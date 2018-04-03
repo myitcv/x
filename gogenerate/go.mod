@@ -1,0 +1,1 @@
+module "myitcv.io/gogenerate"
