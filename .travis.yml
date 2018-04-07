@@ -6,6 +6,8 @@ addons:
 go:
   - 1.x.x
 
+go_import_path: myitcv.io
+
 before_script:
   - curl -s https://chromedriver.storage.googleapis.com/2.33/chromedriver_linux64.zip > /tmp/chromedriver_linux64.zip
   - unzip -d /tmp/chromedriver_linux64 /tmp/chromedriver_linux64.zip

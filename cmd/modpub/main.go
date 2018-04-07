@@ -47,6 +47,10 @@ func main() {
 		panic(err)
 	}
 
+	if _, err := os.Stat(target); os.IsNotExist(err) {
+		panic(fmt.Errorf("target %v must exist", target))
+	}
+
 	repoRoot := cwd
 	var found bool
 
@@ -108,11 +112,12 @@ func main() {
 			fmt.Fprintln(os.Stderr, err)
 			continue
 		}
+
 		p := walker.Path()
 
-		if p == "go.mod" || strings.HasSuffix(p, string(os.PathSeparator)+"go.mod") {
+		if filepath.Base(p) == "go.mod" {
 
-			m := &module{path: filepath.Join(relRoot, strings.TrimSuffix(p, "go.mod"))}
+			m := &module{path: filepath.Join(relRoot, filepath.Dir(p))}
 
 			// TODO using the go.mod parser when it exists
 			// for now assume the file is well-formed
@@ -215,6 +220,7 @@ func main() {
 	// to avoid racing on those - versions will be mutually exclusive
 	for i := range modules {
 		m := modules[i]
+
 		if err := os.MkdirAll(filepath.Join(target, m.importPath, "@v"), 0755); err != nil {
 			panic(err)
 		}
@@ -236,6 +242,17 @@ func main() {
 	fmt.Println("Found modules:")
 
 	for _, m := range modules {
+		fmt.Printf("ImportPath: %v, Path: %v\n", m.importPath, m.path)
+
+		for _, sm := range m.submodules {
+			fmt.Printf("  submodule %v\n", sm)
+		}
+
+		if len(m.versions) == 0 {
+			fmt.Printf("  ** no versions\n")
+			continue
+		}
+
 		// write the version file
 		targetM := filepath.Join(target, m.importPath, "@v")
 		vfName := filepath.Join(targetM, "list")
@@ -257,15 +274,7 @@ func main() {
 
 				defer os.RemoveAll(td)
 
-				fmt.Printf("ImportPath: %v, Path: %v\n", m.importPath, m.path)
-
-				for _, v := range m.versions {
-					fmt.Printf("  version %v %v\n", v.Version, v.Time)
-				}
-
-				for _, sm := range m.submodules {
-					fmt.Printf("  submodule %v\n", sm)
-				}
+				fmt.Printf("  version %v %v\n", v.Version, v.Time)
 
 				// git archive into the td; we use the cwd
 				run("git archive %v | tar -C %q -x", v.commitish, td)
