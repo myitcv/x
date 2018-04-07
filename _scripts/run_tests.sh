@@ -57,16 +57,17 @@ do
 	then
 		./_scripts/run_tests.sh
 	else
-		# run the standard tests
 		$go generate ./...
-
-		# until we get a resolution on vgo being able to provide locations
-		# of .a files from the build cache
-		$go install ./...
-
 		$go test ./...
+
+		# we can remove this once we resolve https://github.com/golang/go/issues/24661
+		$go install ./...
 	fi
 	popd > /dev/null
 	echo "----"
 	echo ""
 done
+
+# by this point we will have mdreplace installed. Hence check that
+# committed .md files are "fresh"
+mdreplace -w **/*.md
