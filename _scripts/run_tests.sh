@@ -9,30 +9,64 @@ source $(git rev-parse --show-toplevel)/_scripts/common.bash
 if [ "${CI:-}" == "true" ]
 then
 	go get -u golang.org/x/vgo
-	pushd $(go list -f "{{.Dir}}" golang.org/x/vgo)
-	git checkout -f 890b798475a0fc2108fa88d9b2810d5f768f5752
-	popd
+	pushd $(go list -f "{{.Dir}}" golang.org/x/vgo) > /dev/null
+	git checkout -qf $VGO_COMMIT
+	popd > /dev/null
 
 	# so we can access Github without hitting rate limits
 	echo "machine api.github.com login $GH_USER password $GH_TOKEN" >> $HOME/.netrc
+
+	# now setup our cache for ensuring integrity of CI builds
+	pushd $GOPATH > /dev/null
+
+	git clone -q https://github.com/myitcv/cachex
+
+	cd cachex
+
+	for i in $(find -name *.mod)
+	do
+		d=$(dirname $i)
+		v=$(basename $i .mod)
+		echo "$v" >> "$d/list"
+	done
+
+	git clone -q https://github.com/myitcv/pubx /tmp/pubx
+	mv /tmp/pubx/myitcv.io ./myitcv.io
+
+	export GOPROXY="file://$PWD"
+
+	popd > /dev/null
 fi
 
 export PATH=$GOPATH/bin:$PATH
 
+$go version
+$go env
+
+# can potentially go when we get a resolution on
+# https://github.com/golang/go/issues/24748
+echo "GOPROXY=\"${GOPROXY:-}\""
 
 # get all packages that do not belong to a module that has its
 # own _scripts/run_tests.sh file
 for i in $(find -mindepth 2 -iname go.mod -exec dirname '{}' \;)
 do
+	echo "---- $i"
 	pushd $i > /dev/null
-	if [ -f $i/_scripts/run_tests.sh ]
+	if [ -f ./_scripts/run_tests.sh ]
 	then
 		./_scripts/run_tests.sh
 	else
 		# run the standard tests
-		vgo generate ./...
+		$go generate ./...
 
-		vgo test ./...
+		# until we get a resolution on vgo being able to provide locations
+		# of .a files from the build cache
+		$go install ./...
+
+		$go test ./...
 	fi
 	popd > /dev/null
+	echo "----"
+	echo ""
 done
