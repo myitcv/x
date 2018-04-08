@@ -1,0 +1,4 @@
+    <!-- __TEMPLATE: echo -n "hello world" today
+    {{. -}}
+    -->
+    <!-- END -->

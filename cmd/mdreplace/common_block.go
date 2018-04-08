@@ -101,7 +101,9 @@ Args:
 		p.errorf("failed to parse template %q: %e", tmpl, err)
 	}
 
-	p.printf(prefix+" %v\n%v"+commEnd+"\n", origCmdStr, tmpl)
+	if !*fStrip {
+		p.printf(prefix+" %v\n%v"+commEnd+"\n", origCmdStr, tmpl)
+	}
 
 	i := conv(out)
 
@@ -109,7 +111,9 @@ Args:
 		p.errorf("failed to execute template %q with input %q: %v", tmpl, i, err)
 	}
 
-	p.println(blockEnd)
+	if !*fStrip {
+		p.println(blockEnd)
+	}
 
 	return p.processText
 }

@@ -1,0 +1,4 @@
+    <!-- __TEMPLATE: sh -c "BANANA=fruit; echo -n \"${DOLLAR}BANANA\""
+    {{.}}
+    -->
+    <!-- END -->

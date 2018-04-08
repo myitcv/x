@@ -1,0 +1,12 @@
+    <!-- __TEMPLATE: echo -n "hello world"
+    ```go
+    package main
+
+    import "fmt"
+
+    func main() {
+            fmt.Println("{{.}}")
+    }
+    ```
+    -->
+    <!-- END -->
