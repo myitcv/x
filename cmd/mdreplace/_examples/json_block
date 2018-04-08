@@ -1,0 +1,8 @@
+    <!-- __JSON: go list -json encoding/json
+    Package `{{.ImportPath}}` has name `{{.Name}}` and the following doc string:
+
+    ```
+    {{.Doc}}
+    ```
+    -->
+    <!-- END -->

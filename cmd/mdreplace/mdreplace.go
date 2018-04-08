@@ -1,4 +1,6 @@
 // mdreplace is a tool to help you keep your markdown README/documentation current.
+//
+// For more information see https://github.com/myitcv/x/blob/master/cmd/mdreplace/README.md
 package main // import "myitcv.io/cmd/mdreplace"
 
 import (
@@ -8,6 +10,7 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 )
 
 // take input from stdin or files (args)
@@ -45,6 +48,7 @@ import (
 var (
 	fHelp  = flag.Bool("h", false, "show usage information")
 	fWrite = flag.Bool("w", false, "whether to write back to input files (cannot be used when reading from stdin)")
+	fStrip = flag.Bool("strip", false, "whether to strip special comments from the file")
 
 	usage string // gets populated at runtime
 )
@@ -75,16 +79,23 @@ func main() {
 		var files []*os.File
 
 		for _, f := range args {
-			i, err := os.Open(f)
+			abs, err := filepath.Abs(f)
 			if err != nil {
-				fatalf("failed to open %v: %v\n", f, err)
+				fatalf("failed to make absolute path %v: %v", f, err)
+			}
+			i, err := os.Open(abs)
+			if err != nil {
+				fatalf("failed to open %v: %v\n", abs, err)
 			}
 
 			files = append(files, i)
 		}
 
 		for _, f := range files {
-			// we can do this concurrently
+			dir := filepath.Dir(f.Name())
+			if err := os.Chdir(dir); err != nil {
+				fatalf("failed to chdir to %v: %v", dir, err)
+			}
 			var out io.Writer
 
 			if *fWrite {
@@ -105,9 +116,7 @@ func main() {
 				if err != nil {
 					fatalf("failed to write to %v: %v\n", fn, err)
 				}
-
 			}
-
 		}
 	}
 
