@@ -93,7 +93,7 @@ Args:
 	cmd := exec.Command(args[0], args[1:]...)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
-		p.errorf("failed to run command %q: %v", origCmdStr, err)
+		p.errorf("failed to run command %q: %v\n%v", origCmdStr, err, string(out))
 	}
 
 	t, err := template.New("").Funcs(tmplFuncMap).Parse(tmpl.String())
