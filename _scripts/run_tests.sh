@@ -11,6 +11,7 @@ then
 	go get -u golang.org/x/vgo
 	pushd $(go list -f "{{.Dir}}" golang.org/x/vgo) > /dev/null
 	git checkout -qf $VGO_COMMIT
+	go install
 	popd > /dev/null
 
 	# so we can access Github without hitting rate limits
