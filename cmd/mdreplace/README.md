@@ -149,7 +149,12 @@ fruit
 Both the `__TEMPLATE` and `__JSON` blocks support the following template functions:
 
 * `lines(string) []string` - split a string into lines
+* `lineEllipsis(s string, n int) string)` - output at most `n` lines from `s`, adding ellipsis if required
+* `trimLinePrefixWhitespace(s string, m string) string` - remove lines from `s`, upto and including the line
+  matching `m`, as well as any blank lines that follow `m`
 * ... more to follow
+
+_TODO: move these to be an internal package that can then be automatically documented._
 
 
 ### Implementation

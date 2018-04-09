@@ -1,0 +1,23 @@
+set -eu
+td=`mktemp -d`
+trap "rm -rf $td" EXIT
+cd $td
+
+export GOPATH=$PWD
+export PATH=$PWD/bin:$PATH
+
+# ** SCRIPT START **
+
+# clone the mono repo
+git clone -q https://github.com/myitcv/x src/myitcv.io
+
+# get modpub
+go get -u myitcv.io/cmd/modpub
+
+# create our target directory
+mkdir pubx
+
+cd src/myitcv.io
+git checkout -qf c57b27668caebdef755844c84016f8bf1cf618fe
+
+modpub -target ../../pubx

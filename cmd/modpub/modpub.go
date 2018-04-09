@@ -279,12 +279,12 @@ func main() {
 			targetV := filepath.Join(targetM, v.Version)
 
 			func() {
-				td, err := ioutil.TempDir("", "modpub-")
+				td, err := ioutil.TempDir("", "modpubX-")
 				if err != nil {
 					fatalf("failed to create a working temp dir: %v", err)
 				}
 
-				// defer os.RemoveAll(td)
+				defer os.RemoveAll(td)
 
 				vinfof("  version %v %v\n", v.Version, v.Time)
 
