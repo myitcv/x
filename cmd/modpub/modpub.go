@@ -1,4 +1,6 @@
 // modpub is a tool to help create a directory of vgo modules from a git respository.
+//
+// For more information see https://github.com/myitcv/x/blob/master/cmd/modpub/README.md
 package main
 
 import (
