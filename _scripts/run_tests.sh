@@ -37,16 +37,17 @@ then
 	export GOPROXY="file://$PWD"
 
 	popd > /dev/null
+
+	$go version
+	$go env
+
+	# can potentially go when we get a resolution on
+	# https://github.com/golang/go/issues/24748
+	echo "GOPROXY=\"${GOPROXY:-}\""
 fi
 
 export PATH=$GOPATH/bin:$PATH
 
-$go version
-$go env
-
-# can potentially go when we get a resolution on
-# https://github.com/golang/go/issues/24748
-echo "GOPROXY=\"${GOPROXY:-}\""
 
 # get all packages that do not belong to a module that has its
 # own _scripts/run_tests.sh file

@@ -40,6 +40,29 @@ hello world today
 _To see this in action, look at the [source of the
 `README.md`](https://raw.githubusercontent.com/myitcv/x/master/cmd/mdreplace/README.md) you are currently reading._
 
+### Usage
+
+<!-- __TEMPLATE: mdreplace -h
+```
+{{.}}
+```
+-->
+```
+Usage:
+
+  mdreplace file1 file2 ...
+  mdreplace
+
+When called with no file arguments, mdreplace works with stdin
+
+Flags:
+  -h	show usage information
+  -strip
+    	whether to strip special comments from the file
+  -w	whether to write back to input files (cannot be used when reading from stdin)
+
+```
+<!-- END -->
 
 ### Code fences
 
