@@ -48,6 +48,10 @@ fi
 
 export PATH=$GOPATH/bin:$PATH
 
+# work out a better way of priming the build tools
+pushd cmd/pkgconcat > /dev/null
+$go install .
+popd > /dev/null
 
 # get all packages that do not belong to a module that has its
 # own _scripts/run_tests.sh file

@@ -8,6 +8,8 @@ import (
 	"strconv"
 	"strings"
 	"unicode/utf8"
+
+	"myitcv.io/cmd/mdreplace/internal/itemtype"
 )
 
 const (
@@ -66,7 +68,7 @@ func (l *lexer) run() {
 	close(l.items)
 }
 
-func (l *lexer) emit(t itemType) {
+func (l *lexer) emit(t itemtype.ItemType) {
 	i := item{
 		typ: t,
 		val: l.input[l.start:l.pos],
@@ -79,7 +81,7 @@ func (l *lexer) emit(t itemType) {
 	l.start = l.pos
 }
 
-func (l *lexer) emitNonEmpty(t itemType) {
+func (l *lexer) emitNonEmpty(t itemtype.ItemType) {
 	if l.pos <= l.start {
 		return
 	}
@@ -89,16 +91,16 @@ func (l *lexer) emitNonEmpty(t itemType) {
 
 func (l *lexer) lexCode() stateFn {
 	l.pos += len(codeFence)
-	l.emit(itemCodeFence)
+	l.emit(itemtype.ItemCodeFence)
 
 	startOfLine := false
 
 loop:
 	for {
 		if startOfLine && strings.HasPrefix(l.input[l.pos:], codeFence) {
-			l.emit(itemCode)
+			l.emit(itemtype.ItemCode)
 			l.pos += len(codeFence)
-			l.emit(itemCodeFence)
+			l.emit(itemtype.ItemCodeFence)
 			return l.lexText
 		}
 
@@ -133,27 +135,27 @@ loop:
 		if startOfLine {
 			switch {
 			case strings.HasPrefix(l.input[l.pos:], codeFence):
-				l.emitNonEmpty(itemText)
+				l.emitNonEmpty(itemtype.ItemText)
 				return l.lexCode
 
 			case strings.HasPrefix(l.input[l.pos:], commEnd):
 				// we lext text when we are parsing the block arg
-				l.emitNonEmpty(itemText)
+				l.emitNonEmpty(itemtype.ItemText)
 				return l.lexCommEnd
 
 			case strings.HasPrefix(l.input[l.pos:], blockEnd):
 				// we lex text for anything that exists between
 				// the start of a block and the end (it will be
 				// discarded but hey)
-				l.emitNonEmpty(itemText)
+				l.emitNonEmpty(itemtype.ItemText)
 				return l.lexBlockEnd
 
 			case strings.HasPrefix(l.input[l.pos:], tmplBlock):
-				l.emitNonEmpty(itemText)
+				l.emitNonEmpty(itemtype.ItemText)
 				return l.lexTmplBlock
 
 			case strings.HasPrefix(l.input[l.pos:], jsonBlock):
-				l.emitNonEmpty(itemText)
+				l.emitNonEmpty(itemtype.ItemText)
 				return l.lexJsonBlock
 			}
 		}
@@ -170,30 +172,30 @@ loop:
 
 	// Correctly reached EOF.
 	if l.pos > l.start {
-		l.emit(itemText)
+		l.emit(itemtype.ItemText)
 	}
 
-	l.emit(itemEOF)
+	l.emit(itemtype.ItemEOF)
 	return nil
 }
 
 func (l *lexer) lexTmplBlock() stateFn {
 	l.pos += len(tmplBlock)
-	l.emit(itemTmplBlockStart)
+	l.emit(itemtype.ItemTmplBlockStart)
 
 	return l.lexCmdAndArgs
 }
 
 func (l *lexer) lexJsonBlock() stateFn {
 	l.pos += len(jsonBlock)
-	l.emit(itemJsonBlockStart)
+	l.emit(itemtype.ItemJsonBlockStart)
 
 	return l.lexCmdAndArgs
 }
 
 func (l *lexer) lexBlockEnd() stateFn {
 	l.pos += len(blockEnd)
-	l.emit(itemBlockEnd)
+	l.emit(itemtype.ItemBlockEnd)
 
 	// accept spaces
 	l.acceptRun(" \t")
@@ -208,7 +210,7 @@ func (l *lexer) lexBlockEnd() stateFn {
 
 func (l *lexer) lexCommEnd() stateFn {
 	l.pos += len(commEnd)
-	l.emit(itemCommEnd)
+	l.emit(itemtype.ItemCommEnd)
 
 	// accept spaces
 	l.acceptRun(" \t")
@@ -240,7 +242,7 @@ func (l *lexer) next() rune {
 
 func (l *lexer) errorf(format string, args ...interface{}) stateFn {
 	i := item{
-		typ: itemError,
+		typ: itemtype.ItemError,
 		val: fmt.Sprintf(format, args...),
 	}
 
@@ -288,7 +290,7 @@ Words:
 					if err != nil {
 						return l.errorf("bad quoted string")
 					}
-					l.emit(itemQuoteArg)
+					l.emit(itemtype.ItemQuoteArg)
 
 					// if we have more to do ensure the next character is space or end of line.
 					switch p := l.peek(); {
@@ -306,10 +308,10 @@ Words:
 			for {
 				switch l.input[l.pos] {
 				case ' ', '\t':
-					l.emit(itemArg)
+					l.emit(itemtype.ItemArg)
 					continue Words
 				case '\n':
-					l.emit(itemArg)
+					l.emit(itemtype.ItemArg)
 					break Words
 				}
 

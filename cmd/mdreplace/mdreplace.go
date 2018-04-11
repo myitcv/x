@@ -11,6 +11,8 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+
+	"myitcv.io/cmd/mdreplace/internal/itemtype"
 )
 
 // take input from stdin or files (args)
@@ -46,22 +48,33 @@ import (
 // ===========================
 
 var (
-	fHelp  = flag.Bool("h", false, "show usage information")
 	fWrite = flag.Bool("w", false, "whether to write back to input files (cannot be used when reading from stdin)")
 	fStrip = flag.Bool("strip", false, "whether to strip special comments from the file")
-
-	usage string // gets populated at runtime
 )
+
+//go:generate pkgconcat -out gen_cliflag.go myitcv.io/_tmpls/cliflag
 
 type stateFn func() stateFn
 
-func main() {
-	setupAndParseFlags()
+type item struct {
+	typ itemtype.ItemType
+	val string
+}
 
-	if *fHelp {
-		infof(usage)
-		os.Exit(0)
-	}
+func (i item) String() string {
+	return fmt.Sprintf("{typ: %v, val: %q}", i.typ, i.val)
+}
+
+func main() {
+	setupAndParseFlags(`Usage:
+
+  mdreplace file1 file2 ...
+  mdreplace
+
+When called with no file arguments, mdreplace works with stdin
+
+Flags:
+`)
 
 	args := flag.Args()
 
@@ -134,11 +147,6 @@ func run(r io.Reader, w io.Writer) error {
 
 func infof(format string, args ...interface{}) {
 	fmt.Fprintf(os.Stderr, format, args...)
-}
-
-func fatalf(format string, args ...interface{}) {
-	fmt.Fprintf(os.Stderr, format, args...)
-	os.Exit(1)
 }
 
 func debugf(format string, args ...interface{}) {

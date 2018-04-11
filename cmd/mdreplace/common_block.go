@@ -6,6 +6,8 @@ import (
 	"strconv"
 	"strings"
 	"text/template"
+
+	"myitcv.io/cmd/mdreplace/internal/itemtype"
 )
 
 func (p *processor) processCommonBlock(prefix string, conv func([]byte) interface{}) procFn {
@@ -21,8 +23,8 @@ Args:
 		t := i.val
 
 		switch i.typ {
-		case itemArg:
-		case itemQuoteArg:
+		case itemtype.ItemArg:
+		case itemtype.ItemQuoteArg:
 			v, err := strconv.Unquote(i.val)
 			if err != nil {
 				p.errorf("failed to unquote %q: %v", i.val, err)
@@ -61,9 +63,9 @@ Args:
 	// together
 	tmpl := new(strings.Builder)
 
-	for p.curr.typ != itemCommEnd {
+	for p.curr.typ != itemtype.ItemCommEnd {
 		switch p.curr.typ {
-		case itemCodeFence, itemCode, itemText:
+		case itemtype.ItemCodeFence, itemtype.ItemCode, itemtype.ItemText:
 			tmpl.WriteString(p.curr.val)
 		default:
 			p.errorf("didn't expect to see a %v", p.curr.typ)
@@ -76,9 +78,9 @@ Args:
 
 	// again we can expect text or code fence blocks here; we are just
 	// going to ignore them.
-	for p.curr.typ != itemBlockEnd {
+	for p.curr.typ != itemtype.ItemBlockEnd {
 		switch p.curr.typ {
-		case itemCodeFence, itemCode, itemText:
+		case itemtype.ItemCodeFence, itemtype.ItemCode, itemtype.ItemText:
 			// noop
 		default:
 			p.errorf("didn't expect to see a %v", p.curr.typ)

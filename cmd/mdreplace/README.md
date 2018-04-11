@@ -1,10 +1,20 @@
+<!-- __JSON: go list -json .
+## `{{ filepathBase .ImportPath}}`
+
+{{.Doc}}
+
+```
+go get -u {{.ImportPath}}
+```
+-->
 ## `mdreplace`
 
-`mdreplace` is a tool to help you keep your markdown README/documentation current.
+mdreplace is a tool to help you keep your markdown README/documentation current.
 
 ```
 go get -u myitcv.io/cmd/mdreplace
 ```
+<!-- END -->
 
 _(will soon be available as a [`vgo` module](https://github.com/golang/go/issues/24301))_
 
@@ -40,13 +50,16 @@ hello world today
 _To see this in action, look at the [source of the
 `README.md`](https://raw.githubusercontent.com/myitcv/x/master/cmd/mdreplace/README.md) you are currently reading._
 
+
+<!-- __TEMPLATE: sh -c "${DOLLAR}(go list -f '{{.ImportPath}}' | xargs basename) -h"
 ### Usage
 
-<!-- __TEMPLATE: mdreplace -h
 ```
 {{.}}
 ```
 -->
+### Usage
+
 ```
 Usage:
 
@@ -56,10 +69,11 @@ Usage:
 When called with no file arguments, mdreplace works with stdin
 
 Flags:
-  -h	show usage information
   -strip
     	whether to strip special comments from the file
-  -w	whether to write back to input files (cannot be used when reading from stdin)
+  -w	whether to write back to input files (cannot be used when reading from 
+  stdin)
+
 
 ```
 <!-- END -->

@@ -1,24 +1,37 @@
-### `modpub`
+<!-- __JSON: go list -json .
+## `{{ filepathBase .ImportPath}}`
 
-`modpub` is a tool to help create a directory of [`vgo`](https://github.com/golang/go/issues/24301) modules from a git
-repository.
+{{.Doc}}
+
+```
+go get -u {{.ImportPath}}
+```
+-->
+## `modpub`
+
+modpub is a tool to help create a directory of vgo modules from a git respository.
 
 ```
 go get -u myitcv.io/cmd/modpub
 ```
+<!-- END -->
 
+
+<!-- __TEMPLATE: sh -c "${DOLLAR}(go list -f '{{.ImportPath}}' | xargs basename) -h"
 ### Usage
 
-<!-- __TEMPLATE: sh -c "modpub -h || true"
 ```
-{{. -}}
+{{.}}
 ```
 -->
+### Usage
+
 ```
-Usage of modpub:
   -target string
     	target directory for publishing
   -v	give verbose output
+
+
 ```
 <!-- END -->
 
