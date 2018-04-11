@@ -3,11 +3,13 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"path/filepath"
 	"strings"
 	"text/template"
 )
 
 var tmplFuncMap = template.FuncMap{
+	"filepathBase": filepath.Base,
 	"lines": func(s string) []string {
 		return strings.Split(s, "\n")
 	},

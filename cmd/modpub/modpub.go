@@ -31,9 +31,9 @@ const (
 var (
 	fTarget  = flag.String("target", "", "target directory for publishing")
 	fVerbose = flag.Bool("v", false, "give verbose output")
-
-	usage string
 )
+
+//go:generate pkgconcat -out gen_cliflag.go myitcv.io/_tmpls/cliflag
 
 func main() {
 	// Notes
@@ -41,7 +41,7 @@ func main() {
 	// 1. We trust that any given go.mod file is accurate i.e. that submodules are
 	// correctly nested and the respective go.mod files reflect that
 	// 2. We assume that go.mod files have the module line _as the first line_
-	setupAndParseFlags()
+	setupAndParseFlags("")
 
 	cwd, err := os.Getwd()
 	if err != nil {
@@ -438,17 +438,6 @@ func main() {
 
 		vf.Close()
 	}
-}
-
-func fatalf(format string, vs ...interface{}) {
-	s := fmt.Sprintf(format, vs...)
-
-	if panicOnError {
-		panic(fmt.Errorf(s))
-	}
-
-	fmt.Fprintf(os.Stderr, s)
-	os.Exit(1)
 }
 
 func infof(format string, args ...interface{}) {

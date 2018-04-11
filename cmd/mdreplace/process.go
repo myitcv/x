@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"io"
+
+	"myitcv.io/cmd/mdreplace/internal/itemtype"
 )
 
 type procFn func() procFn
@@ -43,17 +45,17 @@ loop:
 		i := p.curr
 
 		switch i.typ {
-		case itemEOF:
+		case itemtype.ItemEOF:
 			break loop
-		case itemError:
+		case itemtype.ItemError:
 			p.errorf(i.val)
-		case itemCodeFence:
+		case itemtype.ItemCodeFence:
 			return p.processCode
-		case itemTmplBlockStart:
+		case itemtype.ItemTmplBlockStart:
 			return p.processTmplBlock
-		case itemJsonBlockStart:
+		case itemtype.ItemJsonBlockStart:
 			return p.processJsonBlock
-		case itemText:
+		case itemtype.ItemText:
 			p.print(i.val)
 		default:
 			p.errorf("unknown item %v", i.typ)
@@ -70,7 +72,7 @@ func (p *processor) processCode() procFn {
 	p.print(codeFence)
 
 	// consume until the next codeFence
-	for p.curr.typ != itemCodeFence {
+	for p.curr.typ != itemtype.ItemCodeFence {
 		p.print(p.curr.val)
 		p.next()
 	}
