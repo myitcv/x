@@ -10,20 +10,14 @@ rm -f !(_vendor)/**/gen_*.go
 $go install myitcv.io/immutable/cmd/immutableGen
 $go install myitcv.io/immutable/cmd/immutableVet
 
+# this step is needed because _testFiles is not walked by ./...
 pushd cmd/immutableVet/_testFiles
 $go generate
 popd
 
 $go generate ./...
-
-# for immutable this step needs to be before the tests (because some of the
-# tests rely on the myitcv.io/immutable package to have been installed)
-
-# we can remove this once we resolve https://github.com/golang/go/issues/24661
-$go install ./...
-
 $go test ./...
 
+$go install myitcv.io/immutable/cmd/immutableVet
 
 immutableVet myitcv.io/immutable/example
-

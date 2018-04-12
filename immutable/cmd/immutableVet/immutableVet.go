@@ -5,7 +5,6 @@ import (
 	"flag"
 	"fmt"
 	"go/ast"
-	"go/importer"
 	"go/parser"
 	"go/printer"
 	"go/token"
@@ -22,13 +21,16 @@ import (
 	"myitcv.io/gogenerate"
 	"myitcv.io/immutable"
 	"myitcv.io/immutable/util"
+	"myitcv.io/vgo"
 )
 
 const (
 	skipFileComment = "//" + immutable.CmdImmutableVet + ":skipFile"
 )
 
-var fset = token.NewFileSet()
+var (
+	fset = token.NewFileSet()
+)
 
 type immutableVetter struct {
 	pkgs map[string]*ast.Package
@@ -51,6 +53,9 @@ type immutableVetter struct {
 	vcls map[*ast.CompositeLit]bool
 
 	errlist []immErr
+
+	importer types.ImporterFrom
+	immIntf  *types.Interface
 }
 
 var typesCache = map[string]bool{
@@ -63,8 +68,6 @@ type immErr struct {
 }
 
 type errors []immErr
-
-var immIntf *types.Interface
 
 func main() {
 	flag.Parse()
@@ -87,8 +90,10 @@ func main() {
 	}
 }
 
-func loadImmIntf() {
+func loadImmIntf(dir string) (types.ImporterFrom, *types.Interface) {
 	ip := "myitcv.io/immutable"
+
+	importer := vgo.NewTestLoader(dir)
 
 	bpkg, err := build.Import(ip, "", 0)
 	if err != nil {
@@ -115,7 +120,7 @@ func loadImmIntf() {
 
 	conf := types.Config{
 		FakeImportC: true,
-		Importer:    importer.For("gc", nil),
+		Importer:    importer,
 	}
 
 	tpkg, err := conf.Check(ip, fset, files, nil)
@@ -144,13 +149,11 @@ func loadImmIntf() {
 		fatalf("Underlying type is not a *types.Interface: %T", nmd.Underlying())
 	}
 
-	immIntf = intf
+	return importer, intf
 }
 
 func vet(wd string, specs []string) []immErr {
 	var emsgs []immErr
-
-	loadImmIntf()
 
 	// vetting phase: vet all packages packages passed in through the command line
 	for _, spec := range specs {
@@ -420,11 +423,15 @@ func newImmutableVetter(ipkg *build.Package, wd string) *immutableVetter {
 		fatalf("could not parse package directory for %v", ipkg.Name)
 	}
 
+	importer, immIntf := loadImmIntf(ipkg.Dir)
+
 	return &immutableVetter{
 		pkgs:      pkgs,
 		bpkg:      ipkg,
 		vcls:      make(map[*ast.CompositeLit]bool),
 		wd:        wd,
+		immIntf:   immIntf,
+		importer:  importer,
 		skipFiles: make(map[string]bool),
 	}
 }
@@ -451,7 +458,7 @@ func (iv *immutableVetter) vetPackages() []immErr {
 
 		// check types for the core package
 		conf := types.Config{
-			Importer: importer.Default(),
+			Importer: iv.importer,
 		}
 		info := &types.Info{
 			Selections: make(map[*ast.SelectorExpr]*types.Selection),
@@ -497,7 +504,7 @@ func (iv *immutableVetter) vetPackages() []immErr {
 
 					for i := 0; i < st.NumFields(); i++ {
 						f := st.Field(i)
-						if !isImmType(f.Type()) {
+						if !iv.isImmType(f.Type()) {
 							msg := fmt.Sprintf("immutable struct field must be immutable type; %v is not", f.Type())
 							iv.errorf(f.Pos(), msg)
 						}
@@ -575,7 +582,7 @@ func (iv *immutableVetter) vetPackages() []immErr {
 	return iv.errlist
 }
 
-func isImmType(t types.Type) bool {
+func (iv *immutableVetter) isImmType(t types.Type) bool {
 	if v, ok := typesCache[t.String()]; ok {
 		return v
 	}
@@ -585,7 +592,7 @@ func isImmType(t types.Type) bool {
 
 		typesCache[t.String()] = true
 
-		v := isImmType(t.Underlying())
+		v := iv.isImmType(t.Underlying())
 		typesCache[t.String()] = v
 
 		return v
@@ -598,14 +605,14 @@ func isImmType(t types.Type) bool {
 	case *types.Struct:
 		for i := 0; i < t.NumFields(); i++ {
 			f := t.Field(i)
-			if !isImmType(f.Type()) {
+			if !iv.isImmType(f.Type()) {
 				return false
 			}
 		}
 
 		return true
 	case *types.Interface:
-		return types.Implements(t, immIntf)
+		return types.Implements(t, iv.immIntf)
 	case *types.Signature:
 		return false
 	default:
