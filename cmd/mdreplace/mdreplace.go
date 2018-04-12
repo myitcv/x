@@ -50,6 +50,7 @@ import (
 var (
 	fWrite = flag.Bool("w", false, "whether to write back to input files (cannot be used when reading from stdin)")
 	fStrip = flag.Bool("strip", false, "whether to strip special comments from the file")
+	fDebug = flag.Bool("debug", false, "whether to print debug information of not")
 )
 
 //go:generate pkgconcat -out gen_cliflag.go myitcv.io/_tmpls/cliflag
@@ -150,7 +151,7 @@ func infof(format string, args ...interface{}) {
 }
 
 func debugf(format string, args ...interface{}) {
-	if debug {
+	if debug || *fDebug {
 		fmt.Fprintf(os.Stderr, format, args...)
 	}
 }
