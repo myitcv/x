@@ -5,12 +5,6 @@
 
 source "$(git rev-parse --show-toplevel)/_scripts/common.bash"
 
-rm -f !(_vendor)/**/gen_*.go
-
-$go install golang.org/x/tools/cmd/stringer
-
+# we just generate and test in this template module
 $gg ./...
 $go test ./...
-
-# we can remove this once we resolve https://github.com/golang/go/issues/24661
-$go install ./...

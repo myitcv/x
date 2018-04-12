@@ -12,7 +12,6 @@ import (
 	"go/parser"
 	"go/printer"
 	"go/token"
-	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -165,7 +164,7 @@ func gatherImmTypes(pkg string, fset *token.FileSet, file *ast.File) *fileTmpls 
 				continue
 			}
 
-			infof("found immutable declaration at %v", fset.Position(gd.Pos()))
+			vinfof("found immutable declaration at %v", fset.Position(gd.Pos()))
 
 			switch typ := ts.Type.(type) {
 			case *ast.MapType:
@@ -324,9 +323,9 @@ func (o *output) genImmTypes() {
 		}
 
 		if wrote {
-			infof("writing %v", offn)
+			vinfof("writing %v", offn)
 		} else {
-			infof("skipping writing of %v; it's identical", offn)
+			vinfof("skipping writing of %v; it's identical", offn)
 		}
 	}
 }
@@ -449,21 +448,5 @@ func (o *output) pt(tmpl string, fm template.FuncMap, val interface{}) {
 	err = t.Execute(o.output, val)
 	if err != nil {
 		panic(err)
-	}
-}
-
-func fatalf(format string, args ...interface{}) {
-	panic(fmt.Errorf(format, args...))
-}
-
-func infoln(args ...interface{}) {
-	if *fGoGenLog == string(gogenerate.LogInfo) {
-		log.Println(args...)
-	}
-}
-
-func infof(format string, args ...interface{}) {
-	if *fGoGenLog == string(gogenerate.LogInfo) {
-		log.Printf(format, args...)
 	}
 }

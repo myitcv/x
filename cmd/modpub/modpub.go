@@ -117,6 +117,7 @@ func main() {
 
 	var modules []*module
 
+Modules:
 	for walker.Step() {
 		if err := walker.Err(); err != nil {
 			fmt.Fprintln(os.Stderr, err)
@@ -126,6 +127,21 @@ func main() {
 		p := walker.Path()
 
 		if filepath.Base(p) == "go.mod" {
+
+			// we skip any directory that has an underscore prefix per the Go convention
+			for d := filepath.Dir(p); ; {
+				d1, b := filepath.Split(d)
+
+				if d1 == d {
+					break
+				}
+
+				d = d1
+
+				if strings.HasPrefix(b, "_") {
+					continue Modules
+				}
+			}
 
 			m := &module{path: filepath.Join(relRoot, filepath.Dir(p))}
 
@@ -438,10 +454,6 @@ func main() {
 
 		vf.Close()
 	}
-}
-
-func infof(format string, args ...interface{}) {
-	fmt.Fprintf(os.Stderr, format, args...)
 }
 
 func vinfof(format string, args ...interface{}) {

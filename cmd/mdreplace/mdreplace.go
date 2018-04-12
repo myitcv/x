@@ -146,12 +146,8 @@ func run(r io.Reader, w io.Writer) error {
 	return nil
 }
 
-func infof(format string, args ...interface{}) {
-	fmt.Fprintf(os.Stderr, format, args...)
-}
-
 func debugf(format string, args ...interface{}) {
 	if debug || *fDebug {
-		fmt.Fprintf(os.Stderr, format, args...)
+		infof(format, args...)
 	}
 }
