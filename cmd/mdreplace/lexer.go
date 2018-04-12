@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"strconv"
 	"strings"
+	"unicode"
 	"unicode/utf8"
 
 	"myitcv.io/cmd/mdreplace/internal/itemtype"
@@ -29,7 +30,16 @@ const (
 
 	tmplBlock = commStart + " " + tagTmpl + ":"
 	jsonBlock = commStart + " " + tagJson + ":"
+
+	optionStart  = '#'
+	optionLong   = "LONG"
+	optionOnline = "ONLINE"
 )
+
+var options = []string{
+	optionLong,
+	optionOnline,
+}
 
 type lexer struct {
 	items chan item
@@ -276,6 +286,31 @@ Words:
 		switch v {
 		case eof:
 			return l.errorf("missing end of line in arg list")
+		case optionStart:
+			l.emit(itemtype.ItemArgComment)
+
+			for {
+				l.acceptRun(" \t")
+				l.ignore()
+
+				switch l.peek() {
+				case eof:
+					return l.errorf("saw end of file midway through args")
+				case '\n':
+					break Words
+				}
+
+				l.acceptOption()
+
+				if l.start == l.pos {
+					// this is a problem because we didn't see something
+					// that is considered to be a valid option
+					return l.errorf("invalid option")
+				}
+
+				l.emit(itemtype.ItemOption)
+			}
+
 		case '"':
 			for {
 				switch l.next() {
@@ -334,6 +369,12 @@ Words:
 
 func (l *lexer) acceptRun(valid string) {
 	for strings.IndexRune(valid, l.next()) >= 0 {
+	}
+	l.backup()
+}
+
+func (l *lexer) acceptOption() {
+	for unicode.IsLetter(l.next()) {
 	}
 	l.backup()
 }

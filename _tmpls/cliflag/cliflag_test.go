@@ -1,9 +1,6 @@
 package main
 
 import (
-	"fmt"
-	"os/exec"
-	"strings"
 	"testing"
 )
 
@@ -60,16 +57,4 @@ func TestFoldOnSpaces(t *testing.T) {
 			t.Errorf("%q failed to fold to %q; got %q", c.i, out, res)
 		}
 	}
-}
-
-func fold(s string, w int) string {
-	cmd := exec.Command("fold", "-s", "-w", fmt.Sprintf("%v", w))
-	cmd.Stdin = strings.NewReader(s)
-
-	out, err := cmd.CombinedOutput()
-	if err != nil {
-		panic(fmt.Errorf("failed to run fold -s -w %v %q: %v", w, s, err))
-	}
-
-	return string(out)
 }

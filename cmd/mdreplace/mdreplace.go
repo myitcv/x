@@ -51,6 +51,9 @@ var (
 	fWrite = flag.Bool("w", false, "whether to write back to input files (cannot be used when reading from stdin)")
 	fStrip = flag.Bool("strip", false, "whether to strip special comments from the file")
 	fDebug = flag.Bool("debug", false, "whether to print debug information of not")
+
+	fLong   = flag.Bool("long", false, "run LONG blocks")
+	fOnline = flag.Bool("online", false, "run ONLINE blocks")
 )
 
 //go:generate pkgconcat -out gen_cliflag.go myitcv.io/_tmpls/cliflag
@@ -105,7 +108,7 @@ Flags:
 			files = append(files, i)
 		}
 
-		for _, f := range files {
+		for ind, f := range files {
 			dir := filepath.Dir(f.Name())
 			if err := os.Chdir(dir); err != nil {
 				fatalf("failed to chdir to %v: %v", dir, err)
@@ -118,6 +121,7 @@ Flags:
 				out = os.Stdout
 			}
 
+			infof("Processing %v...\n", args[ind])
 			if err := run(f, out); err != nil {
 				fatalf("%v\n", err)
 			}

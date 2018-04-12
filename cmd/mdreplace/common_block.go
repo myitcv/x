@@ -15,6 +15,9 @@ func (p *processor) processCommonBlock(prefix string, conv func([]byte) interfac
 
 	var orig []string
 	var args []string
+	var options []string
+
+	execute := true
 
 Args:
 	for {
@@ -23,6 +26,25 @@ Args:
 		t := i.val
 
 		switch i.typ {
+		case itemtype.ItemArgComment:
+			options = []string{}
+			// consume any options
+			for {
+				i := p.next()
+				if i.typ != itemtype.ItemOption {
+					break Args
+				}
+				switch i.val {
+				case optionLong:
+					execute = execute && *fLong
+				case optionOnline:
+					execute = execute && *fOnline
+				default:
+					p.errorf("unknown option %v", i.val)
+				}
+				options = append(options, i.val)
+			}
+
 		case itemtype.ItemArg:
 		case itemtype.ItemQuoteArg:
 			v, err := strconv.Unquote(i.val)
@@ -81,7 +103,9 @@ Args:
 	for p.curr.typ != itemtype.ItemBlockEnd {
 		switch p.curr.typ {
 		case itemtype.ItemCodeFence, itemtype.ItemCode, itemtype.ItemText:
-			// noop
+			if !execute {
+				p.print(p.curr.val)
+			}
 		default:
 			p.errorf("didn't expect to see a %v", p.curr.typ)
 		}
@@ -91,26 +115,34 @@ Args:
 	// consume the block end
 	p.next()
 
-	// ok now process the command, parse the template and write everything
-	cmd := exec.Command(args[0], args[1:]...)
-	out, err := cmd.CombinedOutput()
-	if err != nil {
-		p.errorf("failed to run command %q: %v\n%v", origCmdStr, err, string(out))
-	}
-
-	t, err := template.New("").Funcs(tmplFuncMap).Parse(tmpl.String())
-	if err != nil {
-		p.errorf("failed to parse template %q: %e", tmpl, err)
-	}
-
 	if !*fStrip {
-		p.printf(prefix+" %v\n%v"+commEnd+"\n", origCmdStr, tmpl)
+		p.printf(prefix+" %v", origCmdStr)
+
+		if len(options) > 0 {
+			p.printf(" %v %v", string(optionStart), strings.Join(options, " "))
+		}
+
+		p.printf("\n%v"+commEnd+"\n", tmpl)
 	}
 
-	i := conv(out)
+	if execute {
+		// ok now process the command, parse the template and write everything
+		cmd := exec.Command(args[0], args[1:]...)
+		out, err := cmd.CombinedOutput()
+		if err != nil {
+			p.errorf("failed to run command %q: %v\n%v", origCmdStr, err, string(out))
+		}
 
-	if err := t.Execute(p.out, i); err != nil {
-		p.errorf("failed to execute template %q with input %q: %v", tmpl, i, err)
+		t, err := template.New("").Funcs(tmplFuncMap).Parse(tmpl.String())
+		if err != nil {
+			p.errorf("failed to parse template %q: %e", tmpl, err)
+		}
+
+		i := conv(out)
+
+		if err := t.Execute(p.out, i); err != nil {
+			p.errorf("failed to execute template %q with input %q: %v", tmpl, i, err)
+		}
 	}
 
 	if !*fStrip {

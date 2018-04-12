@@ -71,6 +71,10 @@ When called with no file arguments, mdreplace works with stdin
 Flags:
   -debug
     	whether to print debug information of not
+  -long
+    	run LONG blocks
+  -online
+    	run ONLINE blocks
   -strip
     	whether to strip special comments from the file
   -w	whether to write back to input files (cannot be used when reading from 
