@@ -52,9 +52,12 @@ fi
 export PATH=$GOPATH/bin:$PATH
 
 # work out a better way of priming the build tools
-pushd cmd/pkgconcat > /dev/null
-$go install .
-popd > /dev/null
+for i in cmd/pkgconcat cmd/gg
+do
+	pushd $i > /dev/null
+	$go install .
+	popd > /dev/null
+done
 
 # get all packages that do not belong to a module that has its
 # own _scripts/run_tests.sh file
@@ -71,7 +74,7 @@ do
 			./_scripts/pre_run_tests.sh
 		fi
 
-		$go generate ./...
+		$gg ./...
 		$go test ./...
 
 		if [ -f ./_scripts/post_run_tests.sh ]

@@ -1,0 +1,10 @@
+{
+  "Typed": [
+    "golang.org/x/tools/cmd/stringer"
+  ],
+  "Untyped": [
+	  "myitcv.io/cmd/pkgconcat",
+	  "myitcv.io/immutable/cmd/immutableGen",
+	  "echo"
+  ]
+}

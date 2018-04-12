@@ -26,4 +26,6 @@ const (
 
 	ItemArg
 	ItemQuoteArg
+
+	ItemLong
 )

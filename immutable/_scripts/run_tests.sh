@@ -7,15 +7,20 @@ source "$(git rev-parse --show-toplevel)/_scripts/common.bash"
 
 rm -f !(_vendor)/**/gen_*.go
 
-$go install myitcv.io/immutable/cmd/immutableGen
-$go install myitcv.io/immutable/cmd/immutableVet
+for i in ./cmd/immutableGen ./cmd/immutableVet
+do
+	pushd $i > /dev/null
+	$gg
+	$go install
+	popd > /dev/null
+done
 
 # this step is needed because _testFiles is not walked by ./...
 pushd cmd/immutableVet/_testFiles
-$go generate
+$gg
 popd
 
-$go generate ./...
+$gg ./...
 $go test ./...
 
 $go install myitcv.io/immutable/cmd/immutableVet

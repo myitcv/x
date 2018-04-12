@@ -19,11 +19,14 @@ var (
 	fGoGenCmds   gogenCmds
 	fLicenseFile = gogenerate.LicenseFileFlag()
 	fGoGenLog    = gogenerate.LogFlag()
+	fVerbose     = flag.Bool("v", false, "verbose logging")
 )
 
 func init() {
 	flag.Var(&fGoGenCmds, "G", "Path to search for imports (flag can be used multiple times)")
 }
+
+//go:generate pkgconcat -out gen_cliflag.go myitcv.io/_tmpls/cliflag
 
 func main() {
 	flag.Parse()
@@ -66,4 +69,10 @@ func main() {
 	}
 
 	execute(wd, envPkgName, licenseHeader, fGoGenCmds)
+}
+
+func vinfof(format string, args ...interface{}) {
+	if *fVerbose {
+		infof(format, args...)
+	}
 }

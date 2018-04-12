@@ -182,3 +182,12 @@ func fatalf(format string, args ...interface{}) {
 	fmt.Fprintf(os.Stderr, format, args...)
 	os.Exit(1)
 }
+func infof(format string, args ...interface{}) {
+	fmt.Fprintf(os.Stderr, format, args...)
+}
+func info(args ...interface{}) {
+	fmt.Fprint(os.Stderr, args...)
+}
+func infoln(format string, args ...interface{}) {
+	fmt.Fprintf(os.Stderr, format+"\n", args...)
+}

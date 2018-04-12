@@ -69,6 +69,8 @@ type immErr struct {
 
 type errors []immErr
 
+//go:generate pkgconcat -out gen_cliflag.go myitcv.io/_tmpls/cliflag
+
 func main() {
 	flag.Parse()
 
@@ -628,10 +630,6 @@ func (iv *immutableVetter) errorf(pos token.Pos, format string, args ...interfac
 		pos: fset.Position(pos),
 		msg: msg,
 	})
-}
-
-func fatalf(format string, args ...interface{}) {
-	panic(fmt.Errorf(format, args...))
 }
 
 func (r immErr) String() string {
