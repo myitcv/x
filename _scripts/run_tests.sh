@@ -96,7 +96,4 @@ do
 	popd > /dev/null
 done
 
-echo Checking markdown files are current
-# by this point we will have mdreplace installed. Hence check that
-# committed .md files are "fresh"
-mdreplace -w **/*.md
+_scripts/update_readmes.sh

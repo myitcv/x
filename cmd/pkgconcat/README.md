@@ -16,13 +16,25 @@ go get -u myitcv.io/cmd/pkgconcat
 ```
 <!-- END -->
 
+Used with its `-out` flag, `pkgconcat` can effectively act as a code generator, where the directory/import path is a
+"template":
+
+<!-- __TEMPLATE: sh -c "cat ${DOLLAR}(go list -f '{{.Dir}}' myitcv.io/cmd/modpub)/modpub.go | grep \"go:generate pkgconcat\""
+```
+{{. -}}
+```
+-->
+```
+//go:generate pkgconcat -out gen_cliflag.go myitcv.io/_tmpls/cliflag
+```
+<!-- END -->
 
 
 <!-- __TEMPLATE: sh -c "${DOLLAR}(go list -f '{{.ImportPath}}' | xargs basename) -h"
 ### Usage
 
 ```
-{{.}}
+{{. -}}
 ```
 -->
 ### Usage
@@ -42,7 +54,6 @@ Flags:
   -outpkgname string
     	name of package to output; if not specified take the package name of the 
     	input directory/import path
-
 
 ```
 <!-- END -->

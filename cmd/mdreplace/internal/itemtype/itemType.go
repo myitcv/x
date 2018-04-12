@@ -26,6 +26,7 @@ const (
 
 	ItemArg
 	ItemQuoteArg
+	ItemArgComment
 
-	ItemLong
+	ItemOption
 )
