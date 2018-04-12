@@ -10,8 +10,11 @@ if [ "${CI:-}" == "true" ]
 then
 	go get -u golang.org/x/vgo
 	pushd $(go list -f "{{.Dir}}" golang.org/x/vgo) > /dev/null
-	git checkout -qf $VGO_COMMIT
+
+	# git checkout -qf $VGO_COMMIT
+	git fetch -q https://go.googlesource.com/vgo refs/changes/55/105855/3 && git checkout -qf FETCH_HEAD
 	go install
+
 	popd > /dev/null
 
 	# so we can access Github without hitting rate limits
@@ -63,15 +66,31 @@ do
 	then
 		./_scripts/run_tests.sh
 	else
+		if [ -f ./_scripts/pre_run_tests.sh ]
+		then
+			./_scripts/pre_run_tests.sh
+		fi
+
 		$go generate ./...
 		$go test ./...
 
-		# we can remove this once we resolve https://github.com/golang/go/issues/24661
-		$go install ./...
+		if [ -f ./_scripts/post_run_tests.sh ]
+		then
+			./_scripts/post_run_tests.sh
+		fi
 	fi
 	popd > /dev/null
 	echo "----"
 	echo ""
+done
+
+# we use regular go to list here because of https://github.com/golang/go/issues/24749;
+# this is also the reason why we need to change to the directory to do the vgo install
+for i in $(go list -f "{{if eq .Name \"main\"}}{{.Dir}}{{end}}" ./...)
+do
+	pushd $i > /dev/null
+	$go install
+	popd > /dev/null
 done
 
 echo Checking markdown files are current

@@ -55,7 +55,7 @@ _To see this in action, look at the [source of the
 ### Usage
 
 ```
-{{.}}
+{{. -}}
 ```
 -->
 ### Usage
@@ -69,11 +69,12 @@ Usage:
 When called with no file arguments, mdreplace works with stdin
 
 Flags:
+  -debug
+    	whether to print debug information of not
   -strip
     	whether to strip special comments from the file
   -w	whether to write back to input files (cannot be used when reading from 
   stdin)
-
 
 ```
 <!-- END -->
