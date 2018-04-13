@@ -1,5 +1,7 @@
 // package vgo provides some utility types, functions etc to support vgo
-package vgo // import "myitcv.io/vgo"
+//
+// For now it is a copy of the WIP myitcv.io/vgo
+package vgo
 
 import (
 	"bytes"
@@ -19,6 +21,8 @@ import (
 // correctly initialised *Loader.  A Loader must not be copied once created.
 type Loader struct {
 	mu sync.Mutex
+
+	Debug io.Writer
 
 	dir       string
 	compiler  string
@@ -76,7 +80,7 @@ func (l *Loader) ImportFrom(path, dir string, mode types.ImportMode) (*types.Pac
 		// we need to load the results for this dir and build an importer
 
 		// resolve the package found in dir
-		bpkg, err := build.ImportDir(dir, 0)
+		_, err := build.ImportDir(dir, 0)
 		if err != nil {
 			return nil, fmt.Errorf("unable to resolve %v to a package: %v", dir, err)
 		}
@@ -88,44 +92,65 @@ func (l *Loader) ImportFrom(path, dir string, mode types.ImportMode) (*types.Pac
 			args = append(args, "-test")
 		}
 
-		args = append(args, bpkg.ImportPath)
+		args = append(args, ".")
+
+		combined := new(bytes.Buffer)
+		stderr := new(bytes.Buffer)
+		stdout := new(bytes.Buffer)
+
+		mu := new(sync.Mutex)
 
 		cmd := exec.Command(args[0], args[1:]...)
 		cmd.Dir = l.dir
+		cmd.Stderr = newSyncMultiWriter(mu, stderr, combined)
+		cmd.Stdout = newSyncMultiWriter(mu, stdout, combined)
 
-		out, err := cmd.CombinedOutput()
-		if err != nil {
-			return nil, fmt.Errorf("unable to run %v: %v [%q]", strings.Join(cmd.Args, " "), err, string(out))
+		l.debugf("dir: %v, running %v\n", cmd.Dir, strings.Join(cmd.Args, " "))
+
+		if err := cmd.Run(); err != nil {
+			l.debugf("failed: %v\n%v\n", err, combined.String())
+			return nil, fmt.Errorf("unable to run %v: %v [%q]", strings.Join(cmd.Args, " "), err, combined.String())
 		}
+
+		l.debugf("output:\n%v\n", combined.String())
 
 		// parse the JSON
 
-		lookup := make(map[string]string)
+		dec := json.NewDecoder(bytes.NewBuffer(stdout.Bytes()))
 
-		dec := json.NewDecoder(bytes.NewBuffer(out))
+		type vgoDeplistResult struct {
+			ImportPath  string
+			PackageFile string
+			Incomplete  bool
+		}
+
+		lookup := make(map[string]vgoDeplistResult)
 
 		for {
-			var d struct {
-				ImportPath  string
-				PackageFile string
-			}
+			var d vgoDeplistResult
 
 			if err := dec.Decode(&d); err != nil {
 				if err == io.EOF {
 					break
 				}
 
-				return nil, fmt.Errorf("failed to parse vgo output: %v\noutput was:\n%v", err, string(out))
+				return nil, fmt.Errorf("failed to parse vgo output: %v\noutput was:\n%v", err, combined.String())
 			}
 
-			lookup[d.ImportPath] = d.PackageFile
+			lookup[d.ImportPath] = d
 		}
 
 		i := importer.For(l.compiler, func(path string) (io.ReadCloser, error) {
-			file, ok := lookup[path]
+			d, ok := lookup[path]
 			if !ok {
 				return nil, fmt.Errorf("failed to resolve import path %q", path)
 			}
+
+			if d.Incomplete {
+				return nil, fmt.Errorf("import path %v failed to compile", path)
+			}
+
+			file := d.PackageFile
 
 			f, err := os.Open(file)
 			if err != nil {
@@ -152,4 +177,29 @@ func (l *Loader) ImportFrom(path, dir string, mode types.ImportMode) (*types.Pac
 	dirCache[path] = p
 
 	return p, nil
+}
+
+func (l *Loader) debugf(format string, args ...interface{}) {
+	if l.Debug != nil {
+		fmt.Fprintf(l.Debug, format, args...)
+	}
+}
+
+type syncWriter struct {
+	mu *sync.Mutex
+	u  io.Writer
+}
+
+func newSyncMultiWriter(mu *sync.Mutex, ws ...io.Writer) syncWriter {
+	return syncWriter{
+		mu: mu,
+		u:  io.MultiWriter(ws...),
+	}
+}
+
+func (s syncWriter) Write(b []byte) (int, error) {
+	s.mu.Lock()
+	n, err := s.u.Write(b)
+	s.mu.Unlock()
+	return n, err
 }

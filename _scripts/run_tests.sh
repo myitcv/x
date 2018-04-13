@@ -12,7 +12,9 @@ then
 	pushd $(go list -f "{{.Dir}}" golang.org/x/vgo) > /dev/null
 
 	# git checkout -qf $VGO_COMMIT
-	git fetch -q https://go.googlesource.com/vgo refs/changes/55/105855/3 && git checkout -qf FETCH_HEAD
+
+	# override from deplist CL
+	git fetch -q https://go.googlesource.com/vgo refs/changes/55/105855/4 && git checkout -qf FETCH_HEAD
 	go install
 
 	popd > /dev/null
