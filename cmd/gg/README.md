@@ -21,7 +21,7 @@ go get -u myitcv.io/cmd/gg
 ### Usage
 
 ```
-{{.}}
+{{. -}}
 ```
 -->
 ### Usage
@@ -40,7 +40,6 @@ go get -u myitcv.io/cmd/gg
   -vv
     	output commands as they are executed
   -x	print commands as they are executed
-
 
 ```
 <!-- END -->

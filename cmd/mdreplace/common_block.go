@@ -98,6 +98,17 @@ Args:
 	// consume the commEnd
 	p.next()
 
+	// print the header now in case we are not executing
+	if !*fStrip {
+		p.printf(prefix+" %v", origCmdStr)
+
+		if len(options) > 0 {
+			p.printf(" %v %v", string(optionStart), strings.Join(options, " "))
+		}
+
+		p.printf("\n%v"+commEnd+"\n", tmpl)
+	}
+
 	// again we can expect text or code fence blocks here; we are just
 	// going to ignore them.
 	for p.curr.typ != itemtype.ItemBlockEnd {
@@ -114,16 +125,6 @@ Args:
 
 	// consume the block end
 	p.next()
-
-	if !*fStrip {
-		p.printf(prefix+" %v", origCmdStr)
-
-		if len(options) > 0 {
-			p.printf(" %v %v", string(optionStart), strings.Join(options, " "))
-		}
-
-		p.printf("\n%v"+commEnd+"\n", tmpl)
-	}
 
 	if execute {
 		// ok now process the command, parse the template and write everything
