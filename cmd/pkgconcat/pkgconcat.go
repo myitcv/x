@@ -2,10 +2,12 @@
 package main // import "myitcv.io/cmd/pkgconcat"
 
 import (
+	"bytes"
 	"flag"
 	"fmt"
 	"go/ast"
 	"go/build"
+	"go/format"
 	"go/parser"
 	"go/printer"
 	"go/token"
@@ -19,8 +21,6 @@ import (
 var (
 	fOutPkg  = flag.String("outpkgname", "", "name of package to output; if not specified take the package name of the input directory/import path")
 	fOutFile = flag.String("out", "", "path to which to write output; if not specified STDOUT is used")
-
-	outFile = os.Stdout
 )
 
 // takes an optional single directory/import path. A directory is identified by
@@ -40,13 +40,9 @@ Flags:
 
 	// if we have an import path convert it to a directory
 
-	if *fOutFile != "" {
-		f, err := os.Create(*fOutFile)
-		if err != nil {
-			fatalf("failed to open out file %v for writing: %v", *fOutFile, err)
-		}
-
-		outFile = f
+	outBuf := new(bytes.Buffer)
+	outln := func(format string, args ...interface{}) {
+		fmt.Fprintf(outBuf, format+"\n", args...)
 	}
 
 	var err error
@@ -175,16 +171,30 @@ Flags:
 				}
 			}
 
-			printer.Fprint(outFile, fset, d)
+			printer.Fprint(outBuf, fset, d)
 			outln("")
 		}
 	}
-}
 
-func out(format string, args ...interface{}) {
-	fmt.Fprintf(outFile, format, args...)
-}
+	outFileName := "/dev/stdout"
+	outFile := os.Stdout
 
-func outln(format string, args ...interface{}) {
-	fmt.Fprintf(outFile, format+"\n", args...)
+	if *fOutFile != "" {
+		outFileName = *fOutFile
+		f, err := os.Create(*fOutFile)
+		if err != nil {
+			fatalf("failed to open out file %v for writing: %v", *fOutFile, err)
+		}
+
+		outFile = f
+	}
+
+	fmtByts, err := format.Source(outBuf.Bytes())
+	if err != nil {
+		fatalf("failed to format output in %v: %v\n%v", outFileName, err, outBuf.String())
+	}
+
+	if _, err := outFile.Write(fmtByts); err != nil {
+		fatalf("failed to write output to %v: %v", outFileName, err)
+	}
 }

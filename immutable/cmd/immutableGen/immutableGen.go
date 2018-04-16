@@ -5,7 +5,6 @@ package main // import "myitcv.io/immutable/cmd/immutableGen"
 
 import (
 	"flag"
-	"log"
 	"os"
 
 	"myitcv.io/gogenerate"
@@ -29,9 +28,7 @@ func init() {
 //go:generate pkgconcat -out gen_cliflag.go myitcv.io/_tmpls/cliflag
 
 func main() {
-	flag.Parse()
-	log.SetFlags(0)
-	log.SetPrefix(immutableGenCmd + ": ")
+	setupAndParseFlags("")
 
 	gogenerate.DefaultLogLevel(fGoGenLog, gogenerate.LogFatal)
 

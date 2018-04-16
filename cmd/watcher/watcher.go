@@ -30,7 +30,7 @@ var (
 	fIgnorePaths ignorePaths
 
 	fDebug           = flag.Bool("debug", false, "give debug output")
-	fQuiet           = flag.Duration("q", 20*time.Millisecond, "the duration of the 'quiet' window; format is 1s, 10us etc. Min 1 millisecond")
+	fQuiet           = flag.Duration("q", 100*time.Millisecond, "the duration of the 'quiet' window; format is 1s, 10us etc. Min 1 millisecond")
 	fPath            = flag.String("p", "", "the path to watch; default is CWD [*]")
 	fFollow          = flag.Bool("f", false, "whether to follow symlinks or not (recursively) [*]")
 	fDie             = flag.Bool("d", false, "die on first notification; only consider -p and -f flags")
@@ -156,26 +156,27 @@ func (w *watcher) close() error {
 	return nil
 }
 
-func (w *watcher) recursiveWatchAdd(p string) error {
+func (w *watcher) recursiveWatchAdd(p string) {
 	// p is a path; may or may not be a directory
 
 	fi, err := os.Stat(p)
 	if err != nil {
-		panic(err)
+		debugf("recursiveWatchAdd: os.Stat(%v): %v", p, err)
+		return
 	}
 	if !fi.IsDir() {
 		hashCache[p] = hash(p)
 		if err := w.iwatcher.Add(p); err != nil {
-			panic(err)
+			debugf("recursiveWatchAdd: watcher add to %v: %v", p, err)
 		}
-		return nil
+		return
 	}
 
 	walker := fs.Walk(p)
 WalkLoop:
 	for walker.Step() {
 		if err := walker.Err(); err != nil {
-			// TODO better than silently continue?
+			debugf("recursiveWatchAdd: walker.Err: %v", err)
 			continue
 		}
 		s := walker.Stat()
@@ -203,15 +204,14 @@ WalkLoop:
 				}
 			}
 			if err := w.iwatcher.Add(walker.Path()); err != nil {
-				// TODO anything better to do that just swallow it?
+				debugf("recursiveWatchAdd: walker add watch to dir member %v: %v", walker.Path(), err)
 			}
 		} else {
 			if err := w.iwatcher.Add(walker.Path()); err != nil {
-				// TODO anything better to do that just swallow it?
+				debugf("recursiveWatchAdd: walker add watch to %v: %v", walker.Path(), err)
 			}
 		}
 	}
-	return nil
 }
 
 func (w *watcher) recursiveWatchRemove(p string) error {
@@ -238,17 +238,19 @@ func (w *watcher) watchOnce(p string) {
 	os.Exit(retVal)
 }
 
-func hash(fn string) string {
+// in case of any errors simply return "" because we're probably
+// racing with another process
+func hash(fn string) (res string) {
 	h := sha256.New()
 
 	fi, err := os.Stat(fn)
 	if err != nil {
-		fatalf("failed to stat %v for hashing: %v", fn, err)
+		return
 	}
 
 	f, err := os.Open(fn)
 	if err != nil {
-		fatalf("failed to open %v for hashing: %v", fn, err)
+		return
 	}
 
 	defer f.Close()
@@ -256,7 +258,7 @@ func hash(fn string) string {
 	if fi.IsDir() {
 		ns, err := f.Readdirnames(0)
 		if err != nil {
-			fatalf("failed to read dir contents from %v: %v", fn, err)
+			return
 		}
 
 		for _, e := range ns {
@@ -264,7 +266,7 @@ func hash(fn string) string {
 		}
 	} else {
 		if _, err := io.Copy(h, f); err != nil {
-			fatalf("failed to hash %v: %v", fn, err)
+			return
 		}
 	}
 
@@ -321,7 +323,7 @@ func (w *watcher) watchLoop(p string) {
 					}
 				}
 				buffer = append(buffer, e)
-				timers = append(timers, time.After(*fQuiet))
+				timers = append(timers, time.After(w.quiet))
 			case <-timeout:
 				e := buffer[0]
 				buffer = buffer[1:]
@@ -336,7 +338,6 @@ func (w *watcher) watchLoop(p string) {
 
 	}()
 
-Loop:
 	for {
 		select {
 		case e := <-w.iwatcher.Events:
@@ -346,17 +347,9 @@ Loop:
 			// removes somehow
 			switch e.Op {
 			case fsnotify.Create:
-				err := w.recursiveWatchAdd(e.Name)
-				if err != nil {
-					// TODO anything better to do that just swallow it?
-				}
-				continue Loop
+				w.recursiveWatchAdd(e.Name)
 			case fsnotify.Remove, fsnotify.Rename:
-				err := w.recursiveWatchRemove(e.Name)
-				if err != nil {
-					// TODO anything better to do that just swallow it?
-				}
-				continue Loop
+				w.recursiveWatchRemove(e.Name)
 			}
 
 			debugf("event loop> %v for %v\n", e.Op, e.Name)
@@ -388,8 +381,6 @@ func (w *watcher) commandLoop(workBus chan struct{}) {
 
 	runCmd := func() {
 		if command != nil {
-			// TODO assume this would only fail if the process has
-			// already died... hence silently ignore
 			_ = command.Process.Kill()
 		}
 		if w.clearScreen {
