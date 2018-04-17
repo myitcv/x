@@ -31,9 +31,10 @@ const (
 	tmplBlock = commStart + " " + tagTmpl + ":"
 	jsonBlock = commStart + " " + tagJson + ":"
 
-	optionStart  = '#'
-	optionLong   = "LONG"
-	optionOnline = "ONLINE"
+	optionStart         = '#'
+	optionLong          = "LONG"
+	optionOnline        = "ONLINE"
+	optionSortInvariant = "SORTINVARIANT"
 )
 
 var options = []string{

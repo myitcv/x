@@ -27,6 +27,7 @@ go get -u myitcv.io/cmd/gg
 ### Usage
 
 ```
+Flags:
   -X value
     	packages to exclude
   -l	list go generate directive commands in packages

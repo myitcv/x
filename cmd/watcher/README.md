@@ -27,6 +27,7 @@ go get -u myitcv.io/cmd/watcher
 ### Usage
 
 ```
+Flags:
   -I value
     	Paths to ignore. Absolute paths are absolute to the path; relative paths
     	can match anywhere in the tree

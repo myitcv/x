@@ -27,6 +27,7 @@ go get -u myitcv.io/cmd/modpub
 ### Usage
 
 ```
+Flags:
   -target string
     	target directory for publishing
   -v	give verbose output
