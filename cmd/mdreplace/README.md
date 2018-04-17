@@ -77,8 +77,8 @@ Flags:
     	run ONLINE blocks
   -strip
     	whether to strip special comments from the file
-  -w	whether to write back to input files (cannot be used when reading from 
-  stdin)
+  -w	whether to write back to input files (cannot be used when reading from
+    	stdin)
 
 ```
 <!-- END -->

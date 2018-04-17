@@ -72,7 +72,7 @@ type errors []immErr
 //go:generate pkgconcat -out gen_cliflag.go myitcv.io/_tmpls/cliflag
 
 func main() {
-	flag.Parse()
+	setupAndParseFlags("")
 
 	wd, err := os.Getwd()
 	if err != nil {

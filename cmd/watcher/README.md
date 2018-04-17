@@ -28,7 +28,7 @@ go get -u myitcv.io/cmd/watcher
 
 ```
   -I value
-    	Paths to ignore. Absolute paths are absolute to the path; relative paths 
+    	Paths to ignore. Absolute paths are absolute to the path; relative paths
     	can match anywhere in the tree
   -c	do not clear the screen before running the command
   -d	die on first notification; only consider -p and -f flags
@@ -40,8 +40,8 @@ go get -u myitcv.io/cmd/watcher
   -p string
     	the path to watch; default is CWD [*]
   -q duration
-    	the duration of the 'quiet' window; format is 1s, 10us etc. Min 1 
-    	millisecond (default 20ms)
+    	the duration of the 'quiet' window; format is 1s, 10us etc. Min 1
+    	millisecond (default 100ms)
   -t duration
     	the timeout after which a process is killed; not valid with -k
 

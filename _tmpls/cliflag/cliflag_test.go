@@ -21,15 +21,15 @@ func TestFoldOnSpaces(t *testing.T) {
 		},
 		{
 			i: "the quick brown fox jumped over the lazy sleeping dog",
-			o: "the quick brown fox \n" +
-				"jumped over the \n" +
+			o: "the quick brown fox\n" +
+				"jumped over the\n" +
 				"lazy sleeping dog",
 		},
 		{
 			i: "\t\tthe quick brown fox jumped over the lazy sleeping dog",
-			o: "\t\tthe quick brown \n" +
-				"\t\tfox jumped over \n" +
-				"\t\tthe lazy sleeping \n" +
+			o: "\t\tthe quick brown\n" +
+				"\t\tfox jumped over\n" +
+				"\t\tthe lazy sleeping\n" +
 				"\t\tdog",
 		},
 		{
@@ -37,14 +37,14 @@ func TestFoldOnSpaces(t *testing.T) {
 		-outpkgname string
 		name of package to output; if not specified take the package name of the input directory/import path`,
 			o: "Flags:\n" +
-				"\t\t-outpkgname \n" +
+				"\t\t-outpkgname\n" +
 				"\t\tstring\n" +
-				"\t\tname of package \n" +
-				"\t\tto output; if not \n" +
-				"\t\tspecified take \n" +
-				"\t\tthe package name \n" +
-				"\t\tof the input \n" +
-				"\t\tdirectory/import \n" +
+				"\t\tname of package\n" +
+				"\t\tto output; if not\n" +
+				"\t\tspecified take\n" +
+				"\t\tthe package name\n" +
+				"\t\tof the input\n" +
+				"\t\tdirectory/import\n" +
 				"\t\tpath",
 		},
 	}
@@ -54,7 +54,7 @@ func TestFoldOnSpaces(t *testing.T) {
 
 		res := foldOnSpaces(c.i, w)
 		if res != out {
-			t.Errorf("%q failed to fold to %q; got %q", c.i, out, res)
+			t.Errorf("%q failed to fold to\n%q; got\n%q", c.i, out, res)
 		}
 	}
 }
