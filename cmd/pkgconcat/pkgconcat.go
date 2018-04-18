@@ -34,8 +34,6 @@ func main() {
 pkgconcat takes an optional single argument that is a directory or an import
 path. A directory is indicated by being an absolute path; anything else is
 treated as an import path.
-
-Flags:
 `)
 
 	// if we have an import path convert it to a directory
