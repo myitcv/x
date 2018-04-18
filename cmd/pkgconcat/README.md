@@ -47,12 +47,11 @@ Usage:
 pkgconcat takes an optional single argument that is a directory or an import
 path. A directory is indicated by being an absolute path; anything else is
 treated as an import path.
-
 Flags:
   -out string
     	path to which to write output; if not specified STDOUT is used
   -outpkgname string
-    	name of package to output; if not specified take the package name of the 
+    	name of package to output; if not specified take the package name of the
     	input directory/import path
 
 ```

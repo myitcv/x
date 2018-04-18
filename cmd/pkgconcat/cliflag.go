@@ -1,5 +1,7 @@
 package main
 
+// this is a manual copy of myitcv.io/_tmpls/cliflag to bootstrap pkgconcat
+
 import (
 	"bufio"
 	"flag"

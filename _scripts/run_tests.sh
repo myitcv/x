@@ -99,3 +99,18 @@ do
 done
 
 _scripts/update_readmes.sh
+
+if [ "${CI:-}" == "true" ]
+then
+	function verifyGoGet() {
+		local pkg=$1
+		echo "Verifying go get for $pkg"
+		(
+		cd `mktemp -d`
+		export GOPATH=$PWD
+		go get $pkg
+		)
+	}
+
+	verifyGoGet "myitcv.io/cmd/concsh"
+fi

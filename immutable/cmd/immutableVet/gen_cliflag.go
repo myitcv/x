@@ -6,7 +6,6 @@ import (
 	"bufio"
 	"flag"
 	"fmt"
-	"golang.org/x/text/unicode/norm"
 	"os"
 	"strings"
 	"unicode"
@@ -91,8 +90,6 @@ Line:
 		sincelastTab := 0
 		seenTab := false
 
-		var ia norm.Iter
-		ia.InitString(norm.NFD, carry)
 		nc := len(indent)
 
 		if nc >= width {
@@ -103,13 +100,14 @@ Line:
 		var space string
 
 	Space:
-		for !ia.Done() {
-			prevPos := ia.Pos()
-			nbs := ia.Next()
+		for i := 0; i < len(carry); {
+			prevPos := i
+			nbs, rw := utf8.DecodeRuneInString(carry[i:])
+			i += rw
 
 			nc++
 
-			if nbs[0] == '\t' {
+			if nbs == '\t' {
 				seenTab = true
 			}
 
@@ -128,7 +126,7 @@ Line:
 
 				if nc >= width {
 					res.WriteString("\n")
-					carry = strings.TrimLeftFunc(carry[ia.Pos():], unicode.IsSpace)
+					carry = strings.TrimLeftFunc(carry[prevPos:], unicode.IsSpace)
 
 					if seenTab {
 						indent += strings.Repeat(" ", sincelastTab) + "\t"
@@ -142,7 +140,7 @@ Line:
 
 			} else {
 				if lastSpace == -1 {
-					res.Write(nbs)
+					res.WriteRune(nbs)
 					continue Space
 				}
 
@@ -169,9 +167,7 @@ Line:
 
 	return res.String()
 }
-func isSplitter(byts []byte) bool {
-	r, _ := utf8.DecodeRune(byts)
-
+func isSplitter(r rune) bool {
 	if unicode.IsSpace(r) {
 		return true
 	}
