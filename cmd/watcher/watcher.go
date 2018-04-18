@@ -161,13 +161,13 @@ func (w *watcher) recursiveWatchAdd(p string) {
 
 	fi, err := os.Stat(p)
 	if err != nil {
-		debugf("recursiveWatchAdd: os.Stat(%v): %v", p, err)
+		debugf("** recursiveWatchAdd: os.Stat(%v): %v\n", p, err)
 		return
 	}
 	if !fi.IsDir() {
 		hashCache[p] = hash(p)
 		if err := w.iwatcher.Add(p); err != nil {
-			debugf("recursiveWatchAdd: watcher add to %v: %v", p, err)
+			debugf("** recursiveWatchAdd: watcher add to %v: %v\n", p, err)
 		}
 		return
 	}
@@ -176,7 +176,7 @@ func (w *watcher) recursiveWatchAdd(p string) {
 WalkLoop:
 	for walker.Step() {
 		if err := walker.Err(); err != nil {
-			debugf("recursiveWatchAdd: walker.Err: %v", err)
+			debugf("** recursiveWatchAdd: walker.Err: %v\n", err)
 			continue
 		}
 		s := walker.Stat()
@@ -204,11 +204,11 @@ WalkLoop:
 				}
 			}
 			if err := w.iwatcher.Add(walker.Path()); err != nil {
-				debugf("recursiveWatchAdd: walker add watch to dir member %v: %v", walker.Path(), err)
+				debugf("** recursiveWatchAdd: walker add watch to dir member %v: %v\n", walker.Path(), err)
 			}
 		} else {
 			if err := w.iwatcher.Add(walker.Path()); err != nil {
-				debugf("recursiveWatchAdd: walker add watch to %v: %v", walker.Path(), err)
+				debugf("** recursiveWatchAdd: walker add watch to %v: %v\n", walker.Path(), err)
 			}
 		}
 	}

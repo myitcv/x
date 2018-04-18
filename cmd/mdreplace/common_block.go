@@ -1,8 +1,10 @@
 package main
 
 import (
+	"bytes"
 	"os"
 	"os/exec"
+	"sort"
 	"strconv"
 	"strings"
 	"text/template"
@@ -17,6 +19,7 @@ func (p *processor) processCommonBlock(prefix string, conv func([]byte) interfac
 	var args []string
 	var options []string
 
+	sortInvariant := false
 	execute := true
 
 Args:
@@ -39,6 +42,8 @@ Args:
 					execute = execute && *fLong
 				case optionOnline:
 					execute = execute && *fOnline
+				case optionSortInvariant:
+					sortInvariant = true
 				default:
 					p.errorf("unknown option %v", i.val)
 				}
@@ -109,6 +114,8 @@ Args:
 		p.printf("\n%v"+commEnd+"\n", tmpl)
 	}
 
+	prevBuf := new(bytes.Buffer)
+
 	// again we can expect text or code fence blocks here; we are just
 	// going to ignore them.
 	for p.curr.typ != itemtype.ItemBlockEnd {
@@ -116,6 +123,10 @@ Args:
 		case itemtype.ItemCodeFence, itemtype.ItemCode, itemtype.ItemText:
 			if !execute {
 				p.print(p.curr.val)
+			} else {
+				if _, err := prevBuf.WriteString(p.curr.val); err != nil {
+					p.errorf("failed to write to prevBuf: %v", err)
+				}
 			}
 		default:
 			p.errorf("didn't expect to see a %v", p.curr.typ)
@@ -125,6 +136,8 @@ Args:
 
 	// consume the block end
 	p.next()
+
+	output := prevBuf
 
 	if execute {
 		// ok now process the command, parse the template and write everything
@@ -141,10 +154,43 @@ Args:
 
 		i := conv(out)
 
-		if err := t.Execute(p.out, i); err != nil {
+		newBuf := new(bytes.Buffer)
+
+		if err := t.Execute(newBuf, i); err != nil {
 			p.errorf("failed to execute template %q with input %q: %v", tmpl, i, err)
 		}
+
+		newOutput := func() bool {
+			// line-wise sort prevBuf and newBuf
+			p := prevBuf.String()
+			n := newBuf.String()
+
+			ps := strings.Split(p, "\n")
+			ns := strings.Split(n, "\n")
+
+			if len(ps) != len(ns) {
+				return true
+			}
+
+			sort.Strings(ps)
+			sort.Strings(ns)
+
+			for i := range ps {
+				if ps[i] != ns[i] {
+					return true
+				}
+			}
+
+			return false
+		}
+
+		// if sortInvariant then we want to only write the output if it has changed
+		if !sortInvariant || newOutput() {
+			output = newBuf
+		}
 	}
+
+	p.print(output.String())
 
 	if !*fStrip {
 		p.println(blockEnd)

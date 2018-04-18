@@ -76,8 +76,6 @@ func main() {
   mdreplace
 
 When called with no file arguments, mdreplace works with stdin
-
-Flags:
 `)
 
 	args := flag.Args()

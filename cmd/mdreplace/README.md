@@ -67,7 +67,6 @@ Usage:
   mdreplace
 
 When called with no file arguments, mdreplace works with stdin
-
 Flags:
   -debug
     	whether to print debug information of not

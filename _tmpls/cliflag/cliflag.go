@@ -21,6 +21,7 @@ func setupAndParseFlags(msg string) {
 		res := new(strings.Builder)
 		fmt.Fprint(res, msg)
 
+		res.WriteString("Flags:\n")
 		flag.CommandLine.SetOutput(res)
 		flag.PrintDefaults()
 		res.WriteString("\n")
