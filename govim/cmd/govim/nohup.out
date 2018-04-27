@@ -1,0 +1,11 @@
+running as a server with debug = true
+listening on address :1982
+got new connection
+fd25028d77: handling new connection
+fd25028d77: sent response [0,"fd25028d77"]
+fd25028d77: waiting for question
+running as a server with debug = true
+listening on address :1982
+d1bc927aed: handling new connection
+d1bc927aed: sent response [0,"d1bc927aed"]
+d1bc927aed: waiting for question
