@@ -1,1 +1,1 @@
-module "myitcv.io/_tmpls"
+module myitcv.io/_tmpls

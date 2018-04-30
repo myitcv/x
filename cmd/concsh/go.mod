@@ -1,1 +1,1 @@
-module "myitcv.io/cmd/concsh"
+module myitcv.io/cmd/concsh

@@ -1,1 +1,1 @@
-module "myitcv.io/cmd/pkgconcat"
+module myitcv.io/cmd/pkgconcat

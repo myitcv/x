@@ -1,1 +1,1 @@
-module "myitcv.io/gogenerate"
+module myitcv.io/gogenerate
