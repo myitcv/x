@@ -8,13 +8,18 @@ source $(git rev-parse --show-toplevel)/_scripts/common.bash
 # install vgo on CI server
 if [ "${CI:-}" == "true" ]
 then
-	go get -u golang.org/x/vgo
-	pushd $(go list -f "{{.Dir}}" golang.org/x/vgo) > /dev/null
-
+	# whilst we wait for -deps support in vgo we use my hacked up
+	# deplist
+	#
+	# go get -u golang.org/x/vgo
+	# pushd $(go list -f "{{.Dir}}" golang.org/x/vgo) > /dev/null
 	# git checkout -qf $VGO_COMMIT
 
-	# override from deplist CL
-	git fetch -q https://go.googlesource.com/vgo refs/changes/55/105855/4 && git checkout -qf FETCH_HEAD
+	mkdir -p $GOPATH/src/golang.org/x/vgo
+	pushd $GOPATH/src/golang.org/x/vgo > /dev/null
+	git clone -q https://github.com/myitcv/vgo .
+	git checkout -q origin/dep_build_list
+
 	go install
 
 	popd > /dev/null

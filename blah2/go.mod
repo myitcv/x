@@ -1,1 +1,1 @@
-module "myitcv.io/blah2"
+module myitcv.io/blah2

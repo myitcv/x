@@ -11,6 +11,7 @@ import (
 	"go/parser"
 	"go/printer"
 	"go/token"
+	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
@@ -174,25 +175,18 @@ treated as an import path.
 		}
 	}
 
-	outFileName := "/dev/stdout"
-	outFile := os.Stdout
-
-	if *fOutFile != "" {
-		outFileName = *fOutFile
-		f, err := os.Create(*fOutFile)
-		if err != nil {
-			fatalf("failed to open out file %v for writing: %v", *fOutFile, err)
-		}
-
-		outFile = f
-	}
-
 	fmtByts, err := format.Source(outBuf.Bytes())
 	if err != nil {
-		fatalf("failed to format output in %v: %v\n%v", outFileName, err, outBuf.String())
+		fatalf("failed to format output: %v\n%v", err, outBuf.String())
 	}
 
-	if _, err := outFile.Write(fmtByts); err != nil {
-		fatalf("failed to write output to %v: %v", outFileName, err)
+	if *fOutFile != "" {
+		if err := ioutil.WriteFile(*fOutFile, fmtByts, 0644); err != nil {
+			fatalf("failed to write to %v: %v", *fOutFile, err)
+		}
+	} else {
+		if _, err := os.Stdout.Write(fmtByts); err != nil {
+			fatalf("failed to write output to stdout: %v", err)
+		}
 	}
 }
