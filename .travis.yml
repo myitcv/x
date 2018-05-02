@@ -4,11 +4,14 @@ addons:
   chrome: beta
 
 go:
-  - 1.x.x
+  - 1.x
 
 go_import_path: myitcv.io
 
 before_script:
+  - ./_scripts/installGo.sh
+  - export PATH=$HOME/gotip/bin:$PATH
+  - go version
   - curl -s https://chromedriver.storage.googleapis.com/2.33/chromedriver_linux64.zip > /tmp/chromedriver_linux64.zip
   - unzip -d /tmp/chromedriver_linux64 /tmp/chromedriver_linux64.zip
   - export PATH=$PATH:/tmp/chromedriver_linux64
