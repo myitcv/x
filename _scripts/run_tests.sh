@@ -5,6 +5,12 @@
 
 source $(git rev-parse --show-toplevel)/_scripts/common.bash
 
+if [ "${CI:-}" == "true" ]
+then
+	go clean -cache
+	go clean -testcache
+fi
+
 # install vgo on CI server
 if [ "${CI:-}" == "true" ]
 then
