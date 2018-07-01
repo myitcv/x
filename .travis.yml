@@ -11,7 +11,7 @@ addons:
   chrome: beta
 
 go:
-  - 1.x
+  - stable
 
 go_import_path: myitcv.io
 
