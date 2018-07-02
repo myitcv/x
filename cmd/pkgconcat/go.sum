@@ -1,0 +1,4 @@
+github.com/kr/fs v0.0.0-20131111012553-2788f0dbd169 h1:YUrU1/jxRqnt0PSrKj1Uj/wEjk/fjnE80QFfi2Zlj7Q=
+github.com/kr/fs v0.0.0-20131111012553-2788f0dbd169/go.mod h1:glhvuHOU9Hy7/8PwwdtnarXqLagOX0b/TbZx2zLMqEg=
+myitcv.io/cmd/modpub v0.0.0-20180702093358-5e591d073e90 h1:Yud568ZslrwNxvVLRl6k6FXilzGAhF5N/lrD89dzuh0=
+myitcv.io/cmd/modpub v0.0.0-20180702093358-5e591d073e90/go.mod h1:deNC1wP9xqsmQI1w9XU2/TFIDrFLC3sJtxfnwe17KXg=

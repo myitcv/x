@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package common;
+
+import public "google/protobuf/descriptor.proto";
+
+extend google.protobuf.FieldOptions {
+  bool key = 51234;
+  bool uuid = 52234;
+  string target = 52235;
+  bool argb = 52236;
+  string symbol = 52237;
+  bool object = 52238;
+}
+
+extend google.protobuf.MethodOptions {
+  bool has_side_effects = 51235;
+}

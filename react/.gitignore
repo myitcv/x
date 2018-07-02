@@ -1,0 +1,5 @@
+/examples/**/*.js
+/examples/**/*.js.map
+!/examples/sites/common/bootstrap/bootstrap.min.js
+!/examples/sites/common/jquery/jquery.min.js
+

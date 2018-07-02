@@ -7,21 +7,26 @@ source $(git rev-parse --show-toplevel)/_scripts/common.bash
 
 cd $(git rev-parse --show-toplevel)
 
-$go install golang.org/x/tools/cmd/goimports
+go install golang.org/x/tools/cmd/goimports
 
-args="-l"
-if [ $# -gt 0 ]
+# in case we don't have any matching files in the globs below
+shopt -s nullglob
+
+z=$(goimports -l $(git ls-files | grep -v '^_vendor' | grep -v '^react/_talks' | grep '.go$' | grep -v '/gen_[^/]*$'))
+if [ ! -z "$z" ]
 then
-	args="$@"
+	echo "The following files are not formatted:"
+	echo ""
+	echo "$z"
+	exit 1
 fi
 
-u=$(goimports $args **/!(gen_*).go)
-u=$u$(gofmt $args **/gen_*.go)
+z=$(gofmt -l $(git ls-files | grep -v '^_vendor' | grep -v '^react/_talks' | grep '/gen_[^/]*.go$'))
 
-if [ "$u" != "" ]
+if [ ! -z "$z" ]
 then
-	echo "The following files are not formatted"
+	echo "The following generated files are not formatted:"
 	echo ""
-	echo "$u"
+	echo "$z"
 	exit 1
 fi

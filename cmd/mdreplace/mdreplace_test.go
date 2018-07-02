@@ -87,7 +87,7 @@ Something`,
 	{
 		name: "__JSON block simple",
 		in: `This is a test
-<!-- __JSON: vgo list -json .
+<!-- __JSON: go list -json .
 {{.ImportPath}}
 -->
 myitcv.io/cmd/mdreplace
@@ -97,14 +97,14 @@ Something`,
 	{
 		name: "__JSON block with bad original contents",
 		in: `This is a test
-<!-- __JSON: vgo list -json .
+<!-- __JSON: go list -json .
 {{.ImportPath}}
 -->
 rubbish
 <!-- END -->
 Something`,
 		ot: strVal(`This is a test
-<!-- __JSON: vgo list -json .
+<!-- __JSON: go list -json .
 {{.ImportPath}}
 -->
 myitcv.io/cmd/mdreplace
