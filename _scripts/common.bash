@@ -29,4 +29,4 @@ trap 'set +u; error "${LINENO}" "${BASH_SOURCE}"' ERR
 
 # we can always side-step this if required with "go"
 go=vgo
-gg="gg -vgo"
+gg="$go generate"
