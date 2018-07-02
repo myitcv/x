@@ -59,7 +59,7 @@ fi
 export PATH=$GOPATH/bin:$PATH
 
 # work out a better way of priming the build tools
-for i in cmd/pkgconcat cmd/gg
+for i in cmd/pkgconcat
 do
 	pushd $i > /dev/null
 	$go install .
