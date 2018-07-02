@@ -58,7 +58,7 @@ func main() {
 	}
 
 	if _, err := os.Stat(target); os.IsNotExist(err) {
-		fatalf("target %v must exist")
+		fatalf("target %v must exist", target)
 	}
 
 	repoRoot := cwd
