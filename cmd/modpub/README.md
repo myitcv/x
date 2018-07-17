@@ -17,7 +17,7 @@ go get -u myitcv.io/cmd/modpub
 <!-- END -->
 
 
-<!-- __TEMPLATE: sh -c "${DOLLAR}(go list -f '{{.ImportPath}}' | xargs basename) -h"
+<!-- __TEMPLATE: bash -c "${DOLLAR}(go list -f '{{.ImportPath}}' | xargs basename) -h"
 ### Usage
 
 ```
@@ -34,39 +34,6 @@ Flags:
 
 ```
 <!-- END -->
-
-### Example
-
-The [`myitcv.io/...` mono-repo](https://github.com/myitcv/x) has its `vgo` modules published to
-https://github.com/myitcv/pubx. Once we get a resolution on https://github.com/golang/go/issues/24751, `pubx` will serve
-as the `go-import` `mod` target.
-
-`pubx` is effectively built using the following commands:
-
-<!-- __TEMPLATE: sh -c "sh _scripts/readme_example > /dev/null 2>&1 && cat _scripts/readme_example" # LONG ONLINE
-```bash
-{{ trimLinePrefixWhitespace . "# ** SCRIPT START **" }}
-```
--->
-```bash
-# clone the mono repo
-git clone -q https://github.com/myitcv/x src/myitcv.io
-
-# get modpub
-go get -u myitcv.io/cmd/modpub
-
-# create our target directory
-mkdir pubx
-
-cd src/myitcv.io
-git checkout -qf c57b27668caebdef755844c84016f8bf1cf618fe
-
-modpub -target ../../pubx
-
-```
-<!-- END -->
-
-The resulting directory structure can be seen in the https://github.com/myitcv/pubx repository.
 
 ### Status
 

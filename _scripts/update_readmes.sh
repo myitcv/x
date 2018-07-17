@@ -21,4 +21,4 @@ fi
 
 # by this point we will have mdreplace installed. Hence check that
 # committed .md files are "fresh"
-mdreplace $args -w **/*.md
+mdreplace $args -w $(git ls-files !(_vendor)/**/*.md *.md)

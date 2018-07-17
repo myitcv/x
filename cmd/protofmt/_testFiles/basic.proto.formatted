@@ -1,0 +1,38 @@
+syntax = "proto3";
+
+package testapi;
+
+option go_package = "testapi";
+
+import "common.proto";
+
+message Test1 {
+	enum NestedEnum {
+		DEFAULT = 0;
+	}
+	int32 int32_field = 3;
+	string string_field = 14 [(common.key)=true];
+	oneof oneof_group {
+		int32 oneof_int32_field = 50;
+	}
+	repeated int32 repeated_int32_field = 100;
+	map<string, int32> map_string_int32_field = 156;
+	message NestedMsg1 {
+		message NestedMsg2 {
+			int32 int32_field = 1;
+		}
+		NestedMsg2 nested_msg2_field = 1;
+	}
+}
+message Test2 {
+	int64 seconds = 1;
+}
+enum TopLevelEnum {
+	FIRST_VAL = 0;
+}
+service TestGreeter3 {
+	rpc GetTestMessage (Test1) returns (Test1);
+	rpc BumpVersion (Test1) returns (Test1) {
+		option (common.has_side_effects) = true;
+	}
+}

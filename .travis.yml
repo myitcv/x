@@ -7,8 +7,11 @@ notifications:
     on_success: change
     on_failure: always
 
-addons:
-  chrome: beta
+matrix:
+  include:
+    - env: CHROMEDRIVER_VERSION=2.40 CHROME_CHANNEL=beta
+      addons:
+        chrome: beta
 
 go:
   - stable
@@ -17,9 +20,8 @@ go_import_path: myitcv.io
 
 before_script:
   - go version
-  - curl -s https://chromedriver.storage.googleapis.com/2.40/chromedriver_linux64.zip > /tmp/chromedriver_linux64.zip
-  - unzip -d /tmp/chromedriver_linux64 /tmp/chromedriver_linux64.zip
-  - export PATH=$PATH:/tmp/chromedriver_linux64
+  - ./_scripts/setupCIEnv.sh
+  - mkdir /tmp/google-chrome-bin && ln -s /usr/bin/google-chrome-$CHROME_CHANNEL /tmp/google-chrome-bin/google-chrome && export PATH=/tmp/google-chrome-bin:$PATH
 
 install: true
 

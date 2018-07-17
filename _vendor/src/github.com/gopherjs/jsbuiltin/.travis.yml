@@ -1,0 +1,20 @@
+language: go
+go:
+  - 1.10.x
+
+addons:
+  apt:
+    packages:
+      - nodejs
+
+go_import_path: github.com/gopherjs/jsbuiltin
+
+install:
+  - node --version
+  - go version
+  - go get -u github.com/gopherjs/gopherjs
+  - npm install source-map-support
+
+script:
+  - diff -u <(echo -n) <(gofmt -d ./)
+  - gopherjs test

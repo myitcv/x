@@ -1,0 +1,74 @@
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Go Present Viewer</title>
+
+    <style>
+      html, body {
+        height: 100%;
+        margin: 0
+      }
+
+      .box {
+        display: flex;
+        flex-flow: column;
+        height: 100%;
+      }
+
+      .box .row.header {
+        flex: 0 1 auto;
+      }
+
+      .box .row.content {
+        display: flex;
+        flex-flow: column;
+        flex: 1 1 auto;
+        overflow-y: auto;
+        align-items: center;
+        justify-content: center;
+        overflow-x: hidden;
+      }
+
+      #addressbar {
+        box-sizing: border-box;
+        width: 100%;
+        display: block;
+        padding: 0.5rem 0.75rem;
+        line-height: 1.25;
+        font-size: 14px;
+      }
+
+      .placeholder {
+        font-family: system-ui;
+        color: lightgray;
+      }
+
+      .placeholder.arrow {
+        font-size: 120px;
+      }
+
+      .placeholder.text {
+        font-size: 60px;
+      }
+
+      .placeholder.error {
+        font-size: 40px;
+        color: red;
+      }
+
+      .placeholder.status {
+        font-size: 40px;
+        color: lightgray;
+      }
+    </style>
+  </head>
+  <body>
+
+    <div class="box" id="app"></div>
+
+    <script src="present.js"></script>
+  </body>
+</html>
