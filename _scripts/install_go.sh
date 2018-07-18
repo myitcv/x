@@ -2,22 +2,20 @@
 
 source "${BASH_SOURCE%/*}/common.bash"
 
+trap "go version" EXIT
+
+if [ "${USE_GO_TIP:-}" != "true" ]
+then
+	# nothing to do
+	exit
+fi
+
+source="https://github.com/myitcv/gobuilds/raw/master/linux_amd64/$GO_TIP_VERSION.tar.gz"
 target=$HOME/gotip
 
-echo "Will install ${GOTIP_VERSION:0:10} from $GOTIP_REPO to $target"
+echo "Will install ${GO_TIP_VERSION:0:10} from $source to $target"
 
 mkdir -p $target
 cd $target
 
-if [ ! -e .git ]
-then
-	echo cloning
-	git clone -q $GOTIP_REPO .
-else
-	echo fetching
-	git fetch -q $GOTIP_REPO
-fi
-
-git checkout -qf $GOTIP_VERSION
-cd src
-GOROOT_BOOTSTRAP=$(go env GOROOT) ./make.bash
+curl -L -s $source | tar -xz
