@@ -4,7 +4,7 @@
 // Package remarkable provides an incomplete wrapper for remarkable (https://github.com/jonschlinkert/remarkable),
 // a pure Javascript markdown parser
 //
-package remarkable // import "myitcv.io/remarkable"
+package remarkable
 
 import "github.com/gopherjs/gopherjs/js"
 

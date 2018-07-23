@@ -4,13 +4,14 @@ import (
 	"fmt"
 	"go/ast"
 	"go/build"
-	"go/importer"
 	"go/parser"
 	"go/token"
 	"go/types"
 	"path"
 	"sort"
 	"strings"
+
+	"myitcv.io/hybridimporter"
 )
 
 const (
@@ -92,15 +93,20 @@ func (r *reactVetter) vetPackages() {
 			continue
 		}
 
+		imp, err := hybridimporter.New(&build.Default, fset, ".")
+		if err != nil {
+			fatalf("failed to create importer: %v", err)
+		}
+
 		conf := types.Config{
-			Importer: importer.Default(),
+			Importer: imp,
 		}
 		info := &types.Info{
 			Defs:  make(map[*ast.Ident]types.Object),
 			Types: make(map[ast.Expr]types.TypeAndValue),
 			Uses:  make(map[*ast.Ident]types.Object),
 		}
-		_, err := conf.Check(r.bpkg.ImportPath, fset, files, info)
+		_, err = conf.Check(r.bpkg.ImportPath, fset, files, info)
 		if err != nil {
 			fatalf("type checking failed, %v", err)
 		}

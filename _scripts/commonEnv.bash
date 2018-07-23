@@ -20,15 +20,6 @@ then
 	export PROTOBUF_INSTALL_DIR=$CI_DEPENDENCIES_DIR/protobuf
 
 	export CHROMEDRIVER_INSTALL_DIR=$CI_DEPENDENCIES_DIR/chromedriver
-
-	# gross hack because Travis does not update the google-chrome alternative
-	# properly
-	if [ ! -d /tmp/google-chrome-bin ]
-	then
-		mkdir /tmp/google-chrome-bin
-		ln -s /usr/bin/google-chrome-$CHROME_CHANNEL /tmp/google-chrome-bin/google-chrome
-	fi
-	export PATH=/tmp/google-chrome-bin:$PATH
 fi
 
 if [ "${PROTOBUF_VERSION:-}" == "" ]

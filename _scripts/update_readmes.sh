@@ -7,14 +7,14 @@ source $(git rev-parse --show-toplevel)/_scripts/common.bash
 
 args=""
 
-if [ "${CI:-}" == "true" ]
+if [ $(running_on_ci_server) == "yes" ]
 then
 	echo Checking markdown files are current
 else
 	echo Updating markdown files
 fi
 
-if [ "${CI:-}" == "true" ] || [ "${1:-}" == "-f" ]
+if [ $(running_on_ci_server) == "yes" ] || [ "${1:-}" == "-f" ]
 then
 	args="-long -online"
 fi

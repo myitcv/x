@@ -37,4 +37,145 @@ only_run_on_ci_server()
 }
 export -f only_run_on_ci_server
 
+cwd_as_import_path()
+{
+	local i
+	for i in $(sed -e "s/:/\n/g" <<< "$GOPATH")
+	do
+		if [[ "$PWD" =~ $i* ]]
+		then
+			echo ${PWD#${i}/src/}
+			return
+		fi
+	done
+
+	echo "could not resolve $PWD to import path"
+	exit 1
+}
+export -f cwd_as_import_path
+
+subpackages()
+{
+	local ip=$(cwd_as_import_path)
+
+	go list ./... | ( grep -v -f <(sed -e 's+^\(.*\)$+^myitcv.io/\1/+' <<< "$(nested_test_dirs)") || true )
+}
+export -f subpackages
+
+nested_test_dirs()
+{
+	for i in $(find -path ./_scripts -prune -o -name run_tests.sh -printf '%P\n')
+	do
+		dirname $(dirname "$i")
+	done
+}
+export -f nested_test_dirs
+
+nested_test_dir_patterns()
+{
+	nested_test_dirs | sed -e 's+^\(.*\)$+^\1/$+'
+}
+export -f nested_test_dir_patterns
+
+sub_git_files()
+{
+	git ls-files | ( grep -v -f <(sed -e 's+^\(.*\)$+^\1/.*$+' <<< "$(nested_test_dirs)") || true )
+}
+export -f sub_git_files
+
+ensure_go_formatted()
+{
+	if [ "$#" == "0" ]
+	then
+		return
+	fi
+	local z=$(goimports -l "$@")
+	if [ ! -z "$z" ]
+	then
+		echo "The following files are not formatted:"
+		echo ""
+		echo "$z"
+		exit 1
+	fi
+}
+export -f ensure_go_formatted
+
+ensure_go_gen_formatted()
+{
+	if [ "$#" == "0" ]
+	then
+		return
+	fi
+	local z=$(gofmt -l "$@")
+	if [ ! -z "$z" ]
+	then
+		echo "The following generated files are not formatted:"
+		echo ""
+		echo "$z"
+		exit 1
+	fi
+}
+export -f ensure_go_gen_formatted
+
+gen_files()
+{
+	grep '\(^gen_\|/gen_\)[^/]\+$' || true
+}
+export -f gen_files
+
+non_gen_files()
+{
+	grep -v '\(^gen_\|/gen_\)[^/]\+$' || true
+}
+export -f non_gen_files
+
+go_files()
+{
+	grep '/\?[^/]\+.go$' || true
+}
+export -f go_files
+
+non_gen_go_files()
+{
+	go_files | non_gen_files
+}
+export -f non_gen_go_files
+
+gen_go_files()
+{
+	go_files | gen_files
+}
+export -f gen_go_files
+
+run_nested_tests()
+{
+	for i in $(nested_test_dirs)
+	do
+		cat <<EOD
+bash -c "set -e; echo '---- $i'; cd $i; ./_scripts/run_tests.sh; echo '----'; echo ''"
+EOD
+	done | concsh
+}
+export -f run_nested_tests
+
+install_main_go()
+{
+	for i in $(go list -f "{{if eq .Name \"main\"}}{{.Dir}}{{end}}" "$@")
+	do
+		pushd $i > /dev/null
+		go install
+		popd > /dev/null
+	done
+}
+export -f install_main_go
+
+# workaround for Go 1.10 pre export data in Go 1.11
+install_deps()
+{
+	go list -f "{{ range .Deps}}{{.}}
+	{{end}}" "$@" | xargs go install
+}
+export -f install_deps
+
+# **********************
 LOADED_COMMON_FUNCTIONS=true

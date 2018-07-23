@@ -1,5 +1,5 @@
 // pkgconcat is a simple tool that concatenates the contents of a package into a single file
-package main // import "myitcv.io/cmd/pkgconcat"
+package main
 
 import (
 	"bytes"

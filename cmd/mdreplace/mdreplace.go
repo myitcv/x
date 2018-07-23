@@ -1,7 +1,7 @@
 // mdreplace is a tool to help you keep your markdown README/documentation current.
 //
 // For more information see https://github.com/myitcv/x/blob/master/cmd/mdreplace/README.md
-package main // import "myitcv.io/cmd/mdreplace"
+package main
 
 import (
 	"bytes"

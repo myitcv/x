@@ -3,7 +3,7 @@
 
 //go:generate sortGen -licenseFile license_header.txt
 
-package main // import "myitcv.io/sorter/example"
+package main
 
 import (
 	"fmt"

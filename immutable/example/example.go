@@ -1,7 +1,7 @@
 // Copyright (c) 2016 Paul Jolly <paul@myitcv.org.uk>, all rights reserved.
 // Use of this document is governed by a license found in the LICENSE document.
 
-package example // import "myitcv.io/immutable/example"
+package example
 
 // The following directive will result in a generated file that includes the
 // directive //go:generate echo "hello world"

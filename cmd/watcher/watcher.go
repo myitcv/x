@@ -2,7 +2,7 @@
 // Use of this document is governed by a license found in the LICENSE document.
 
 // watcher is a Linux-based directory watcher for triggering commands
-package main // import "myitcv.io/cmd/watcher"
+package main
 
 import (
 	"crypto/sha256"

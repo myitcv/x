@@ -1,0 +1,5 @@
+source "$(git rev-parse --show-toplevel)/_scripts/commonFunctions.bash"
+
+autostash_or_export DOCKER_IMAGE="x_monorepo"
+autostash_or_export DOCKERFILE_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+autostash_or_export DOCKER_WORKING_DIR="$HOME/gopath/src/myitcv.io"

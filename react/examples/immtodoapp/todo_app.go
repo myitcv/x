@@ -1,4 +1,4 @@
-package immtodoapp // import "myitcv.io/react/examples/immtodoapp"
+package immtodoapp
 
 import (
 	"fmt"

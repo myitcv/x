@@ -4,7 +4,7 @@
 
 // Package srcimporter implements importing directly
 // from source files rather than installed packages.
-package srcimporter // import "myitcv.io/hybridimporter/srcimporter"
+package srcimporter
 
 import (
 	"fmt"

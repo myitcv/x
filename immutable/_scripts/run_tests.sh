@@ -3,37 +3,17 @@
 # Copyright (c) 2016 Paul Jolly <paul@myitcv.org.uk>, all rights reserved.
 # Use of this document is governed by a license found in the LICENSE document.
 
-function error() {
-  local lineno="$1"
-  local file="$2"
+source "$(git rev-parse --show-toplevel)/_scripts/common.bash"
 
-  # intentional so we can test BASH_SOURCE
-  if [[ -n "$file" ]] ; then
-    echo "Error on line $file:$lineno"
-  fi
+cd "${BASH_SOURCE%/*}/.."
 
-  exit 1
-}
+go install myitcv.io/immutable/cmd/immutableGen myitcv.io/immutable/cmd/immutableVet
 
-trap 'set +u; error "${LINENO}" "${BASH_SOURCE}"' ERR
-
-set -u
-set -v
-shopt -s globstar
-shopt -s extglob
-
-rm -f **/gen_*.go
-
-go install myitcv.io/immutable/cmd/immutableGen
-go install myitcv.io/immutable/cmd/immutableVet
-
-pushd cmd/immutableVet/_testFiles
-go generate
-popd
-
-go generate ./...
-go install ./...
-go vet ./...
-go test ./...
+go generate $(subpackages) ./cmd/immutableVet/_testFiles
+go install $(subpackages)
+go test $(subpackages)
+go vet $(subpackages)
 immutableVet myitcv.io/immutable/example
 
+ensure_go_formatted $(sub_git_files | non_gen_go_files)
+ensure_go_gen_formatted $(sub_git_files | gen_go_files)

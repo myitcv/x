@@ -1,4 +1,4 @@
-package todoapp // import "myitcv.io/react/examples/todoapp"
+package todoapp
 
 import (
 	"fmt"

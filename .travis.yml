@@ -1,4 +1,5 @@
-language: go
+language: generic
+sudo: required
 
 notifications:
   email:
@@ -9,20 +10,15 @@ notifications:
 
 matrix:
   include:
-    - env: CHROMEDRIVER_VERSION=2.40 CHROME_CHANNEL=beta
-      go: 1.10.x
-      addons:
-        chrome: beta
+    - env: CHROMEDRIVER_VERSION=2.40 CHROME_CHANNEL=beta GO_VERSION=go1.10.3
 
-go_import_path: myitcv.io
+services:
+  - docker
 
-before_script:
-  - ./_scripts/install_go.sh
-  - ./_scripts/setupCIEnv.sh
-
-install: true
+before_install:
+  - docker --version
+  - source .docker_details
+  - docker build -q --build-arg USER=$USER --build-arg UID=$UID --build-arg DOCKER_WORKING_DIR=$DOCKER_WORKING_DIR --build-arg CHROME_CHANNEL=$CHROME_CHANNEL -t $DOCKER_IMAGE $DOCKERFILE_DIR
 
 script:
-  - ./_scripts/run_tests.sh
-  - ./_scripts/check_code_is_formatted.sh
-  - ./_scripts/check_git_is_clean.sh
+  - docker run -u $USER:$USER --env-file .docker_env_file -v $PWD:$DOCKER_WORKING_DIR -w $DOCKER_WORKING_DIR --rm $DOCKER_IMAGE ./_scripts/docker_run.sh

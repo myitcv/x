@@ -1,4 +1,4 @@
-package main // import "myitcv.io/immutable/cmd/immutableVet"
+package main
 
 import (
 	"bytes"
@@ -20,6 +20,7 @@ import (
 
 	"github.com/kisielk/gotool"
 	"myitcv.io/gogenerate"
+	"myitcv.io/hybridimporter"
 	"myitcv.io/immutable"
 	"myitcv.io/immutable/util"
 )
@@ -113,9 +114,14 @@ func loadImmIntf() {
 		files = append(files, f)
 	}
 
+	imp, err := hybridimporter.New(&build.Default, fset, ".")
+	if err != nil {
+		fatalf("failed to create importer: %v", err)
+	}
+
 	conf := types.Config{
 		FakeImportC: true,
-		Importer:    importer.For("gc", nil),
+		Importer:    imp,
 	}
 
 	tpkg, err := conf.Check(ip, fset, files, nil)

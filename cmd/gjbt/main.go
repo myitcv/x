@@ -1,6 +1,6 @@
 // gjbt is a simple (temporary) wrapper for GopherJS to run tests in Chrome as
 // opposed to NodeJS.
-package main // import "myitcv.io/cmd/gjbt"
+package main
 
 import (
 	"errors"

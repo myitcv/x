@@ -2,7 +2,7 @@
 // Use of this document is governed by a license found in the LICENSE document.
 
 // gitgodoc allows you to view `godoc` documentation for different branches of a Git repository
-package main // import "myitcv.io/cmd/gitgodoc"
+package main
 
 import (
 	"bufio"
