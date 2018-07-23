@@ -4,26 +4,21 @@
 #
 # It also ensures that GOBIN is suitably set and PATH updated to include GOBIN.
 
+source "${BASH_SOURCE%/*}/commonFunctions.bash"
+
 if [ "${LOADED_SETUP_GOPATH:-}" == "true" ]
 then
 	return
 fi
 
-if [ "$(type -t autostash || true)" == "function" ]
-then
-	autostash GOBIN="$(readlink -m "${BASH_SOURCE%/*}/../.bin")"
-else
-	export GOBIN="$(readlink -m "${BASH_SOURCE%/*}/../.bin")"
-fi
+autostash_or_export GOBIN="$(readlink -m "${BASH_SOURCE%/*}/../.bin")"
 
-if [[ "$(go version | cut -d ' ' -f 3)" =~ go1.(9|10).[0-9]+ ]]
+# Pre Go 1.11 check
+# [[ "$(go version | cut -d ' ' -f 3)" =~ go1.(9|10).[0-9]+ ]]
+
+if [ "${GO111MODULE:-}" != "on" ]
 then
-	if [ "$(type -t autostash || true)" == "function" ]
-	then
-		autostash GOPATH="$(readlink -m "${BASH_SOURCE%/*}/../_vendor"):$GOPATH"
-	else
-		export GOPATH="$(readlink -m "${BASH_SOURCE%/*}/../_vendor"):$GOPATH"
-	fi
+	autostash_or_export GOPATH="$(readlink -m "${BASH_SOURCE%/*}/../_vendor"):$GOPATH"
 fi
 
 LOADED_SETUP_GOPATH=true

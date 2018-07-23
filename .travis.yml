@@ -10,18 +10,15 @@ notifications:
 matrix:
   include:
     - env: CHROMEDRIVER_VERSION=2.40 CHROME_CHANNEL=beta
+      go: 1.10.x
       addons:
         chrome: beta
-
-go:
-  - stable
 
 go_import_path: myitcv.io
 
 before_script:
-  - go version
+  - ./_scripts/install_go.sh
   - ./_scripts/setupCIEnv.sh
-  - mkdir /tmp/google-chrome-bin && ln -s /usr/bin/google-chrome-$CHROME_CHANNEL /tmp/google-chrome-bin/google-chrome && export PATH=/tmp/google-chrome-bin:$PATH
 
 install: true
 
