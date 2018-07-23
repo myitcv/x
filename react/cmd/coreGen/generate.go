@@ -380,7 +380,7 @@ func parse{{.Name}}(n *html.Node) *react.{{.Name}}Elem {
 		}
 
 		if err := ioutil.WriteFile(fn, toWrite, 0644); err != nil {
-			fatalf("failed to write to %v; %v", fn)
+			fatalf("failed to write to %v; %v", fn, err)
 		}
 	}
 

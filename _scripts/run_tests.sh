@@ -38,34 +38,27 @@ done
 #
 # run_nested_tests
 
-go generate $(subpackages)
+for i in $(find !(_vendor) -name go.mod -execdir pwd \;)
+do
+	pushd $i > /dev/null
 
-ensure_go_formatted $(sub_git_files | grep -v '^_vendor/' | non_gen_go_files)
-ensure_go_gen_formatted $(sub_git_files | grep -v '^_vendor/' | gen_go_files)
+	go generate $(subpackages)
 
-go test $(subpackages)
+	ensure_go_formatted $(sub_git_files | grep -v '^_vendor/' | non_gen_go_files)
+	ensure_go_gen_formatted $(sub_git_files | grep -v '^_vendor/' | gen_go_files)
 
-install_main_go $(subpackages)
+	go test $(subpackages)
 
-# TODO remove once we have Go 1.11
-install_deps $(subpackages)
+	install_main_go $(subpackages)
 
-go vet $(subpackages)
+	go vet $(subpackages)
+
+	popd > /dev/null
+done
 
 _scripts/update_readmes.sh
 
 if [ $(running_on_ci_server) == "yes" ]
 then
-	function verifyGoGet()
-	{
-		local pkg=$1
-		echo "Verifying go get for $pkg"
-		(
-		cd `mktemp -d`
-		export GOPATH=$PWD
-		go get $pkg
-		)
-	}
-
-	verifyGoGet "myitcv.io/cmd/concsh"
+	verifyGoGet myitcv.io/cmd/concsh
 fi

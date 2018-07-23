@@ -27,8 +27,13 @@ type pkgInfo struct {
 
 // New returns a go/types.ImporterFrom that uses build cache package files if they
 // are available (i.e. compile), dropping back to a src-based importer otherwise.
-func New(ctxt *build.Context, fset *token.FileSet, dir string) (*srcimporter.Importer, error) {
-	cmd := exec.Command("go", "list", "-deps", "-test", "-json", "-e", "-export", ".")
+// path is effectively optional, because if not specified it defaults to ".", i.e.
+// the package in dir.
+func New(ctxt *build.Context, fset *token.FileSet, dir, path string) (*srcimporter.Importer, error) {
+	if path == "" {
+		path = "."
+	}
+	cmd := exec.Command("go", "list", "-deps", "-test", "-json", "-e", "-export", path)
 	cmd.Dir = dir
 
 	// Because of https://github.com/golang/go/issues/25842 we first need to

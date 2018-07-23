@@ -14,3 +14,8 @@ mkdir -p $PROTOBUF_INSTALL_DIR
 
 "${BASH_SOURCE%/*}/install_protobuf.sh"
 "${BASH_SOURCE%/*}/install_chromedriver.sh"
+
+mkdir -p $GOBIN
+
+cd $HOME
+git clone --depth=1 https://github.com/myitcv/cachex

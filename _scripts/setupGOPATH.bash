@@ -13,6 +13,8 @@ fi
 
 autostash_or_export GOBIN="$(readlink -m "${BASH_SOURCE%/*}/../.bin")"
 
+autostash_or_export PATH="$GOBIN:$PATH"
+
 # Pre Go 1.11 check
 # [[ "$(go version | cut -d ' ' -f 3)" =~ go1.(9|10).[0-9]+ ]]
 
