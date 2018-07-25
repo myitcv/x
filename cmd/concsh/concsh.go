@@ -1,5 +1,5 @@
 // concsh allows you to concurrently run commands from your shell.
-package main // import "myitcv.io/cmd/concsh"
+package main
 
 import (
 	"bufio"
@@ -55,7 +55,7 @@ In the case no arguments are provided, concsh will read the commands to execute 
 		r := recover()
 
 		if err, ok := r.(error); ok {
-			fmt.Errorf("concsh error whilst running: %v", err)
+			fmt.Fprintf(os.Stderr, "concsh error whilst running: %v", err)
 			os.Exit(1)
 		}
 

@@ -45,12 +45,7 @@ source "${BASH_SOURCE%/*}/commonEnv.bash"
 
 if [ $(running_on_ci_server) == "yes" ]
 then
-	# Travis bug with GOROOT
-	unset GOROOT
-	if [ "${USE_GO_TIP:-}" == "true" ]
-	then
-		export PATH="$HOME/gotip/bin:$PATH"
-	fi
+	export PATH="$HOME/go/bin:$PATH"
 fi
 
 # We assume that PATH will have been setup in such a way as to leave

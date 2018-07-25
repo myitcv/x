@@ -1,7 +1,7 @@
 // Package hybridimporter is an implementation of go/types.ImporterFrom that
 // uses depdency export information where it can, falling back to a source-file
 // based importer otherwise.
-package hybridimporter // import "myitcv.io/hybridimporter"
+package hybridimporter
 
 import (
 	"bytes"
@@ -39,6 +39,10 @@ func New(ctxt *build.Context, fset *token.FileSet, dir string) (*srcimporter.Imp
 
 	out, _ := cmd.Output()
 
+	// TODO because of https://github.com/golang/go/issues/25842 in Go 1.11 we
+	// need to have this fallback. But it also happens to work for Go 1.10
+	// (which does not have the extended list capability). So we'll leave this
+	// for now....
 	// if err != nil {
 	// 	if ad, err := filepath.Abs(dir); err == nil {
 	// 		dir = ad

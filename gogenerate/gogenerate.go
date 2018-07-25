@@ -6,7 +6,7 @@
 // for further notes on such generators. It also exposes some convenience functions that might be useful
 // to authors of generators
 //
-package gogenerate // import "myitcv.io/gogenerate"
+package gogenerate
 
 import (
 	"bufio"

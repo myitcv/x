@@ -3,7 +3,7 @@
 
 // immutableGen is a go generate generator that creates immutable struct, map
 // and slice type declarations from template type declarations.
-package main // import "myitcv.io/immutable/cmd/immutableGen"
+package main
 
 import (
 	"flag"

@@ -4,7 +4,7 @@
 /*
 Package parser parses proto files into gotoc's AST representation.
 */
-package parser // import "myitcv.io/protobuf/parser"
+package parser
 
 import (
 	"fmt"

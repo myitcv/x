@@ -9,7 +9,7 @@ library for building user interfaces.
 For more information see https://github.com/myitcv/react/wiki
 
 */
-package react // import "myitcv.io/react"
+package react
 
 //go:generate cssGen
 //go:generate coreGen

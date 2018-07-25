@@ -4,7 +4,7 @@
 /*
 Package ast defines the AST data structures used by gotoc.
 */
-package ast // import "myitcv.io/protobuf/ast"
+package ast
 
 import (
 	"fmt"

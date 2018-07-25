@@ -1,6 +1,6 @@
-#!/usr/bin/env bash
+#!/usr/bin/env vbash
 
-source "${BASH_SOURCE%/*}/common.bash"
+source "$(git rev-parse --show-toplevel)/_scripts/common.bash"
 
 only_run_on_ci_server
 

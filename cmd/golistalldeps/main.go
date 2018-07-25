@@ -1,6 +1,6 @@
 // golistalldeps transitively lists all dependencies (package, test and xtest) of specified packages in a format
 // identical to go list
-package main // import "myitcv.io/cmd/golistalldeps"
+package main
 
 import (
 	"flag"

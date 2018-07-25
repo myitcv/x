@@ -1,4 +1,4 @@
-package markdowneditor // import "myitcv.io/react/examples/markdowneditor"
+package markdowneditor
 
 import (
 	"github.com/gopherjs/gopherjs/js"

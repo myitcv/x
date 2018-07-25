@@ -1,4 +1,4 @@
-package hellomessage // import "myitcv.io/react/examples/hellomessage"
+package hellomessage
 
 import (
 	"myitcv.io/react"

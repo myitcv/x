@@ -1,45 +1,60 @@
-#!/usr/bin/env bash
+#!/usr/bin/env vbash
 
 # Copyright (c) 2016 Paul Jolly <paul@myitcv.org.uk>, all rights reserved.
 # Use of this document is governed by a license found in the LICENSE document.
 
-source "${BASH_SOURCE%/*}/common.bash"
+source "$(git rev-parse --show-toplevel)/_scripts/common.bash"
 
-go install myitcv.io/cmd/concsh
+# TODO: work out a better way of priming the build tools
+go install myitcv.io/cmd/concsh myitcv.io/cmd/pkgconcat
+go install golang.org/x/tools/cmd/goimports
 
-# work out a better way of priming the build tools
-for i in cmd/pkgconcat
+# Top-level run_tests.sh only.
+# check we don't have doubly-nested sub tests - we don't support this yet
+diff -wu <(nested_test_dirs) <(nested_test_dirs | grep -v -f <(nested_test_dir_patterns))
+
+# TODO for now we manually specify the run order of nested test dirs
+# that is until we automate the dependency order (or use Bazel??)
+nested_order="sorter
+immutable
+cmd/gjbt
+react
+gopherize.me"
+
+# TODO remove when we revert back to running tests in parallel
+diff -wu <(cat <<< "$nested_order" | sort) <(nested_test_dirs | sort)
+for i in $nested_order
 do
 	pushd $i > /dev/null
-	go install .
+	echo "---- $i"
+	./_scripts/run_tests.sh
+	echo "----"
+	echo ""
 	popd > /dev/null
 done
 
-# TODO make sure we don't have nested run_tests.sh files
+# TODO re-enable this once we correctly calculate the dependency graph
+# and only run things in parallel where we can
+#
+# run_nested_tests
 
-for i in $(find !(_scripts) -mindepth 1 -name run_tests.sh -exec bash -c 'dirname $(dirname {})' \;)
-do
-	cat <<EOD
-bash -c "set -e; echo '---- $i'; cd $i; ./_scripts/run_tests.sh; echo '----'; echo ''"
-EOD
-done | concsh
+go generate $(subpackages)
 
-# now test the rest
+ensure_go_formatted $(sub_git_files | grep -v '^_vendor/' | non_gen_go_files)
+ensure_go_gen_formatted $(sub_git_files | grep -v '^_vendor/' | gen_go_files)
 
-echo Protobuf Include $PROTOBUF_INCLUDE
+go test $(subpackages)
 
-go test $(go list ./... | grep -v -f <(for i in $(find !(_scripts) -mindepth 1 -name run_tests.sh ); do dirname $(dirname $i); done))
+install_main_go $(subpackages)
 
-for i in $(go list -f "{{if eq .Name \"main\"}}{{.Dir}}{{end}}" ./...)
-do
-	pushd $i > /dev/null
-	go install
-	popd > /dev/null
-done
+# TODO remove once we have Go 1.11
+install_deps $(subpackages)
+
+go vet $(subpackages)
 
 _scripts/update_readmes.sh
 
-if [ "${CI:-}" == "true" ]
+if [ $(running_on_ci_server) == "yes" ]
 then
 	function verifyGoGet()
 	{
@@ -52,5 +67,5 @@ then
 		)
 	}
 
-verifyGoGet "myitcv.io/cmd/concsh"
+	verifyGoGet "myitcv.io/cmd/concsh"
 fi

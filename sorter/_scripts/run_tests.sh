@@ -3,42 +3,27 @@
 # Copyright (c) 2016 Paul Jolly <paul@myitcv.org.uk>, all rights reserved.
 # Use of this document is governed by a license found in the LICENSE document.
 
-function error() {
-  local lineno="$1"
-  local file="$2"
+source "$(git rev-parse --show-toplevel)/_scripts/common.bash"
 
-  # intentional so we can test BASH_SOURCE
-  if [[ -n "$file" ]] ; then
-    echo "Error on line $file:$lineno"
-  fi
-
-  exit 1
-}
-
-trap 'set +u; error "${LINENO}" "${BASH_SOURCE}"' ERR
-
-set -u
-set -v
-shopt -s globstar
-shopt -s extglob
-
-export GOPATH=$PWD/_vendor:$GOPATH
-export PATH="${GOPATH//://bin:}/bin:$PATH"
-
-rm -f !(_vendor)/**/gen_*.go
+rm -f $(sub_git_files | gen_files)
 
 # TODO use gg
 go install myitcv.io/sorter/cmd/sortGen
 go install myitcv.io/immutable/cmd/immutableGen
 
-go generate ./...
-go install ./...
-go vet ./...
-go test ./...
+go generate $(subpackages)
+go install $(subpackages)
+go vet $(subpackages)
+go test $(subpackages)
 
-cd cmd/sortGen/_testFiles/
+pushd cmd/sortGen/_testFiles/ > /dev/null
 
-go generate ./...
-go test ./...
-go install ./...
-go vet ./...
+go generate $(subpackages)
+go test $(subpackages)
+go install $(subpackages)
+go vet $(subpackages)
+
+popd > /dev/null
+
+ensure_go_formatted $(sub_git_files | non_gen_go_files)
+ensure_go_gen_formatted $(sub_git_files | gen_go_files)

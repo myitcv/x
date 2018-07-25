@@ -2,6 +2,8 @@ package banana
 
 import "bytes"
 
+//go:generate stateGen
+
 var root _Node_App
 
 type _Node_App struct {

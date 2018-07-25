@@ -1,4 +1,4 @@
-package util // import "myitcv.io/immutable/util"
+package util
 
 import (
 	"bytes"

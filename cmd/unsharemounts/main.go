@@ -3,7 +3,7 @@
 
 // +build linux
 
-package main // import "myitcv.io/cmd/unsharemounts"
+package main
 
 import (
 	"bufio"

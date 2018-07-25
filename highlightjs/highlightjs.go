@@ -4,7 +4,7 @@
 // Package highlightjs provides an incomplete wrapper for Highlight.js (https://github.com/isagalaev/highlight.js),
 // a Javascript syntax highlighter
 //
-package highlightjs // import "myitcv.io/highlightjs"
+package highlightjs
 
 import (
 	"github.com/gopherjs/gopherjs/js"

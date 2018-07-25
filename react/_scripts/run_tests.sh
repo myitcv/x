@@ -3,10 +3,7 @@
 # Copyright (c) 2016 Paul Jolly <paul@myitcv.org.uk>, all rights reserved.
 # Use of this document is governed by a license found in the LICENSE document.
 
-source "${BASH_SOURCE%/*}/common.bash"
-
-export PATH=$PWD/_vendor/bin:$GOPATH/bin:$PATH
-export GOPATH=$PWD/_vendor:$GOPATH
+source "$(git rev-parse --show-toplevel)/_scripts/common.bash"
 
 google-chrome --version
 
@@ -18,7 +15,7 @@ do
 	go install $i
 done
 
-find -path ./_vendor -prune -o -name "gen_*.go" -exec rm '{}' \;
+sub_git_files | gen_files | xargs rm -f
 
 {
 	pushd examples/sites/helloworld
@@ -38,56 +35,34 @@ find -path ./_vendor -prune -o -name "gen_*.go" -exec rm '{}' \;
 	popd
 }
 
-go generate ./...
+go generate $(subpackages)
 
-z=$(goimports -l !(_vendor|_talks)/**/!(gen_*).go !(gen_*).go)
-if [ ! -z "$z" ]
-then
-	echo "The following files are not formatted:"
-	echo ""
-	echo "$z"
-	exit 1
-fi
+install_main_go $(subpackages)
 
-z=$(gofmt -l !(_vendor)/**/gen_*.go gen_*.go)
+# TODO remove once we have Go 1.11
+install_deps $(subpackages)
 
-if [ ! -z "$z" ]
-then
-	echo "The following generated files are not formatted:"
-	echo ""
-	echo "$z"
-	exit 1
-fi
-
-# we need to install first so the go/types-based reactVet tests
-# can import the myitcv.io/react/jsx package
-go install ./...
-
-# with Go 1.10 we have to manually install deps of vetters below
-# because package dependencies aren't automatically built into
-# GOPATH/pkg. This will be fixed in later Go versions... by having
-# the go command pass values to a vetter telling it (the vetter)
-# where built packages exist
-
-go list -f "{{ range .Deps}}{{.}}
-{{end}}" ./... | xargs go install
-
-go test ./...
+# we install the deps above because one of the reactVet tests
+# requires the deps to be present
+go test $(subpackages)
 
 # TODO work out a better way of excluding the cmd packages
 # or making them exclude themselves by virtue of a build tag
-go list myitcv.io/react/... | grep -v 'myitcv.io/react/cmd/' | xargs gjbt
+subpackages | grep -v 'myitcv.io/react/cmd/' | xargs gjbt
 
-go vet ./...
+go vet $(subpackages)
+reactVet $(subpackages)
+immutableVet $(subpackages)
 
-reactVet ./...
-
-immutableVet ./...
-
-# we need to explicitly test the generated test files
+# We need to explicitly test the generated test files
+# because these are not found by go list
+go generate myitcv.io/react/cmd/stateGen/_testFiles/
 go test myitcv.io/react/cmd/stateGen/_testFiles/
 
-if [ "${CI:-}" == "true" ]
+ensure_go_formatted $(sub_git_files | grep -v '^_talks/' | non_gen_go_files)
+ensure_go_gen_formatted $(sub_git_files | gen_go_files)
+
+if [ $(running_on_ci_server) == "yes" ]
 then
 	# off the back of https://github.com/myitcv/react/issues/116#issuecomment-380280847
 	# ensure that we can go get myitcv.io/react/... without _vendor

@@ -12,7 +12,7 @@ import (
 	"github.com/kisielk/gotool"
 )
 
-func TestImmutableVetter(t *testing.T) {
+func TestReactVetter(t *testing.T) {
 
 	var expected = `_testFiles/example.go:16:15: argument must be a constant string
 _testFiles/example.go:20:19: argument must be a constant string
