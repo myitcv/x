@@ -1,0 +1,19 @@
+FROM myitcv/x_monorepo:$CHROME_CHANNEL
+
+ARG USER
+ARG UID
+ARG DOCKER_WORKING_DIR
+
+ENV PATH=/vbash/bin:/home/$USER/.local/bin:$PATH
+ENV GOPATH=/home/$USER/gopath
+
+RUN groupadd -g $UID $USER && \
+    adduser --uid $UID --gid $UID --disabled-password --gecos "" $USER
+
+RUN sudo -i -u $USER mkdir -p $DOCKER_WORKING_DIR
+
+# enable sudo
+RUN usermod -aG sudo $USER
+RUN echo "$USER ALL=(ALL:ALL) NOPASSWD: ALL" > /etc/sudoers.d/$USER
+
+USER $USER

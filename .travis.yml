@@ -18,7 +18,8 @@ services:
 before_install:
   - docker --version
   - source .docker_details
-  - docker build -q --build-arg USER=$USER --build-arg UID=$UID --build-arg DOCKER_WORKING_DIR=$DOCKER_WORKING_DIR --build-arg CHROME_CHANNEL=$CHROME_CHANNEL -t $DOCKER_IMAGE $DOCKERFILE_DIR
+  - docker pull $DOCKER_IMAGE:$CHROME_CHANNEL | tee
+  - cat Dockerfile.user | envsubst '$CHROME_CHANNEL' | docker build -t $(basename $DOCKER_IMAGE) --build-arg USER=$USER --build-arg UID=$UID --build-arg DOCKER_WORKING_DIR=$DOCKER_WORKING_DIR -
 
 script:
-  - docker run -u $USER:$USER --env-file .docker_env_file -v $PWD:$DOCKER_WORKING_DIR -w $DOCKER_WORKING_DIR --rm $DOCKER_IMAGE ./_scripts/docker_run.sh
+  - docker run -u $USER:$USER --env-file .docker_env_file -v $PWD:$DOCKER_WORKING_DIR -w $DOCKER_WORKING_DIR --rm $(basename $DOCKER_IMAGE) ./_scripts/docker_run.sh
