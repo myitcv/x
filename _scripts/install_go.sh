@@ -21,7 +21,7 @@ then
 	curl -sL  https://dl.google.com/go/$GO_VERSION.${os}-${arch}.tar.gz | tar -zx
 else
 	# tip
-	source="https://github.com/myitcv/gobuilds/raw/master/${os}_${arch}/$GO_VERSION.tar.gz"
+	source="https://s3-eu-west-1.amazonaws.com/io.myitcv.gobuilds/${os}_${arch}/$GO_VERSION.tar.gz"
 	target=$HOME/go
 
 	echo "Will install ${GO_VERSION:0:10} from $source to $target"
