@@ -92,8 +92,7 @@ func (r *reactVetter) vetPackages() {
 		if len(jsxFiles) == 0 {
 			continue
 		}
-
-		imp, err := hybridimporter.New(&build.Default, fset, ".")
+		imp, err := hybridimporter.New(&build.Default, fset, r.wd, r.bpkg.ImportPath)
 		if err != nil {
 			fatalf("failed to create importer: %v", err)
 		}

@@ -20,6 +20,8 @@ then
 	export PROTOBUF_INSTALL_DIR=$CI_DEPENDENCIES_DIR/protobuf
 
 	export CHROMEDRIVER_INSTALL_DIR=$CI_DEPENDENCIES_DIR/chromedriver
+
+	export GOPROXY=file://$HOME/cachex
 fi
 
 if [ "${PROTOBUF_VERSION:-}" == "" ]

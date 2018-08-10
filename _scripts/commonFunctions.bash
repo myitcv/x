@@ -177,5 +177,19 @@ install_deps()
 }
 export -f install_deps
 
+verifyGoGet()
+{
+	local pkg=$1
+	echo "Verifying go get for $pkg"
+	(
+	cd `mktemp -d`
+	export GOPATH=$PWD
+	GO111MODULE=auto
+	go env
+	go get $pkg
+	)
+}
+export -f verifyGoGet
+
 # **********************
 LOADED_COMMON_FUNCTIONS=true

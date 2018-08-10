@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/usr/bin/env vbash
 
 # Copyright (c) 2016 Paul Jolly <paul@myitcv.org.uk>, all rights reserved.
 # Use of this document is governed by a license found in the LICENSE document.
@@ -48,7 +48,7 @@ go test $(subpackages)
 
 # TODO work out a better way of excluding the cmd packages
 # or making them exclude themselves by virtue of a build tag
-subpackages | grep -v 'myitcv.io/react/cmd/' | xargs gjbt
+gjbt $(subpackages | grep -v 'myitcv.io/react/cmd/')
 
 go vet $(subpackages)
 reactVet $(subpackages)
@@ -66,7 +66,5 @@ if [ $(running_on_ci_server) == "yes" ]
 then
 	# off the back of https://github.com/myitcv/react/issues/116#issuecomment-380280847
 	# ensure that we can go get myitcv.io/react/... without _vendor
-	echo "Verify that we can go get myitcv.io/react/..."
-	export GOPATH=$HOME/gopath
-	go get myitcv.io/react/...
+	verifyGoGet myitcv.io/react/...
 fi
