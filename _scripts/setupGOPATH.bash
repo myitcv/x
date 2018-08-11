@@ -23,4 +23,10 @@ then
 	autostash_or_export GOPATH="$(readlink -m "${BASH_SOURCE%/*}/../_vendor"):$GOPATH"
 fi
 
+if [ $(running_on_ci_server) == "yes" ]
+then
+	export GO111ROOT="$HOME/go111/go"
+fi
+
 LOADED_SETUP_GOPATH=true
+

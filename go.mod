@@ -5,7 +5,6 @@ require (
 	github.com/gopherjs/gopherjs v0.0.0-20180628210949-0892b62f0d9f
 	github.com/gopherjs/jsbuiltin v0.0.0-20180426082241-50091555e127
 	github.com/hpcloud/tail v1.0.0 // indirect
-	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/jteeuwen/go-bindata v3.0.7+incompatible
 	github.com/kisielk/gotool v1.0.0
 	github.com/kr/fs v0.1.0
@@ -29,4 +28,5 @@ require (
 	mvdan.cc/sh v2.5.0+incompatible
 )
 
-replace github.com/gopherjs/gopherjs => github.com/myitcv/gopherjs v0.0.0-20180810213059-af1a9351d8ec
+// branch: go1.11
+replace github.com/gopherjs/gopherjs => github.com/myitcv/gopherjs v0.0.0-20180901025010-55c28f202f5a
