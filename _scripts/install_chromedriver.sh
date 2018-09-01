@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/usr/bin/env vbash
 
 source "${BASH_SOURCE%/*}/common.bash"
 
