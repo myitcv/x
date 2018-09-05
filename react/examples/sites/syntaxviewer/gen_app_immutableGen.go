@@ -18,12 +18,12 @@ import (
 // 	}
 //
 type langState struct {
-	_Code  string
-	_Ast   string
-	_Error bool
+	field_Code  string
+	field_Ast   string
+	field_Error bool
 
 	mutable bool
-	__tmpl  _Imm_langState
+	__tmpl  *_Imm_langState
 }
 
 var _ immutable.Immutable = new(langState)
@@ -72,6 +72,7 @@ func (s *langState) WithImmutable(f func(si *langState)) *langState {
 
 	return s
 }
+
 func (s *langState) IsDeeplyNonMutable(seen map[interface{}]bool) bool {
 	if s == nil {
 		return true
@@ -92,48 +93,48 @@ func (s *langState) IsDeeplyNonMutable(seen map[interface{}]bool) bool {
 	seen[s] = true
 	return true
 }
-func (s *langState) Code() string {
-	return s._Code
-}
-
-// SetCode is the setter for Code()
-func (s *langState) SetCode(n string) *langState {
-	if s.mutable {
-		s._Code = n
-		return s
-	}
-
-	res := *s
-	res._Code = n
-	return &res
-}
 func (s *langState) Ast() string {
-	return s._Ast
+	return s.field_Ast
 }
 
 // SetAst is the setter for Ast()
 func (s *langState) SetAst(n string) *langState {
 	if s.mutable {
-		s._Ast = n
+		s.field_Ast = n
 		return s
 	}
 
 	res := *s
-	res._Ast = n
+	res.field_Ast = n
+	return &res
+}
+func (s *langState) Code() string {
+	return s.field_Code
+}
+
+// SetCode is the setter for Code()
+func (s *langState) SetCode(n string) *langState {
+	if s.mutable {
+		s.field_Code = n
+		return s
+	}
+
+	res := *s
+	res.field_Code = n
 	return &res
 }
 func (s *langState) Error() bool {
-	return s._Error
+	return s.field_Error
 }
 
 // SetError is the setter for Error()
 func (s *langState) SetError(n bool) *langState {
 	if s.mutable {
-		s._Error = n
+		s.field_Error = n
 		return s
 	}
 
 	res := *s
-	res._Error = n
+	res.field_Error = n
 	return &res
 }

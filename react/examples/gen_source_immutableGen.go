@@ -16,7 +16,7 @@ import (
 type exampleSource struct {
 	theMap  map[exampleKey]*source
 	mutable bool
-	__tmpl  _Imm_exampleSource
+	__tmpl  *_Imm_exampleSource
 }
 
 var _ immutable.Immutable = new(exampleSource)
@@ -191,11 +191,11 @@ func (s *exampleSource) IsDeeplyNonMutable(seen map[interface{}]bool) bool {
 // 	}
 //
 type source struct {
-	_file string
-	_src  string
+	field_file string
+	field_src  string
 
 	mutable bool
-	__tmpl  _Imm_source
+	__tmpl  *_Imm_source
 }
 
 var _ immutable.Immutable = new(source)
@@ -244,6 +244,7 @@ func (s *source) WithImmutable(f func(si *source)) *source {
 
 	return s
 }
+
 func (s *source) IsDeeplyNonMutable(seen map[interface{}]bool) bool {
 	if s == nil {
 		return true
@@ -265,32 +266,32 @@ func (s *source) IsDeeplyNonMutable(seen map[interface{}]bool) bool {
 	return true
 }
 func (s *source) file() string {
-	return s._file
+	return s.field_file
 }
 
 // setFile is the setter for File()
 func (s *source) setFile(n string) *source {
 	if s.mutable {
-		s._file = n
+		s.field_file = n
 		return s
 	}
 
 	res := *s
-	res._file = n
+	res.field_file = n
 	return &res
 }
 func (s *source) src() string {
-	return s._src
+	return s.field_src
 }
 
 // setSrc is the setter for Src()
 func (s *source) setSrc(n string) *source {
 	if s.mutable {
-		s._src = n
+		s.field_src = n
 		return s
 	}
 
 	res := *s
-	res._src = n
+	res.field_src = n
 	return &res
 }

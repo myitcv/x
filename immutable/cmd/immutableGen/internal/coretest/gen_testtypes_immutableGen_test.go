@@ -20,7 +20,7 @@ import (
 type MyTestMap struct {
 	theMap  map[string]int
 	mutable bool
-	__tmpl  _Imm_MyTestMap
+	__tmpl  *_Imm_MyTestMap
 }
 
 var _ immutable.Immutable = new(MyTestMap)
@@ -176,7 +176,7 @@ func (s *MyTestMap) IsDeeplyNonMutable(seen map[interface{}]bool) bool {
 type MyTestSlice struct {
 	theSlice []*string
 	mutable  bool
-	__tmpl   _Imm_MyTestSlice
+	__tmpl   *_Imm_MyTestSlice
 }
 
 var _ immutable.Immutable = new(MyTestSlice)
@@ -330,12 +330,13 @@ func (s *MyTestSlice) IsDeeplyNonMutable(seen map[interface{}]bool) bool {
 type MyTestStruct struct {
 	//somethingspecial
 
-	_Name, _surname  string `tag:"value"`
-	_age             int    `tag:"age"`
-	_fieldWithoutTag bool
+	field_Name            string `tag:"value"`
+	field_surname         string `tag:"value"`
+	field_age             int    `tag:"age"`
+	field_fieldWithoutTag bool
 
 	mutable bool
-	__tmpl  _Imm_MyTestStruct
+	__tmpl  *_Imm_MyTestStruct
 }
 
 var _ immutable.Immutable = new(MyTestStruct)
@@ -384,6 +385,7 @@ func (s *MyTestStruct) WithImmutable(f func(si *MyTestStruct)) *MyTestStruct {
 
 	return s
 }
+
 func (s *MyTestStruct) IsDeeplyNonMutable(seen map[interface{}]bool) bool {
 	if s == nil {
 		return true
@@ -413,18 +415,48 @@ func (s *MyTestStruct) IsDeeplyNonMutable(seen map[interface{}]bool) bool {
 
 */
 func (s *MyTestStruct) Name() string {
-	return s._Name
+	return s.field_Name
 }
 
 // SetName is the setter for Name()
 func (s *MyTestStruct) SetName(n string) *MyTestStruct {
 	if s.mutable {
-		s._Name = n
+		s.field_Name = n
 		return s
 	}
 
 	res := *s
-	res._Name = n
+	res.field_Name = n
+	return &res
+}
+func (s *MyTestStruct) age() int {
+	return s.field_age
+}
+
+// setAge is the setter for Age()
+func (s *MyTestStruct) setAge(n int) *MyTestStruct {
+	if s.mutable {
+		s.field_age = n
+		return s
+	}
+
+	res := *s
+	res.field_age = n
+	return &res
+}
+func (s *MyTestStruct) fieldWithoutTag() bool {
+	return s.field_fieldWithoutTag
+}
+
+// setFieldWithoutTag is the setter for FieldWithoutTag()
+func (s *MyTestStruct) setFieldWithoutTag(n bool) *MyTestStruct {
+	if s.mutable {
+		s.field_fieldWithoutTag = n
+		return s
+	}
+
+	res := *s
+	res.field_fieldWithoutTag = n
 	return &res
 }
 
@@ -436,47 +468,17 @@ func (s *MyTestStruct) SetName(n string) *MyTestStruct {
 
 */
 func (s *MyTestStruct) surname() string {
-	return s._surname
+	return s.field_surname
 }
 
 // setSurname is the setter for Surname()
 func (s *MyTestStruct) setSurname(n string) *MyTestStruct {
 	if s.mutable {
-		s._surname = n
+		s.field_surname = n
 		return s
 	}
 
 	res := *s
-	res._surname = n
-	return &res
-}
-func (s *MyTestStruct) age() int {
-	return s._age
-}
-
-// setAge is the setter for Age()
-func (s *MyTestStruct) setAge(n int) *MyTestStruct {
-	if s.mutable {
-		s._age = n
-		return s
-	}
-
-	res := *s
-	res._age = n
-	return &res
-}
-func (s *MyTestStruct) fieldWithoutTag() bool {
-	return s._fieldWithoutTag
-}
-
-// setFieldWithoutTag is the setter for FieldWithoutTag()
-func (s *MyTestStruct) setFieldWithoutTag(n bool) *MyTestStruct {
-	if s.mutable {
-		s._fieldWithoutTag = n
-		return s
-	}
-
-	res := *s
-	res._fieldWithoutTag = n
+	res.field_surname = n
 	return &res
 }

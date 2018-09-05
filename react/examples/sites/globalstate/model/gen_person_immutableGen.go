@@ -16,7 +16,7 @@ import (
 type People struct {
 	theSlice []*Person
 	mutable  bool
-	__tmpl   _Imm_People
+	__tmpl   *_Imm_People
 }
 
 var _ immutable.Immutable = new(People)
@@ -184,11 +184,11 @@ func (s *People) IsDeeplyNonMutable(seen map[interface{}]bool) bool {
 // 	}
 //
 type Person struct {
-	_Name string
-	_Age  int
+	field_Name string
+	field_Age  int
 
 	mutable bool
-	__tmpl  _Imm_Person
+	__tmpl  *_Imm_Person
 }
 
 var _ immutable.Immutable = new(Person)
@@ -237,6 +237,7 @@ func (s *Person) WithImmutable(f func(si *Person)) *Person {
 
 	return s
 }
+
 func (s *Person) IsDeeplyNonMutable(seen map[interface{}]bool) bool {
 	if s == nil {
 		return true
@@ -257,33 +258,33 @@ func (s *Person) IsDeeplyNonMutable(seen map[interface{}]bool) bool {
 	seen[s] = true
 	return true
 }
-func (s *Person) Name() string {
-	return s._Name
-}
-
-// SetName is the setter for Name()
-func (s *Person) SetName(n string) *Person {
-	if s.mutable {
-		s._Name = n
-		return s
-	}
-
-	res := *s
-	res._Name = n
-	return &res
-}
 func (s *Person) Age() int {
-	return s._Age
+	return s.field_Age
 }
 
 // SetAge is the setter for Age()
 func (s *Person) SetAge(n int) *Person {
 	if s.mutable {
-		s._Age = n
+		s.field_Age = n
 		return s
 	}
 
 	res := *s
-	res._Age = n
+	res.field_Age = n
+	return &res
+}
+func (s *Person) Name() string {
+	return s.field_Name
+}
+
+// SetName is the setter for Name()
+func (s *Person) SetName(n string) *Person {
+	if s.mutable {
+		s.field_Name = n
+		return s
+	}
+
+	res := *s
+	res.field_Name = n
 	return &res
 }

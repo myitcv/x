@@ -215,5 +215,10 @@ installGo() {
 }
 export -f installGo
 
+goVersion() {
+	go version | cut -d ' ' -f 3
+}
+export -f goVersion
+
 # **********************
 LOADED_COMMON_FUNCTIONS=true

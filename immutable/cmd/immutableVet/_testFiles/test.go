@@ -43,7 +43,7 @@ var _ = new(Dummy)
 var good *Dummy
 
 func main() {
-	print(good._Name) // ERROR
+	print(good.field_Name) // ERROR
 
 	var x *intS
 

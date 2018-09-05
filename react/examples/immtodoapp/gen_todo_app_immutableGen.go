@@ -16,7 +16,7 @@ import (
 type itemS struct {
 	theSlice []*item
 	mutable  bool
-	__tmpl   _Imm_itemS
+	__tmpl   *_Imm_itemS
 }
 
 var _ immutable.Immutable = new(itemS)
@@ -183,10 +183,10 @@ func (s *itemS) IsDeeplyNonMutable(seen map[interface{}]bool) bool {
 // 	}
 //
 type item struct {
-	_name string
+	field_name string
 
 	mutable bool
-	__tmpl  _Imm_item
+	__tmpl  *_Imm_item
 }
 
 var _ immutable.Immutable = new(item)
@@ -235,6 +235,7 @@ func (s *item) WithImmutable(f func(si *item)) *item {
 
 	return s
 }
+
 func (s *item) IsDeeplyNonMutable(seen map[interface{}]bool) bool {
 	if s == nil {
 		return true
@@ -256,17 +257,17 @@ func (s *item) IsDeeplyNonMutable(seen map[interface{}]bool) bool {
 	return true
 }
 func (s *item) name() string {
-	return s._name
+	return s.field_name
 }
 
 // setName is the setter for Name()
 func (s *item) setName(n string) *item {
 	if s.mutable {
-		s._name = n
+		s.field_name = n
 		return s
 	}
 
 	res := *s
-	res._name = n
+	res.field_name = n
 	return &res
 }
