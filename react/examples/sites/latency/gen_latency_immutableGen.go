@@ -16,7 +16,7 @@ import (
 type latencies struct {
 	theMap  map[location]latency
 	mutable bool
-	__tmpl  _Imm_latencies
+	__tmpl  *_Imm_latencies
 }
 
 var _ immutable.Immutable = new(latencies)

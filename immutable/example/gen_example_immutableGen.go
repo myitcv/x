@@ -17,7 +17,7 @@ import (
 type MyMap struct {
 	theMap  map[string]*MySlice
 	mutable bool
-	__tmpl  _Imm_MyMap
+	__tmpl  *_Imm_MyMap
 }
 
 var _ immutable.Immutable = new(MyMap)
@@ -192,7 +192,7 @@ func (s *MyMap) IsDeeplyNonMutable(seen map[interface{}]bool) bool {
 type MySlice struct {
 	theSlice []*MyMap
 	mutable  bool
-	__tmpl   _Imm_MySlice
+	__tmpl   *_Imm_MySlice
 }
 
 var _ immutable.Immutable = new(MySlice)
@@ -368,13 +368,13 @@ func (s *MySlice) IsDeeplyNonMutable(seen map[interface{}]bool) bool {
 // 	}
 //
 type MyStruct struct {
-	_Name    string `tag:"value"`
-	_surname string
-	_self    *MyStruct
-	_age     int `tag:"age"`
+	field_Name    string `tag:"value"`
+	field_surname string
+	field_self    *MyStruct
+	field_age     int `tag:"age"`
 
 	mutable bool
-	__tmpl  _Imm_MyStruct
+	__tmpl  *_Imm_MyStruct
 }
 
 var _ immutable.Immutable = new(MyStruct)
@@ -423,6 +423,7 @@ func (s *MyStruct) WithImmutable(f func(si *MyStruct)) *MyStruct {
 
 	return s
 }
+
 func (s *MyStruct) IsDeeplyNonMutable(seen map[interface{}]bool) bool {
 	if s == nil {
 		return true
@@ -442,7 +443,7 @@ func (s *MyStruct) IsDeeplyNonMutable(seen map[interface{}]bool) bool {
 
 	seen[s] = true
 	{
-		v := s._self
+		v := s.field_self
 
 		if v != nil && !v.IsDeeplyNonMutable(seen) {
 			return false
@@ -453,66 +454,66 @@ func (s *MyStruct) IsDeeplyNonMutable(seen map[interface{}]bool) bool {
 
 // Name is a field in MyStruct
 func (s *MyStruct) Name() string {
-	return s._Name
+	return s.field_Name
 }
 
 // SetName is the setter for Name()
 func (s *MyStruct) SetName(n string) *MyStruct {
 	if s.mutable {
-		s._Name = n
+		s.field_Name = n
 		return s
 	}
 
 	res := *s
-	res._Name = n
-	return &res
-}
-
-// surname will not be exported
-func (s *MyStruct) surname() string {
-	return s._surname
-}
-
-// setSurname is the setter for Surname()
-func (s *MyStruct) setSurname(n string) *MyStruct {
-	if s.mutable {
-		s._surname = n
-		return s
-	}
-
-	res := *s
-	res._surname = n
-	return &res
-}
-func (s *MyStruct) self() *MyStruct {
-	return s._self
-}
-
-// setSelf is the setter for Self()
-func (s *MyStruct) setSelf(n *MyStruct) *MyStruct {
-	if s.mutable {
-		s._self = n
-		return s
-	}
-
-	res := *s
-	res._self = n
+	res.field_Name = n
 	return &res
 }
 
 // age will not be exported
 func (s *MyStruct) age() int {
-	return s._age
+	return s.field_age
 }
 
 // setAge is the setter for Age()
 func (s *MyStruct) setAge(n int) *MyStruct {
 	if s.mutable {
-		s._age = n
+		s.field_age = n
 		return s
 	}
 
 	res := *s
-	res._age = n
+	res.field_age = n
+	return &res
+}
+func (s *MyStruct) self() *MyStruct {
+	return s.field_self
+}
+
+// setSelf is the setter for Self()
+func (s *MyStruct) setSelf(n *MyStruct) *MyStruct {
+	if s.mutable {
+		s.field_self = n
+		return s
+	}
+
+	res := *s
+	res.field_self = n
+	return &res
+}
+
+// surname will not be exported
+func (s *MyStruct) surname() string {
+	return s.field_surname
+}
+
+// setSurname is the setter for Surname()
+func (s *MyStruct) setSurname(n string) *MyStruct {
+	if s.mutable {
+		s.field_surname = n
+		return s
+	}
+
+	res := *s
+	res.field_surname = n
 	return &res
 }

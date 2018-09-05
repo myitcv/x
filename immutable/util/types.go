@@ -12,62 +12,128 @@ type ImmType interface {
 }
 
 type (
-	ImmTypeUnknown struct{}
-	ImmTypeStruct  struct{}
-	ImmTypeMap     struct {
+	// ImmTypeBasic identifies Go types that are inherently immutable, e.g.
+	// ints, strings
+	ImmTypeBasic struct{}
+
+	// ImmTypeStruct is used to indicate a type that is immutable by virtue of
+	// being a pointer to a struct type that was itself generated from an _Imm_
+	// struct template.
+	ImmTypeStruct struct {
+		Struct *types.Struct
+	}
+
+	// ImmTypeMap is used to indicate a type that is immutable by virtue of
+	// being a pointer to a struct type that was itself generated from an _Imm_
+	// map template.
+	ImmTypeMap struct {
 		Key  types.Type
 		Elem types.Type
 	}
+
+	// ImmTypeMap is used to indicate a type that is immutable by virtue of
+	// being a pointer to a struct type that was itself generated from an _Imm_
+	// slice template.
 	ImmTypeSlice struct {
 		Elem types.Type
 	}
+
+	// ImmTypeImplsIntf is used to indicate a type that is not an ImmTypeStruct,
+	// ImmTypeMap or ImmTypeSlice, but still satisfies the immutable "interface".
+	// See the docs for myitcv.io/immutable.Immutable.
+	ImmTypeImplsIntf struct{}
+
+	// ImmTypeSimple is used to indiciate an interface type that extends the
+	// myitcv.io/immutable.Immutable interface.
+	ImmTypeSimple struct{}
 )
 
-func (i ImmTypeUnknown) isImmType() {}
-func (i ImmTypeStruct) isImmType()  {}
-func (i ImmTypeMap) isImmType()     {}
-func (i ImmTypeSlice) isImmType()   {}
+func (i ImmTypeBasic) isImmType()     {}
+func (i ImmTypeStruct) isImmType()    {}
+func (i ImmTypeMap) isImmType()       {}
+func (i ImmTypeSlice) isImmType()     {}
+func (i ImmTypeImplsIntf) isImmType() {}
+func (i ImmTypeSimple) isImmType()    {}
 
-var ic immCache
-
-type immCache struct {
-	mu      sync.Mutex
-	msCache typeutil.MethodSetCache
-	res     map[*types.Named]ImmType
+// TODO make a non-global; define a good API for creating a new checker
+// after we have a couple of use cases that break with this approach.
+var ic = &immCache{
+	msCache: new(typeutil.MethodSetCache),
+	res:     make(map[types.Type]ImmType),
 }
 
-func (i *immCache) lookup(tt types.Type) ImmType {
-	// TODO this is only a restriction on "our" implementation
-	// of immutable types
-	pt, ok := tt.(*types.Pointer)
-	if !ok {
+type immCache struct {
+	mu sync.Mutex
+
+	// not entirely clear we even need this because we cache
+	// the results of determining whether a pointer type is immutable
+	// or not.
+	msCache *typeutil.MethodSetCache
+
+	// res is a cache of the non-pointer type to the result
+	// because pointer type values are not comparable
+	res map[types.Type]ImmType
+}
+
+func (i *immCache) lookup(tt types.Type) (v ImmType) {
+	var cacheKey = tt
+
+	// fast path for Go types that are inherently immutable
+	switch tt := tt.Underlying().(type) {
+	case *types.Basic:
+		return ImmTypeBasic{}
+	case *types.Pointer:
+		cacheKey = tt.Elem()
+	case *types.Interface:
+		// ideally we would use types.Implements here... but we don't have a
+		// reference to myitcv.io/immutable.Immutable. So we do it by hand for now.
+	default:
+		// see comment below
 		return nil
 	}
 
-	nt, ok := pt.Elem().(*types.Named)
-	if !ok {
-		return nil
-	}
+	// From this point onwards we have to implement the immutable "interface". And to my best
+	// understanding at this point in time, that is only possible if the type is a pointer.
+	// Hence anything else cannot be an immutable type.
+
+	// We don't actually care whether we are pointing to a named type or not... because we use
+	// underlying below.
 
 	i.mu.Lock()
 	defer i.mu.Unlock()
 
-	v, ok := i.res[nt]
+	v, ok := i.res[cacheKey]
 	if ok {
 		return v
 	}
 
-	if i.res == nil {
-		i.res = make(map[*types.Named]ImmType)
-	}
+	defer func() {
+		i.res[cacheKey] = v
+	}()
 
-	ms := i.msCache.MethodSet(pt)
+	ms := i.msCache.MethodSet(tt)
 
 	foundMutable := false
 	foundAsMutable := false
 	foundAsImmutable := false
 	foundWithMutable := false
 	foundWithImmutable := false
+	foundIsDeeply := false
+
+	pt, ptOk := tt.(*types.Pointer)
+
+	isPtrToSelf := func(t types.Type) bool {
+		if !ptOk {
+			return false
+		}
+
+		ppt, ok := t.(*types.Pointer)
+		if !ok {
+			return false
+		}
+
+		return ppt.Elem() == pt.Elem()
+	}
 
 	for i := 0; i < ms.Len(); i++ {
 		f := ms.At(i).Obj().(*types.Func)
@@ -97,14 +163,14 @@ func (i *immCache) lookup(tt types.Type) ImmType {
 				break
 			}
 
-			foundAsMutable = isPtrToNamedTyp(t.Results().At(0).Type(), nt)
+			foundAsMutable = isPtrToSelf(t.Results().At(0).Type())
 
 		case "AsImmutable":
 			if t.Params().Len() != 1 {
 				break
 			}
 
-			if !isPtrToNamedTyp(t.Params().At(0).Type(), nt) {
+			if !isPtrToSelf(t.Params().At(0).Type()) {
 				break
 			}
 
@@ -112,7 +178,7 @@ func (i *immCache) lookup(tt types.Type) ImmType {
 				break
 			}
 
-			foundAsImmutable = isPtrToNamedTyp(t.Results().At(0).Type(), nt)
+			foundAsImmutable = isPtrToSelf(t.Results().At(0).Type())
 
 		case "WithMutable", "WithImmutable":
 			if t.Params().Len() != 1 {
@@ -128,7 +194,7 @@ func (i *immCache) lookup(tt types.Type) ImmType {
 				break
 			}
 
-			if !isPtrToNamedTyp(st.Params().At(0).Type(), nt) {
+			if !isPtrToSelf(st.Params().At(0).Type()) {
 				break
 			}
 
@@ -140,7 +206,7 @@ func (i *immCache) lookup(tt types.Type) ImmType {
 				break
 			}
 
-			valid := isPtrToNamedTyp(t.Results().At(0).Type(), nt)
+			valid := isPtrToSelf(t.Results().At(0).Type())
 
 			switch mn {
 			case "WithMutable":
@@ -148,30 +214,57 @@ func (i *immCache) lookup(tt types.Type) ImmType {
 			case "WithImmutable":
 				foundWithImmutable = valid
 			}
+		case "IsDeeplyNonMutable":
+			if t.Params().Len() != 1 {
+				break
+			}
+
+			mt, ok := t.Params().At(0).Type().(*types.Map)
+			if !ok {
+				break
+			}
+
+			if it, ok := mt.Key().(*types.Interface); !ok || !it.Empty() {
+				break
+			}
+
+			if t.Results().Len() != 1 {
+				break
+			}
+
+			foundIsDeeply = t.Results().At(0).Type() == types.Typ[types.Bool]
 		}
 
 	}
 
 	isImm := foundMutable && foundAsMutable && foundAsImmutable &&
-		foundWithMutable && foundWithImmutable
+		foundWithMutable && foundWithImmutable && foundIsDeeply
+
+	isImmSimple := foundMutable && foundIsDeeply
 
 	if !isImm {
-		i.res[nt] = nil
-		return nil
+		if isImmSimple {
+			v = ImmTypeSimple{}
+		}
+		return
 	}
 
-	v = ImmTypeUnknown{}
+	v = ImmTypeImplsIntf{}
 
 	// now we work out whether it's a struct, slice of map... else
 	// it's unknown to this package
 
-	st, ok := nt.Underlying().(*types.Struct)
+	st, ok := pt.Elem().Underlying().(*types.Struct)
 	if !ok {
-		return v
+		return
 	}
 
 	hasTmpl := false
 
+	// TODO this could probably be a bit more robust
+	// but we use this fairly coarse mechanism to determine
+	// whether the struct we have in hand is the result of
+	// immutableGen generation by looking for well-known fields
 	for i := 0; i < st.NumFields(); i++ {
 		f := st.Field(i)
 
@@ -180,40 +273,25 @@ func (i *immCache) lookup(tt types.Type) ImmType {
 			hasTmpl = true
 		case "theMap":
 			m := f.Type().(*types.Map)
-
 			v = ImmTypeMap{
 				Key:  m.Key(),
 				Elem: m.Elem(),
 			}
 		case "theSlice":
 			s := f.Type().(*types.Slice)
-
 			v = ImmTypeSlice{
 				Elem: s.Elem(),
 			}
 		}
 	}
 
-	if v == (ImmTypeUnknown{}) && hasTmpl {
-		v = ImmTypeStruct{}
+	if v == (ImmTypeImplsIntf{}) && hasTmpl {
+		v = ImmTypeStruct{
+			Struct: st,
+		}
 	}
 
-	i.res[nt] = v
-	return v
-}
-
-func isPtrToNamedTyp(t types.Type, nt *types.Named) bool {
-	pt, ok := t.(*types.Pointer)
-	if !ok {
-		return false
-	}
-
-	n, ok := pt.Elem().(*types.Named)
-	if !ok {
-		return false
-	}
-
-	return nt == n
+	return
 }
 
 // IsImmType determines whether the supplied type is an immutable type. In case

@@ -224,6 +224,9 @@ func (iv *immutableVetter) ensurePointerTyp(n ast.Node, typ ast.Expr) {
 		}
 	}
 	t := iv.info.Types[typ].Type
+	if t == nil {
+		return
+	}
 	p := types.NewPointer(t)
 	switch util.IsImmType(p).(type) {
 	case util.ImmTypeMap, util.ImmTypeSlice, util.ImmTypeStruct:
@@ -529,7 +532,7 @@ func (iv *immutableVetter) vetPackages() []immErr {
 				for _, s := range gd.Specs {
 					ts := s.(*ast.TypeSpec)
 
-					_, ok := util.IsImmTmplAst(ts)
+					_, ok := util.IsImmTmpl(ts)
 					if !ok {
 						continue
 					}
