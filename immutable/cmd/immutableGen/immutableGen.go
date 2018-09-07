@@ -1,12 +1,11 @@
 // Copyright (c) 2016 Paul Jolly <paul@myitcv.org.uk>, all rights reserved.
 // Use of this document is governed by a license found in the LICENSE document.
 
-// immutableGen is a go generate generator that creates immutable struct, map
-// and slice type declarations from template type declarations.
 package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
 	"os"
 
@@ -21,6 +20,11 @@ var (
 	fGoGenCmds   gogenCmds
 	fLicenseFile = gogenerate.LicenseFileFlag()
 	fGoGenLog    = gogenerate.LogFlag()
+	fDebug       = flag.Bool("debug", false, "print debug messages")
+)
+
+const (
+	debug = false
 )
 
 func init() {
@@ -68,4 +72,26 @@ func main() {
 	}
 
 	execute(wd, envPkgName, licenseHeader, fGoGenCmds)
+}
+
+func debugf(format string, args ...interface{}) {
+	if debug || *fDebug {
+		fmt.Fprintf(os.Stderr, format, args...)
+	}
+}
+
+func fatalf(format string, args ...interface{}) {
+	panic(fmt.Errorf(format, args...))
+}
+
+func infoln(args ...interface{}) {
+	if *fGoGenLog == string(gogenerate.LogInfo) {
+		log.Println(args...)
+	}
+}
+
+func infof(format string, args ...interface{}) {
+	if *fGoGenLog == string(gogenerate.LogInfo) {
+		log.Printf(format, args...)
+	}
 }

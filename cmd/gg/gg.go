@@ -1,384 +1,293 @@
 // Copyright (c) 2016 Paul Jolly <paul@myitcv.org.uk>, all rights reserved.
 // Use of this document is governed by a license found in the LICENSE document.
 
+// gg is a dependency-aware wrapper for go generate.
 package main
 
-// gg is a wrapper for ``go generate''. More docs to follow
-
 import (
-	"bufio"
-	"bytes"
 	"flag"
-	"fmt"
-	"log"
-	"os"
 	"os/exec"
-	"path/filepath"
-	"regexp"
-	"sort"
 	"strings"
+	"sync"
 	"time"
-
-	"github.com/kisielk/gotool"
-	"myitcv.io/gogenerate"
 )
 
 const (
-	untypedLoopLimit = 10
-	typedLoopLimit   = untypedLoopLimit
+	debug = false
 )
 
 var (
-	wd string
+	fDebug     = flag.Bool("debug", false, "debug logging")
+	fLoopLimit = flag.Int("loopLimit", 10, "limit on the number of go generate iterations per package")
 )
 
-// All code basically derived from rsc.io/gt
-
-// TODO we effectively read from some files twice... whilst computing stale and scanning
-// for directives. These two operations could potentially be collapsed into a single read
+// TODO: when we move gg to be fully-cached based, we will need to load all
+// deps via go list so that we can derive a hash of their go files etc. At this
+// point we will need https://go-review.googlesource.com/c/go/+/112755 or
+// similar to have landed.
 
 func main() {
-	var err error
-
-	log.SetFlags(0)
-	log.SetPrefix("gg: ")
-
-	defer func() {
-		err := recover()
-		if err != nil {
-			log.Fatalln(err)
-		}
-	}()
-
-	flag.Parse()
-
-	wd, err = os.Getwd()
-	if err != nil {
-		fatalf("could not get working directory: %v", err)
-	}
-
+	setupAndParseFlags("")
 	loadConfig()
 
-	specs := gotool.ImportPaths(flag.Args())
-	sort.Strings(specs)
+	pre := time.Now()
+	defer func() {
+		verbosef("total time: %v\n", time.Now().Sub(pre).Seconds()*1000)
+	}()
 
-	readPkgs(specs, true)
+	ps := loadPkgs(flag.Args())
 
-	pkgs := make([]string, 0, len(pkgInfo))
-	for k := range pkgInfo {
-		pkgs = append(pkgs, k)
+	possRoots := make(pkgSet)
+
+	for p := range ps {
+		if p.isTool && p.ready() {
+			possRoots[p] = true
+		}
 	}
 
-	pkgs = cmdList(pkgs)
-
-	if len(pkgs) == 0 {
-		vvlogf("No packages contain any directives")
-		os.Exit(0)
+	for pr := range possRoots {
+		debugf("Poss root: %v\n", pr)
 	}
 
-	if *fList {
-		// cmdList above will have done the logging for us
-
-		os.Exit(0)
+	var work []*pkg
+	for pr := range possRoots {
+		work = append(work, pr)
 	}
 
-	untypedRunExp := buildGoGenRegex(config.Untyped)
-	typedRunExp := buildGoGenRegex(config.Typed)
+	for len(work) > 0 {
+		outPkgs := make(map[*pkg]bool)
+		var is, gs []*pkg
+		var rem []*pkg
 
-	diffs := computeStale(pkgs, false)
-
-	typedCount := 1
-
-	for {
-		untypedCount := 1
-
-		preUntyped := snapHash(diffs)
-
-		for len(diffs) > 0 {
-			if untypedCount > untypedLoopLimit {
-				fatalf("Exceeded loop limit for untyped go generate cmd: %v\n", untypedRunExp)
+	WorkScan:
+		for _, w := range work {
+			if w.isTool {
+				is = append(is, w)
+				continue WorkScan
+			} else {
+				// we are searching for clashes _between_ packages not intra
+				// package (because that clash is just fine - no race condition)
+				if outPkgs[w] {
+					// clash
+					goto NoWork
+				}
+				for _, ods := range w.toolDeps {
+					for od := range ods {
+						if outPkgs[od] {
+							// clash
+							goto NoWork
+						}
+					}
+				}
+				gs = append(gs, w)
+				// no clashes
+				outPkgs[w] = true
+				for _, ods := range w.toolDeps {
+					for od := range ods {
+						outPkgs[od] = true
+					}
+				}
+				continue WorkScan
 			}
 
-			vvlogf("Untyped iteration %v.%v\n", typedCount, untypedCount)
-			goGenerate(diffs, untypedRunExp)
-			untypedCount++
-
-			// order is significant here... because the computeStale
-			// call does a readPkgs
-			prevDiffs := diffs
-			diffs = computeStale(prevDiffs, true)
-			cmdList(prevDiffs)
+		NoWork:
+			rem = append(rem, w)
 		}
 
-		// TODO work out what to do here when gg is being used in conjunction
-		// with gai
-		t := time.Now()
-		vvlogf("pre go install")
-		suc, _ := goInstall(pkgs)
-		vvlogf("post go install %v", time.Now().Sub(t))
+		work = rem
 
-		if len(suc) == 0 {
-			fatalf("No packages from %v succeeded install; cannot continue\n", pkgs)
+		var iwg sync.WaitGroup
+
+		// the is (installs) can proceed concurrently, as can the gs (generates),
+		// because we know in the case of the latter that their output packages
+		// are mutually exclusive
+		if len(is) > 0 {
+			for _, i := range is {
+				i := i
+				iwg.Add(1)
+				go func() {
+					defer func() {
+						iwg.Done()
+					}()
+					pre := time.Now()
+					cmd := exec.Command("go", "install", i.ImportPath)
+					out, err := cmd.CombinedOutput()
+					if err != nil {
+						fatalf("failed to run %v: %v\n%s", strings.Join(cmd.Args, " "), err, out)
+					}
+					verbosef("%v (%v)\n", strings.Join(cmd.Args, " "), time.Now().Sub(pre).Seconds()*1000)
+				}()
+			}
 		}
+		if len(gs) > 0 {
+			// when we are done with this block of work we need to reload
+			// rdeps of the output packages to ensure they are still current
+			rdeps := make(pkgSet)
 
-		if typedCount > typedLoopLimit {
-			fatalf("Exceeded loop limit for typed go generate cmd: %v\n", untypedRunExp)
-		}
+			done := make(chan *pkg)
 
-		vvlogf("Typed iteration %v.0\n", typedCount)
-		goGenerate(suc, typedRunExp)
-		typedCount++
+			type pkgState struct {
+				pre     hashRes
+				post    hashRes
+				count   int
+				pending bool
+			}
 
-		// order is significant here... because the computeStale
-		// call does a readPkgs
-		computeStale(suc, true)
-		cmdList(suc)
+			state := make(map[*pkg]*pkgState)
 
-		postTypedDelta := deltaHash(preUntyped)
-
-		// if there has been no change then regardless of how many fails etc
-		// we should break
-		if len(postTypedDelta) == 0 {
-			vvlogf("no delta from start of untyped iteration; breaking")
-			break
-		}
-
-		pkgs = postTypedDelta
-	}
-}
-
-func buildGoGenRegex(parts []string) string {
-	escpd := make([]string, len(parts))
-
-	for i := range parts {
-		cmd := filepath.Base(parts[i])
-		escpd[i] = regexp.QuoteMeta(cmd)
-	}
-
-	exp := fmt.Sprintf(gogenerate.GoGeneratePrefix+" (?:%v)(?:$| )", strings.Join(escpd, "|"))
-
-	// aggressively ensure the regexp compiles here... else a call to go generate
-	// will be useless
-	_, err := regexp.Compile(exp)
-	if err != nil {
-		fatalf("Could not form valid go generate command: %v\n", err)
-	}
-
-	return exp
-}
-
-func goGenerate(pkgs []string, runExp string) {
-	args := []string{"generate"}
-
-	if *fVerbose {
-		args = append(args, "-v")
-	}
-
-	if *fExecute {
-		args = append(args, "-x")
-	}
-
-	args = append(args, "-run", runExp)
-	args = append(args, pkgs...)
-
-	xlogf("go %v", strings.Join(args, " "))
-
-	out, err := exec.Command("go", args...).CombinedOutput()
-	if err != nil {
-		fatalf("go generate: %v\n%s", err, out)
-	}
-
-	if len(out) > 0 {
-		// we always log the output from go generate
-		fmt.Print(string(out))
-	}
-}
-
-func goInstall(pkgs []string) ([]string, []string) {
-	fmap := make(map[string]struct{})
-
-	xlogf("gai %v", strings.Join(pkgs, " "))
-	vvlogf("gai %v", strings.Join(pkgs, " "))
-
-	out, err := exec.Command("gai", pkgs...).CombinedOutput()
-	if err != nil {
-		sc := bufio.NewScanner(bytes.NewBuffer(out))
-		for sc.Scan() {
-			line := sc.Text()
-
-			if strings.HasPrefix(line, "# ") {
-				parts := strings.Fields(line)
-
-				if len(parts) != 2 {
-					fatalf("could not parse go install output\n%v", string(out))
+			for _, g := range gs {
+				for rd := range g.rdeps {
+					rdeps[rd] = true
 				}
 
-				fmap[parts[1]] = struct{}{}
+				state[g] = &pkgState{
+					pre:  g.snap(),
+					post: g.zeroSnap(),
+				}
+			}
+
+			gpre := time.Now()
+
+			for {
+				checkCount := 0
+				for g, gs := range state {
+					g := g
+					gs := gs
+
+					// TODO
+					// we need to check that we can still proceed, i.e. we haven't "grown"
+					// a new dependency that isn't ready
+
+					if gs.pending {
+						continue
+					}
+
+					if hashEquals, err := gs.pre.equals(gs.post); err != nil {
+						fatalf("failed to compare hashes for %v: %v", g, err)
+					} else if !hashEquals {
+						gs.pre = gs.post
+						gs.pending = true
+						gs.count++
+
+						if gs.count > *fLoopLimit {
+							fatalf("%v exceeded loop limit", g)
+						}
+
+						// fire off work
+						go func() {
+							pre := time.Now()
+							cmd := exec.Command("go", "generate", g.ImportPath)
+							verbosef("go generate %v\n", g.ImportPath)
+							out, err := cmd.CombinedOutput()
+							if err != nil {
+								fatalf("failed to run %v: %v\n%s", strings.Join(cmd.Args, " "), err, out)
+							}
+
+							verbosef("%v iteration %v (%.2fms)\n", strings.Join(cmd.Args, " "), gs.count, time.Now().Sub(pre).Seconds()*1000)
+							done <- g
+						}()
+					} else {
+						checkCount++
+					}
+				}
+
+				if checkCount == len(state) {
+					verbosef("go generate loop completed (%.2fms)\n", time.Now().Sub(gpre).Seconds()*1000)
+					break
+				}
+
+				select {
+				case g := <-done:
+					state[g].pending = false
+
+					// reload packages
+					toReload := []string{g.ImportPath}
+					for _, ods := range g.toolDeps {
+						for od := range ods {
+							toReload = append(toReload, od.ImportPath)
+						}
+					}
+
+					debugf("Will reload %v\n", toReload)
+					loadPkgs(toReload)
+
+					state[g].post = g.snap()
+				}
+			}
+
+			// now reload the rdeps
+			var toReload []string
+			for rd := range rdeps {
+				toReload = append(toReload, rd.ImportPath)
+			}
+			debugf("Will reload %v\n", toReload)
+			loadPkgs(toReload)
+		}
+
+		iwg.Wait()
+
+		var possWork []*pkg
+		var installs []string
+
+		for _, p := range append(is, gs...) {
+			p.donePending(p)
+			if !p.isTool {
+				installs = append(installs, p.ImportPath)
+			}
+			if !p.ready() {
+				for pp := range p.pendingVal {
+					debugf(" + %v\n", pp)
+				}
+				fatalf("%v is still pending on:\n", p)
+			}
+
+			debugf("%v marked as complete\n", p)
+
+			for rd := range p.rdeps {
+				rd.donePending(p)
+				if rd.ready() {
+					possWork = append(possWork, rd)
+				}
 			}
 		}
 
-		if err := sc.Err(); err != nil {
-			fatalf("could not parse go install output\n%v", string(out))
+		var pw *pkg
+		for len(possWork) > 0 {
+			pw, possWork = possWork[0], possWork[1:]
+			if pw.isTool || len(pw.toolDeps) > 0 {
+				debugf("adding work %v\n", pw)
+				work = append(work, pw)
+			} else {
+				// this is a package which exists as a transitive dep
+				pw.donePending(pw)
+				if !pw.isTool {
+					installs = append(installs, pw.ImportPath)
+				}
+				for rd := range pw.rdeps {
+					rd.donePending(pw)
+					if rd.ready() {
+						possWork = append(possWork, rd)
+					}
+				}
+			}
+		}
+
+		// we don't care if this install works... it's just a temporary fix to speed
+		// up subsequent type checks
+		args := []string{"go", "install"}
+		args = append(args, installs...)
+		cmd := exec.Command(args[0], args[1:]...)
+		out, err := cmd.CombinedOutput()
+		if err != nil {
+			if _, ok := err.(*exec.ExitError); !ok {
+				fatalf("failed to try %v: %v\n%s", strings.Join(cmd.Args, " "), err, out)
+			}
 		}
 	}
-
-	if len(out) > 0 {
-		xlog(string(out))
-	}
-
-	var f, s []string
 
 	for _, p := range pkgs {
-		if _, ok := fmap[p]; ok {
-			f = append(f, p)
-		} else {
-			s = append(s, p)
+		if !p.ready() {
+			debugf("%v is not ready\n", p)
 		}
 	}
-
-	return s, f
-}
-
-// cmdList returns a subset of packages (subset of pNames) that contain directives
-// and a map[package] -> map[cmd]struct{} of which commands are used in which packages
-// As it scans each package in pNames it removes any generated files that do not have
-// an occurence of a directive for the associated generator in the package (not test
-// aware right now). In the process it also validates the directives that are present
-func cmdList(pNames []string) []string {
-	cmds := make(map[string]map[string]struct{})
-
-	for _, pName := range pNames {
-		var h map[string]struct{}
-
-		pkg := pkgInfo[pName]
-
-		var goFiles []string
-		goFiles = append(goFiles, pkg.GoFiles...)
-		goFiles = append(goFiles, pkg.CgoFiles...)
-		goFiles = append(goFiles, pkg.TestGoFiles...)
-		goFiles = append(goFiles, pkg.XTestGoFiles...)
-
-		cmdFiles := make(map[string][]string)
-
-		for _, f := range goFiles {
-			f = filepath.Join(pkg.Dir, f)
-
-			visitDir := func(line int, dirArgs []string) error {
-				if *fList {
-					rel, err := filepath.Rel(wd, f)
-					if err != nil {
-						fatalf("could not create filepath.Re(%q, %q): %q", wd, f, err)
-					}
-					fmt.Printf("%v:%v: %v\n", rel, line, strings.Join(dirArgs, " "))
-				}
-				if h == nil {
-					h = make(map[string]struct{})
-					cmds[pName] = h
-				}
-
-				h[dirArgs[0]] = struct{}{}
-
-				return nil
-			}
-
-			if cmd, ok := gogenerate.FileIsGenerated(f); ok {
-				// we only care about cmds which we know about in our config
-				// for now this helps to deal with the edge case that is protobuf
-				// files
-
-				_, oktyp := config.typedCmds[cmd]
-				_, okuntyp := config.untypedCmds[cmd]
-
-				if oktyp || okuntyp {
-					cmdFiles[cmd] = append(cmdFiles[cmd], f)
-				}
-			}
-
-			gogenerate.DirFunc(pName, pkg.Dir, f, visitDir)
-		}
-
-		removed := false
-
-		for c, fs := range cmdFiles {
-			if _, ok := h[c]; !ok {
-				for _, f := range fs {
-					vvlogf("removing %v", f)
-
-					removed = true
-
-					err := os.Remove(f)
-					if err != nil {
-						fatalf("could not remove %v: %v", f, err)
-					}
-				}
-			}
-		}
-
-		if removed {
-			readPkgs([]string{pName}, false)
-		}
-	}
-
-	cm := cmdMap(cmds)
-
-	for v := range cm {
-
-		_, tok := config.typedCmds[v]
-		_, uok := config.untypedCmds[v]
-
-		if !tok && !uok {
-			log.Fatalf("go generate directive command \"%v\" is not specified as either typed or untyped", v)
-		}
-	}
-
-	dirPkgs := make([]string, 0, len(cmds))
-	for k := range cmds {
-		dirPkgs = append(dirPkgs, k)
-	}
-
-	return dirPkgs
-}
-
-func fatalf(format string, args ...interface{}) {
-	panic(fmt.Errorf(format, args...))
-}
-
-func xlog(args ...interface{}) {
-	if *fVVerbose || *fExecute {
-		log.Print(args...)
-	}
-}
-
-func xlogf(format string, args ...interface{}) {
-	if *fVVerbose || *fExecute {
-		log.Print(args...)
-	}
-}
-
-func vvlogf(format string, args ...interface{}) {
-	if *fVVerbose {
-		log.Printf(format, args...)
-	}
-}
-
-func cmdMap(cmds map[string]map[string]struct{}) map[string]struct{} {
-	allCmds := make(map[string]struct{})
-
-	for _, m := range cmds {
-		for k := range m {
-			allCmds[k] = struct{}{}
-		}
-	}
-
-	return allCmds
-}
-
-func keySlice(m map[string]struct{}) []string {
-	res := make([]string, 0, len(m))
-
-	for k := range m {
-		res = append(res, k)
-	}
-
-	return res
 }

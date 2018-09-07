@@ -8,11 +8,6 @@ fi
 
 source "${BASH_SOURCE%/*}/commonEnv.bash"
 
-if [ "$(type -t autostash || true)" == "function" ]
-then
-	autostash PATH="$(readlink -m "${BASH_SOURCE%/*}/../.bin"):$CHROMEDRIVER_INSTALL_DIR/$CHROMEDRIVER_VERSION:$PROTOBUF_INSTALL_DIR/$PROTOBUF_VERSION/bin:$PATH"
-else
-	export PATH="$(readlink -m "${BASH_SOURCE%/*}/../.bin"):$CHROMEDRIVER_INSTALL_DIR/$CHROMEDRIVER_VERSION:$PROTOBUF_INSTALL_DIR/$PROTOBUF_VERSION/bin:$PATH"
-fi
+autostash_or_export PATH="$(readlink -m "${BASH_SOURCE%/*}/../.bin"):$CHROMEDRIVER_INSTALL_DIR/$CHROMEDRIVER_VERSION:$PROTOBUF_INSTALL_DIR/$PROTOBUF_VERSION/bin:$PATH"
 
 LOADED_SETUP_PATH=true

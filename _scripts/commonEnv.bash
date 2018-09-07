@@ -7,7 +7,11 @@ then
 	return
 fi
 
-source "${BASH_SOURCE%/*}/commonFunctions.bash"
+# We deliberately do NOT source commonFunctions here because this file is
+# (transitively) sourced from a user's shell
+#
+# source "${BASH_SOURCE%/*}/commonFunctions.bash"
+#
 
 # Some CI-only env setup
 
@@ -20,6 +24,8 @@ then
 	export PROTOBUF_INSTALL_DIR=$CI_DEPENDENCIES_DIR/protobuf
 
 	export CHROMEDRIVER_INSTALL_DIR=$CI_DEPENDENCIES_DIR/chromedriver
+
+	export GOPROXY=file://$HOME/cachex
 fi
 
 if [ "${PROTOBUF_VERSION:-}" == "" ]

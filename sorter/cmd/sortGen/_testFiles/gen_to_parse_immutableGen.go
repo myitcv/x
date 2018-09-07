@@ -16,7 +16,7 @@ import (
 type MySlice struct {
 	theSlice []string
 	mutable  bool
-	__tmpl   _Imm_MySlice
+	__tmpl   *_Imm_MySlice
 }
 
 var _ immutable.Immutable = new(MySlice)

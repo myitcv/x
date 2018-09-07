@@ -5,6 +5,18 @@
 
 source $(git rev-parse --show-toplevel)/_scripts/common.bash
 
+for i in $(ls _scripts/known_diffs)
+do
+	echo "goVersion $(goVersion)"
+	if [[ "$(goVersion)" = $i* ]]
+	then
+		for j in $(find _scripts/known_diffs/$i -type f)
+		do
+			git apply $j
+		done
+	fi
+done
+
 if [ ! -z "$(git status --porcelain)" ]
 then
   echo "Git is not clean"

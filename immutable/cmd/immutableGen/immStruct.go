@@ -1,8 +1,11 @@
 package main
 
 import (
+	"fmt"
 	"go/ast"
 	"go/token"
+	"go/types"
+	"sort"
 	"strings"
 
 	"myitcv.io/immutable"
@@ -18,94 +21,93 @@ type commonImm struct {
 
 	// the declaring file
 	file *ast.File
+
+	// the template declaration
+	dec *ast.GenDecl
+}
+
+func (c *commonImm) isImmTmpl() {}
+
+type immTmpl interface {
+	isImmTmpl()
 }
 
 type immStruct struct {
 	commonImm
 
+	// the name of the type to generate; not the pointer version
 	name string
-	dec  *ast.GenDecl
-	st   *ast.StructType
+	syn  *ast.StructType
+	typ  *types.Struct
 
 	special bool
+
+	fields  []astField
+	methods map[string]*field
 }
 
-func (o *output) genImmStructs(structs []immStruct) {
+type astField struct {
+	anon  bool
+	name  string
+	field *ast.Field
+}
+
+func (o *output) genImmStructs(structs []*immStruct) {
 	type genField struct {
+		// the actual field name used in the generated struct
+		Field string
+
+		// The proper name of the field to be used on the method
 		Name  string
 		Type  string
 		f     *ast.Field
-		IsImm util.ImmTypeAst
+		IsImm util.ImmType
 	}
 
 	for _, s := range structs {
 
 		o.printCommentGroup(s.dec.Doc)
-		o.printImmPreamble(s.name, s.st)
+		o.printImmPreamble(s.name, s.syn)
 
 		// start of struct
 		o.pfln("type %v struct {", s.name)
 
-		o.printLeadSpecCommsFor(s.st)
+		o.printLeadSpecCommsFor(s.syn)
 
 		o.pln("")
 
 		var fields []genField
 
-		for _, f := range s.st.Fields.List {
-			names := ""
-			sep := ""
+		for _, f := range s.fields {
 
-			var isImm util.ImmTypeAst
-			typ := o.exprString(f.Type)
+			name := fieldNamePrefix + fieldHidingPrefix + f.name
 
-			isImm = o.immTypes[strings.TrimPrefix(typ, "*")]
-
-			if isImm == nil {
-				i, err := util.IsImmTypeAst(f.Type, s.file.Imports, s.pkg)
-				if err != nil {
-					panic(err)
-				}
-				isImm = i
+			if f.anon {
+				name = fieldAnonPrefix + name
 			}
 
 			tag := ""
-
-			if f.Tag != nil {
-				tag = f.Tag.Value
+			if f.field.Tag != nil {
+				tag = f.field.Tag.Value
 			}
+			typ := o.exprString(f.field.Type)
 
-			if len(f.Names) == 0 {
-				n := strings.TrimPrefix(typ, "*")
-				ps := strings.Split(n, ".")
-				n = ps[len(ps)-1]
-				names = fieldHidingPrefix + n
+			isImm := o.isImm(o.info.TypeOf(f.field.Type), typ)
 
-				fields = append(fields, genField{
-					Name:  n,
-					Type:  typ,
-					f:     f,
-					IsImm: isImm,
-				})
-			} else {
-				for _, n := range f.Names {
-					names = names + sep + fieldHidingPrefix + n.Name
-					sep = ", "
+			fields = append(fields, genField{
+				Field: name,
+				Name:  f.name,
+				Type:  typ,
+				f:     f.field,
+				IsImm: isImm,
+			})
 
-					fields = append(fields, genField{
-						Name:  n.Name,
-						Type:  typ,
-						f:     f,
-						IsImm: isImm,
-					})
-				}
-			}
-			o.pfln("%v %v %v", names, typ, tag)
+			o.pfln("%v %v %v", name, typ, tag)
 		}
 
 		o.pln("")
 		o.pln("mutable bool")
-		o.pfln("__tmpl %v%v", immutable.ImmTypeTmplPrefix, s.name)
+		o.pfln("__tmpl *%v%v", immutable.ImmTypeTmplPrefix, s.name)
 
 		// end of struct
 		o.pfln("}")
@@ -128,7 +130,7 @@ func (o *output) genImmStructs(structs []immStruct) {
 		`, exp, s.name)
 		if s.special {
 			o.pt(`
-			res._Key.Version++
+			res.field_Key.Version++
 			`, exp, nil)
 		}
 		o.pt(`
@@ -169,9 +171,7 @@ func (o *output) genImmStructs(structs []immStruct) {
 
 			return s
 		}
-		`, exp, s.name)
 
-		o.pt(`
 		func (s *{{.}}) IsDeeplyNonMutable(seen map[interface{}]bool) bool {
 			if s == nil {
 				return true
@@ -193,48 +193,28 @@ func (o *output) genImmStructs(structs []immStruct) {
 		`, exp, s.name)
 
 		for _, f := range fields {
+			if f.IsImm == nil {
+				continue
+			}
 			switch f.IsImm.(type) {
-			case util.ImmTypeAstSlice, util.ImmTypeAstStruct, util.ImmTypeAstMap, util.ImmTypeAstImplsIntf:
+			case util.ImmTypeSlice, util.ImmTypeStruct, util.ImmTypeMap, util.ImmTypeImplsIntf, util.ImmTypeSimple:
 
 				tmpl := struct {
-					TypeName string
-					Field    genField
+					FieldName string
 				}{
-					TypeName: s.name,
-					Field:    f,
+					FieldName: f.Field,
 				}
 
 				o.pt(`
 				{
-					v := s.`+fieldHidingPrefix+`{{.Field.Name}}
+					v := s.{{.FieldName}}
 
 					if v != nil && !v.IsDeeplyNonMutable(seen) {
 						return false
 					}
 				}
 				`, exp, tmpl)
-			case util.ImmTypeAstExtIntf:
-
-				tmpl := struct {
-					TypeName string
-					Field    genField
-				}{
-					TypeName: s.name,
-					Field:    f,
-				}
-
-				o.pt(`
-				{
-					v := s.`+fieldHidingPrefix+`{{.Field.Name}}
-
-					switch v := v.(type) {
-					case immutable.Immutable:
-						if !v.IsDeeplyNonMutable(seen) {
-							return false
-						}
-					}
-				}
-				`, exp, tmpl)
+			case util.ImmTypeBasic:
 			}
 		}
 
@@ -243,43 +223,102 @@ func (o *output) genImmStructs(structs []immStruct) {
 		}
 		`, exp, s.name)
 
-		for _, f := range fields {
+		var mns []string
+		for n := range s.methods {
+			mns = append(mns, n)
+		}
+
+		sort.Strings(mns)
+
+		for _, n := range mns {
+			f := s.methods[n]
+
 			tmpl := struct {
 				TypeName string
-				Field    genField
+				Path     string
+				Type     string
+				Name     string
 			}{
 				TypeName: s.name,
-				Field:    f,
+				Path:     strings.Join(f.path, "."),
+				Type:     f.typ,
+				Name:     n,
 			}
 
-			exp := exporter(f.Name)
+			exp := exporter(n)
 
-			o.printCommentGroup(f.f.Doc)
+			o.printCommentGroup(f.doc)
 
 			o.pt(`
-			func (s *{{.TypeName}}) {{.Field.Name}}() {{.Field.Type}} {
-				return s.`+fieldHidingPrefix+`{{.Field.Name}}
+			func (s *{{.TypeName}}) {{.Name}}() {{.Type}} {
+				return s.{{.Path}}
 			}
-
-			// {{Export "Set"}}{{Capitalise .Field.Name}} is the setter for {{Capitalise .Field.Name}}()
-			func (s *{{.TypeName}}) {{Export "Set"}}{{Capitalise .Field.Name}}(n {{.Field.Type}}) *{{.TypeName}} {
-				if s.mutable {
-					s.`+fieldHidingPrefix+`{{.Field.Name}} = n
-					return s
-				}
-
-				res := *s
 			`, exp, tmpl)
-			if s.special {
+
+			switch len(f.path) {
+			case 0:
+				panic(fmt.Errorf("We have zero path"))
+			case 1:
 				o.pt(`
-				res._Key.Version++
+				// {{Export "Set"}}{{Capitalise .Name}} is the setter for {{Capitalise .Name}}()
+				func (s *{{.TypeName}}) {{Export "Set"}}{{Capitalise .Name}}(n {{.Type}}) *{{.TypeName}} {
+					if s.mutable {
+						s.{{.Path}} = n
+						return s
+					}
+
+					res := *s
 				`, exp, tmpl)
+				if s.special {
+					o.pt(`
+					res.field_Key.Version++
+					`, exp, tmpl)
+				}
+				o.pt(`
+					res.{{.Path}} = n
+					return &res
+				}
+				`, exp, tmpl)
+			default:
+				o.pt(`
+				func (s *{{.TypeName}}) {{Export "Set"}}{{Capitalise .Name}}(n {{.Type}}) *{{.TypeName}} {
+				`, exp, tmpl)
+				last := "n"
+				for i := len(f.path) - 1; i >= 0; i-- {
+					v := fmt.Sprintf("v%v", i)
+					p := f.path[i]
+
+					rp := strings.Join(f.path[:i], ".")
+
+					if strings.HasSuffix(p, "()") {
+						if rp != "" {
+							rp = rp + "."
+						}
+						sp := strings.TrimSuffix(p, "()")
+
+						tmpl := struct {
+							V    string
+							Rp   string
+							Sp   string
+							Last string
+						}{
+							V:    v,
+							Rp:   rp,
+							Sp:   sp,
+							Last: last,
+						}
+						exp := exporter(sp)
+						o.pt(`{{.V}} := s.{{.Rp}}{{Export "Set"}}{{Capitalise .Sp}}({{.Last}})
+						`, exp, tmpl)
+					} else {
+						o.pf("%v := s.%v\n", v, rp)
+						o.pf("%v.%v = %v\n", v, p, last)
+					}
+					last = v
+				}
+				o.pf("return %v\n", last)
+				o.pln("}")
 			}
-			o.pt(`
-				res.`+fieldHidingPrefix+`{{.Field.Name}} = n
-				return &res
-			}
-			`, exp, tmpl)
 		}
 	}
 }
