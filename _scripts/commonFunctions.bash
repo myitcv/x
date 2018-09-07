@@ -58,7 +58,7 @@ subpackages()
 {
 	local ip=$(cwd_as_import_path)
 
-	go list ./... | ( grep -v -f <(sed -e 's+^\(.*\)$+^myitcv.io/\1/+' <<< "$(nested_test_dirs)") || true )
+	go list ./... | ( grep -v -f <(sed -e 's+^\(.*\)$+^myitcv.io/\1\\(/\\|$\\)+' <<< "$(nested_test_dirs)") || true )
 }
 export -f subpackages
 
@@ -176,6 +176,49 @@ install_deps()
 	{{end}}" "$@" | xargs go install
 }
 export -f install_deps
+
+verifyGoGet()
+{
+	local pkg=$1
+	echo "Verifying go get for $pkg"
+	(
+	cd `mktemp -d`
+	export GOPATH=$PWD
+	GO111MODULE=auto
+	go env
+	go get $pkg
+	)
+}
+export -f verifyGoGet
+
+installGo() {
+	# takes a two argument
+	#
+	# 1. go version
+	# 2. the target directory into which we will install the go directory
+	#
+	tf=$(mktemp)
+	os=$(uname | tr '[:upper:]' '[:lower:]')
+	arch="amd64"
+
+	if [[ "$1" = go* ]]
+	then
+		source="https://dl.google.com/go/$1.${os}-${arch}.tar.gz"
+		curl -sL $source > $tf
+	else
+		source="s3://io.myitcv.gobuilds/${os}_${arch}/$1.tar.gz"
+		aws s3 cp $source $tf
+	fi
+
+	echo "Will install ${1} from $source to $2"
+	tar -C $2 -zxf $tf
+}
+export -f installGo
+
+goVersion() {
+	go version | cut -d ' ' -f 3
+}
+export -f goVersion
 
 # **********************
 LOADED_COMMON_FUNCTIONS=true

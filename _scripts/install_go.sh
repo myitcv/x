@@ -12,22 +12,4 @@ then
 	exit 1
 fi
 
-os=$(uname | tr '[:upper:]' '[:lower:]')
-arch="amd64"
-
-if [[ "$GO_VERSION" = go* ]]
-then
-	cd $HOME
-	curl -sL  https://dl.google.com/go/$GO_VERSION.${os}-${arch}.tar.gz | tar -zx
-else
-	# tip
-	source="https://github.com/myitcv/gobuilds/raw/master/${os}_${arch}/$GO_VERSION.tar.gz"
-	target=$HOME/go
-
-	echo "Will install ${GO_VERSION:0:10} from $source to $target"
-
-	mkdir -p $target
-	cd $target
-
-	curl -L -s $source | tar -xz
-fi
+installGo $GO_VERSION $HOME

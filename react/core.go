@@ -50,3 +50,9 @@ type OnClick interface {
 
 	OnClick(e *SyntheticMouseEvent)
 }
+
+type OnSubmit interface {
+	Event
+
+	OnSubmit(e *SyntheticEvent)
+}

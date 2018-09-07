@@ -16,7 +16,7 @@ import (
 type strEntrySelect struct {
 	theMap  map[string]Label
 	mutable bool
-	__tmpl  _Imm_strEntrySelect
+	__tmpl  *_Imm_strEntrySelect
 }
 
 var _ immutable.Immutable = new(strEntrySelect)
@@ -171,7 +171,7 @@ func (s *strEntrySelect) IsDeeplyNonMutable(seen map[interface{}]bool) bool {
 type LabelEntries struct {
 	theSlice []Label
 	mutable  bool
-	__tmpl   _Imm_LabelEntries
+	__tmpl   *_Imm_LabelEntries
 }
 
 var _ immutable.Immutable = new(LabelEntries)
@@ -319,7 +319,7 @@ func (s *LabelEntries) IsDeeplyNonMutable(seen map[interface{}]bool) bool {
 type entriesKeysSelect struct {
 	theSlice []entryKey
 	mutable  bool
-	__tmpl   _Imm_entriesKeysSelect
+	__tmpl   *_Imm_entriesKeysSelect
 }
 
 var _ immutable.Immutable = new(entriesKeysSelect)

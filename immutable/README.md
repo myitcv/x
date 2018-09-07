@@ -16,7 +16,7 @@ go get -u myitcv.io/immutable
 ```
 <!-- END -->
 
-See [the `immutableGen` wiki](https://github.com/myitcv/immutable/wiki/immutableGen) for more details.
+See [the `immutableGen` docs](_doc/immutableGen.md) for more details.
 
 ### Contributors
 

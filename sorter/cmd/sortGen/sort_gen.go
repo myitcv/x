@@ -246,7 +246,7 @@ func (g *generator) findImmSlices(bp *build.Package) map[string]bool {
 			for _, s := range gd.Specs {
 				ts := s.(*ast.TypeSpec)
 
-				name, isit := util.IsImmTmplAst(ts)
+				name, isit := util.IsImmTmpl(ts)
 
 				if !isit {
 					continue Specs
@@ -563,6 +563,7 @@ func (g *generator) genMatches(funs []toGen, imps map[string]bool) {
 		impSlice = append(impSlice, i)
 	}
 	sort.Strings(impSlice)
+
 	for _, i := range impSlice {
 		g.pf("import %v\n", i)
 	}

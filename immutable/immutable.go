@@ -23,10 +23,12 @@ const (
 // be defined, assuming a generic type parameter T, as follows:
 //
 // 	type Immutable<T> interface {
-// 		AsMutable() T
-// 		AsImmutable() T
-// 		WithMutations(f func(v T)) T
 // 		Mutable() bool
+// 		AsMutable() T
+// 		AsImmutable(T) T
+// 		WithMutable(func(T)) T
+// 		WithImmutable(func(T)) T
+// 		IsDeeplyNonMutable(map[interface{}]bool) bool
 // 	}
 //
 // Because we do not have such a type parameter we can only define the Mutable() method in the interface

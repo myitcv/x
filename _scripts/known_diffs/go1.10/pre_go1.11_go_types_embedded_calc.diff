@@ -1,0 +1,37 @@
+diff --git b/immutable/cmd/immutableGen/internal/coretest/gen_core_immutableGen.go a/immutable/cmd/immutableGen/internal/coretest/gen_core_immutableGen.go
+index e97a115..f99f908 100644
+--- b/immutable/cmd/immutableGen/internal/coretest/gen_core_immutableGen.go
++++ a/immutable/cmd/immutableGen/internal/coretest/gen_core_immutableGen.go
+@@ -1498,6 +1498,15 @@ func (s *Embed1) SetNowA(n time.Time) *Embed1 {
+ 	v0 := s.SetNonImmStructA(v1)
+ 	return v0
+ }
++func (s *Embed1) Other() *Other {
++	return s.NonImmStruct().Other
++}
++func (s *Embed1) SetOther(n *Other) *Embed1 {
++	v1 := s.NonImmStruct()
++	v1.Other = n
++	v0 := s.SetNonImmStruct(v1)
++	return v0
++}
+ func (s *Embed1) OtherA() *pkga.OtherA {
+ 	return s.NonImmStructA().OtherA
+ }
+@@ -1507,6 +1516,16 @@ func (s *Embed1) SetOtherA(n *pkga.OtherA) *Embed1 {
+ 	v0 := s.SetNonImmStructA(v1)
+ 	return v0
+ }
++func (s *Embed1) OtherName() string {
++	return s.NonImmStruct().Other.OtherName()
++}
++func (s *Embed1) SetOtherName(n string) *Embed1 {
++	v2 := s.NonImmStruct().Other.SetOtherName(n)
++	v1 := s.NonImmStruct()
++	v1.Other = v2
++	v0 := s.SetNonImmStruct(v1)
++	return v0
++}
+ func (s *Embed1) OtherNameA() string {
+ 	return s.NonImmStructA().OtherA.OtherNameA()
+ }

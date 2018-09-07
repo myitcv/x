@@ -16,7 +16,7 @@ import (
 type intS struct {
 	theSlice []int
 	mutable  bool
-	__tmpl   _Imm_intS
+	__tmpl   *_Imm_intS
 }
 
 var _ immutable.Immutable = new(intS)
@@ -164,10 +164,10 @@ func (s *intS) IsDeeplyNonMutable(seen map[interface{}]bool) bool {
 // 	}
 //
 type Dummy struct {
-	_Name string
+	field_Name string
 
 	mutable bool
-	__tmpl  _Imm_Dummy
+	__tmpl  *_Imm_Dummy
 }
 
 var _ immutable.Immutable = new(Dummy)
@@ -216,6 +216,7 @@ func (s *Dummy) WithImmutable(f func(si *Dummy)) *Dummy {
 
 	return s
 }
+
 func (s *Dummy) IsDeeplyNonMutable(seen map[interface{}]bool) bool {
 	if s == nil {
 		return true
@@ -237,18 +238,18 @@ func (s *Dummy) IsDeeplyNonMutable(seen map[interface{}]bool) bool {
 	return true
 }
 func (s *Dummy) Name() string {
-	return s._Name
+	return s.field_Name
 }
 
 // SetName is the setter for Name()
 func (s *Dummy) SetName(n string) *Dummy {
 	if s.mutable {
-		s._Name = n
+		s.field_Name = n
 		return s
 	}
 
 	res := *s
-	res._Name = n
+	res.field_Name = n
 	return &res
 }
 
@@ -263,13 +264,13 @@ func (s *Dummy) SetName(n string) *Dummy {
 // 	}
 //
 type Dummy2 struct {
-	_name    []byte
-	_other   *Dummy3
-	_mine    MyIntf
-	_another MyType
+	field_name    []byte
+	field_other   *Dummy3
+	field_mine    MyIntf
+	field_another MyType
 
 	mutable bool
-	__tmpl  _Imm_Dummy2
+	__tmpl  *_Imm_Dummy2
 }
 
 var _ immutable.Immutable = new(Dummy2)
@@ -318,6 +319,7 @@ func (s *Dummy2) WithImmutable(f func(si *Dummy2)) *Dummy2 {
 
 	return s
 }
+
 func (s *Dummy2) IsDeeplyNonMutable(seen map[interface{}]bool) bool {
 	if s == nil {
 		return true
@@ -337,7 +339,7 @@ func (s *Dummy2) IsDeeplyNonMutable(seen map[interface{}]bool) bool {
 
 	seen[s] = true
 	{
-		v := s._other
+		v := s.field_other
 
 		if v != nil && !v.IsDeeplyNonMutable(seen) {
 			return false
@@ -345,64 +347,64 @@ func (s *Dummy2) IsDeeplyNonMutable(seen map[interface{}]bool) bool {
 	}
 	return true
 }
-func (s *Dummy2) name() []byte {
-	return s._name
-}
-
-// setName is the setter for Name()
-func (s *Dummy2) setName(n []byte) *Dummy2 {
-	if s.mutable {
-		s._name = n
-		return s
-	}
-
-	res := *s
-	res._name = n
-	return &res
-}
-func (s *Dummy2) other() *Dummy3 {
-	return s._other
-}
-
-// setOther is the setter for Other()
-func (s *Dummy2) setOther(n *Dummy3) *Dummy2 {
-	if s.mutable {
-		s._other = n
-		return s
-	}
-
-	res := *s
-	res._other = n
-	return &res
-}
-func (s *Dummy2) mine() MyIntf {
-	return s._mine
-}
-
-// setMine is the setter for Mine()
-func (s *Dummy2) setMine(n MyIntf) *Dummy2 {
-	if s.mutable {
-		s._mine = n
-		return s
-	}
-
-	res := *s
-	res._mine = n
-	return &res
-}
 func (s *Dummy2) another() MyType {
-	return s._another
+	return s.field_another
 }
 
 // setAnother is the setter for Another()
 func (s *Dummy2) setAnother(n MyType) *Dummy2 {
 	if s.mutable {
-		s._another = n
+		s.field_another = n
 		return s
 	}
 
 	res := *s
-	res._another = n
+	res.field_another = n
+	return &res
+}
+func (s *Dummy2) mine() MyIntf {
+	return s.field_mine
+}
+
+// setMine is the setter for Mine()
+func (s *Dummy2) setMine(n MyIntf) *Dummy2 {
+	if s.mutable {
+		s.field_mine = n
+		return s
+	}
+
+	res := *s
+	res.field_mine = n
+	return &res
+}
+func (s *Dummy2) name() []byte {
+	return s.field_name
+}
+
+// setName is the setter for Name()
+func (s *Dummy2) setName(n []byte) *Dummy2 {
+	if s.mutable {
+		s.field_name = n
+		return s
+	}
+
+	res := *s
+	res.field_name = n
+	return &res
+}
+func (s *Dummy2) other() *Dummy3 {
+	return s.field_other
+}
+
+// setOther is the setter for Other()
+func (s *Dummy2) setOther(n *Dummy3) *Dummy2 {
+	if s.mutable {
+		s.field_other = n
+		return s
+	}
+
+	res := *s
+	res.field_other = n
 	return &res
 }
 
@@ -414,10 +416,10 @@ func (s *Dummy2) setAnother(n MyType) *Dummy2 {
 // 	}
 //
 type Dummy3 struct {
-	_other *Dummy2
+	field_other *Dummy2
 
 	mutable bool
-	__tmpl  _Imm_Dummy3
+	__tmpl  *_Imm_Dummy3
 }
 
 var _ immutable.Immutable = new(Dummy3)
@@ -466,6 +468,7 @@ func (s *Dummy3) WithImmutable(f func(si *Dummy3)) *Dummy3 {
 
 	return s
 }
+
 func (s *Dummy3) IsDeeplyNonMutable(seen map[interface{}]bool) bool {
 	if s == nil {
 		return true
@@ -485,7 +488,7 @@ func (s *Dummy3) IsDeeplyNonMutable(seen map[interface{}]bool) bool {
 
 	seen[s] = true
 	{
-		v := s._other
+		v := s.field_other
 
 		if v != nil && !v.IsDeeplyNonMutable(seen) {
 			return false
@@ -494,17 +497,17 @@ func (s *Dummy3) IsDeeplyNonMutable(seen map[interface{}]bool) bool {
 	return true
 }
 func (s *Dummy3) other() *Dummy2 {
-	return s._other
+	return s.field_other
 }
 
 // setOther is the setter for Other()
 func (s *Dummy3) setOther(n *Dummy2) *Dummy3 {
 	if s.mutable {
-		s._other = n
+		s.field_other = n
 		return s
 	}
 
 	res := *s
-	res._other = n
+	res.field_other = n
 	return &res
 }

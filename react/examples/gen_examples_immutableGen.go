@@ -16,7 +16,7 @@ import (
 type tabS struct {
 	theMap  map[exampleKey]tab
 	mutable bool
-	__tmpl  _Imm_tabS
+	__tmpl  *_Imm_tabS
 }
 
 var _ immutable.Immutable = new(tabS)

@@ -5,12 +5,12 @@ import (
 	"flag"
 	"fmt"
 	"go/ast"
-	"go/importer"
 	"go/parser"
 	"go/printer"
 	"go/token"
 	"go/types"
 	"os"
+	"os/exec"
 	"path"
 	"path/filepath"
 	"sort"
@@ -18,7 +18,6 @@ import (
 
 	"go/build"
 
-	"github.com/kisielk/gotool"
 	"myitcv.io/gogenerate"
 	"myitcv.io/hybridimporter"
 	"myitcv.io/immutable"
@@ -75,7 +74,10 @@ func main() {
 		fatalf("could not get the working directory")
 	}
 
-	specs := gotool.ImportPaths(flag.Args())
+	specs, err := ImportPaths(flag.Args())
+	if err != nil {
+		fatalf("failed to resolve package patterns: %v", err)
+	}
 
 	emsgs := vet(wd, specs)
 
@@ -86,6 +88,33 @@ func main() {
 	if len(emsgs) > 0 {
 		os.Exit(1)
 	}
+}
+
+func ImportPaths(vs []string) ([]string, error) {
+	if len(vs) == 0 {
+		return nil, nil
+	}
+
+	args := []string{"go", "list"}
+	args = append(args, vs...)
+	cmd := exec.Command(args[0], args[1:]...)
+
+	var stdout, stderr strings.Builder
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+
+	if err := cmd.Run(); err != nil {
+		return nil, fmt.Errorf("failed to resolve import paths: %v\n%s", err, stderr.String())
+	}
+
+	res := strings.Split(strings.TrimSpace(stdout.String()), "\n")
+
+	for i, v := range res {
+		// inefficiently handles CR
+		res[i] = strings.TrimSpace(v)
+	}
+
+	return res, nil
 }
 
 func loadImmIntf() {
@@ -114,7 +143,7 @@ func loadImmIntf() {
 		files = append(files, f)
 	}
 
-	imp, err := hybridimporter.New(&build.Default, fset, ".")
+	imp, err := hybridimporter.New(&build.Default, fset, ".", "")
 	if err != nil {
 		fatalf("failed to create importer: %v", err)
 	}
@@ -195,6 +224,9 @@ func (iv *immutableVetter) ensurePointerTyp(n ast.Node, typ ast.Expr) {
 		}
 	}
 	t := iv.info.Types[typ].Type
+	if t == nil {
+		return
+	}
 	p := types.NewPointer(t)
 	switch util.IsImmType(p).(type) {
 	case util.ImmTypeMap, util.ImmTypeSlice, util.ImmTypeStruct:
@@ -461,9 +493,15 @@ func (iv *immutableVetter) vetPackages() []immErr {
 			files = append(files, f)
 		}
 
+		ctxt := build.Default
+
+		imp, err := hybridimporter.New(&ctxt, fset, iv.wd, iv.bpkg.ImportPath)
+		if err != nil {
+			fatalf("failed to create importer: %v", err)
+		}
 		// check types for the core package
 		conf := types.Config{
-			Importer: importer.Default(),
+			Importer: imp,
 		}
 		info := &types.Info{
 			Selections: make(map[*ast.SelectorExpr]*types.Selection),
@@ -472,7 +510,7 @@ func (iv *immutableVetter) vetPackages() []immErr {
 			Implicits:  make(map[ast.Node]types.Object),
 			Scopes:     make(map[ast.Node]*types.Scope),
 		}
-		_, err := conf.Check(iv.bpkg.ImportPath, fset, files, info)
+		_, err = conf.Check(iv.bpkg.ImportPath, fset, files, info)
 		if err != nil {
 			fatalf("type checking failed, %v", err)
 		}
@@ -494,7 +532,7 @@ func (iv *immutableVetter) vetPackages() []immErr {
 				for _, s := range gd.Specs {
 					ts := s.(*ast.TypeSpec)
 
-					_, ok := util.IsImmTmplAst(ts)
+					_, ok := util.IsImmTmpl(ts)
 					if !ok {
 						continue
 					}
