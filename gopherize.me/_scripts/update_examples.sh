@@ -25,10 +25,10 @@ echo "Copying..."
 
 (
 	cd $t
-	wget --quiet --mirror http://localhost:8081/myitcv.io/gopherize.me/client/
+	wget --quiet --mirror http://localhost:8080/myitcv.io/gopherize.me/client/
 )
 
-cp -rp $t/localhost:8081/myitcv.io/gopherize.me/client/* $r
+cp -rp $t/localhost:8080/myitcv.io/gopherize.me/client/* $r
 
 du -sh $r/!(artwork)
 
