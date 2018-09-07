@@ -58,7 +58,7 @@ subpackages()
 {
 	local ip=$(cwd_as_import_path)
 
-	go list ./... | ( grep -v -f <(sed -e 's+^\(.*\)$+^myitcv.io/\1/+' <<< "$(nested_test_dirs)") || true )
+	go list ./... | ( grep -v -f <(sed -e 's+^\(.*\)$+^myitcv.io/\1\\(/\\|$\\)+' <<< "$(nested_test_dirs)") || true )
 }
 export -f subpackages
 

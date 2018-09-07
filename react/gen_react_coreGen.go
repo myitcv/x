@@ -1117,6 +1117,7 @@ type FormProps struct {
 	Key                     string
 	OnChange                OnChange
 	OnClick                 OnClick
+	OnSubmit                OnSubmit
 	Ref                     Ref
 	Role                    string
 	Style                   *CSS
@@ -1136,6 +1137,7 @@ func Form(props *FormProps, children ...Element) *FormElem {
 		Key                     string              `js:"key" react:"omitempty"`
 		OnChange                OnChange            `js:"onChange"`
 		OnClick                 OnClick             `js:"onClick"`
+		OnSubmit                OnSubmit            `js:"onSubmit"`
 		Ref                     Ref                 `js:"ref"`
 		Role                    string              `js:"role"`
 		Style                   *CSS                `js:"style"`
@@ -1172,6 +1174,9 @@ func Form(props *FormProps, children ...Element) *FormElem {
 		}
 		if props.OnClick != nil {
 			rprops.o.Set("onClick", props.OnClick.OnClick)
+		}
+		if props.OnSubmit != nil {
+			rprops.o.Set("onSubmit", props.OnSubmit.OnSubmit)
 		}
 		if props.Ref != nil {
 			rprops.o.Set("ref", props.Ref.Ref)
