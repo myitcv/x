@@ -7,7 +7,7 @@ source "${BASH_SOURCE%/*}/common.bash"
 
 pushd internal/dev > /dev/null
 {
-	npm install
+	npm ci
 }
 popd > /dev/null
 

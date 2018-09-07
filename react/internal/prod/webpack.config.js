@@ -1,17 +1,14 @@
 const webpack = require("webpack");
 
 module.exports = {
+	mode: 'production',
 	entry: "./entry.point",
 	output: {
+		path: __dirname,
 		filename: "prod.inc.js",
 		libraryTarget: "this",
 	},
-	plugins: [
-		new webpack.optimize.UglifyJsPlugin(),
-		new webpack.DefinePlugin({
-			'process.env': {
-				'NODE_ENV': JSON.stringify('production')
-			}
-		})
-	]
+	optimization: {
+    minimize: true
+  }
 };
