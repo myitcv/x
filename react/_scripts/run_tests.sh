@@ -5,10 +5,14 @@
 
 source "$(git rev-parse --show-toplevel)/_scripts/common.bash"
 
+node --version
+npm --version
 google-chrome --version
 
 # ensure we are in the right directory
 cd "${BASH_SOURCE%/*}/.."
+
+./_scripts/webpack_deps.sh
 
 for i in $(cat .vendored_bin_deps .bin_deps)
 do
