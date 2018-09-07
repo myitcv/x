@@ -230,7 +230,11 @@ var elements = map[string]*Elem{
 	"Footer": &Elem{
 		Dom: "BasicHTMLElement",
 	},
-	"Form": &Elem{},
+	"Form": &Elem{
+		Attributes: map[string]*Attr{
+			"OnSubmit": &Attr{Type: "OnSubmit", IsEvent: true},
+		},
+	},
 	"H1": &Elem{
 		Dom: "HTMLHeadingElement",
 	},
