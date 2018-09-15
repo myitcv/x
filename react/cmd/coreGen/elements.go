@@ -312,7 +312,7 @@ var elements = map[string]*Elem{
 			"Type":               &Attr{React: "type", Type: "string", HTML: "type"},
 			"ValidationMessage":  &Attr{React: "validationMessage", Type: "string", HTML: "validationmessage"},
 			"Value":              &Attr{React: "value", Type: "string", HTML: "value"},
-			"ValueAsDate":        &Attr{React: ".", Type: "time", HTML: "."},
+			"ValueAsDate":        &Attr{React: "valueAsDate", Type: "time", HTML: "valueasdate"},
 			"ValueAsNumber":      &Attr{React: "valueAsNumber", Type: "float64", HTML: "valueasnumber"},
 			"Width":              &Attr{React: "width", Type: "string", HTML: "width"},
 			"WillValidate":       &Attr{React: "willValidate", Type: "bool", HTML: "willvalidate"},
