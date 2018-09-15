@@ -20,7 +20,7 @@ import (
 // using
 // https://github.com/Microsoft/TypeScript/blob/8b9fa4ce7420fdf2f540300dc80fa91f5b89ea93/lib/lib.dom.d.ts#L1692
 // as a reference
-// Used https://play.golang.org/p/uK-9pocUmVE to geerate.
+// Used https://play.golang.org/p/uK-9pocUmVE to generate.
 //
 var attrs = map[string]*typ{
 	"AlignContent":                &typ{HTML: "align-content", React: "alignContent"},
