@@ -1,10 +1,10 @@
 <!-- __JSON: go list -json .
-## `{{ filepathBase .ImportPath}}`
+## `{{ filepathBase .Out.ImportPath}}`
 
-{{.Doc}}
+{{.Out.Doc}}
 
 ```
-go get -u {{.ImportPath}}
+go get -u {{.Out.ImportPath}}
 ```
 -->
 ## `pkgconcat`
@@ -21,7 +21,7 @@ Used with its `-out` flag, `pkgconcat` can effectively act as a code generator, 
 
 <!-- __TEMPLATE: sh -c "cat ${DOLLAR}(go list -f '{{.Dir}}' myitcv.io/cmd/modpub)/modpub.go | grep \"go:generate pkgconcat\""
 ```
-{{. -}}
+{{.Out -}}
 ```
 -->
 ```
@@ -34,7 +34,7 @@ Used with its `-out` flag, `pkgconcat` can effectively act as a code generator, 
 ### Usage
 
 ```
-{{. -}}
+{{.Out -}}
 ```
 -->
 ### Usage

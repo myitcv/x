@@ -2,17 +2,19 @@ package main
 
 import (
 	"bytes"
+	"fmt"
 	"os"
 	"os/exec"
 	"sort"
 	"strconv"
 	"strings"
 	"text/template"
+	"unicode"
 
 	"myitcv.io/cmd/mdreplace/internal/itemtype"
 )
 
-func (p *processor) processCommonBlock(prefix string, conv func([]byte) interface{}) procFn {
+func (p *processor) processCommonBlock(prefix string, conv func(string, []byte) cmdOut) procFn {
 	// consume the (quoted) arguments
 
 	var orig []string
@@ -147,12 +149,94 @@ Args:
 			p.errorf("failed to run command %q: %v\n%v", origCmdStr, err, string(out))
 		}
 
+		i := conv(strings.Join(cmd.Args, " "), out)
+
+		// TODO gross hack for now
+		tmplFuncMap["PrintCmd"] = func(k string) interface{} {
+			m := i.Out.(map[string]interface{})
+			if bs, ok := m["Blocks"]; ok {
+				bsm := bs.(map[string]interface{})
+				if v, ok := bsm[k]; ok {
+					vs := v.([]interface{})
+					if len(vs) == 1 {
+						jv := vs[0].(map[string]interface{})
+						return jv["Cmd"]
+					}
+				}
+			}
+
+			return nil
+		}
+
+		tmplFuncMap["PrintOut"] = func(k string) interface{} {
+			m := i.Out.(map[string]interface{})
+			if bs, ok := m["Blocks"]; ok {
+				bsm := bs.(map[string]interface{})
+				if v, ok := bsm[k]; ok {
+					vs := v.([]interface{})
+					if len(vs) == 1 {
+						jv := vs[0].(map[string]interface{})
+						res := jv["Out"].(string)
+						return strings.TrimRightFunc(res, unicode.IsSpace)
+					}
+				}
+			}
+
+			return nil
+		}
+
+		tmplFuncMap["PrintBlock"] = func(k string) string {
+			m := i.Out.(map[string]interface{})
+			if bs, ok := m["Blocks"]; ok {
+				bsm := bs.(map[string]interface{})
+				if v, ok := bsm[k]; ok {
+					vs := v.([]interface{})
+					res := new(strings.Builder)
+					for _, j := range vs {
+						jj := j.(map[string]interface{})
+						fmt.Fprintf(res, "$ %v\n", jj["Cmd"])
+						if o := jj["Out"]; o != "" {
+							// new line will be part of output
+							fmt.Fprintf(res, "%v", o)
+						}
+					}
+					return res.String()
+				}
+			}
+
+			return ""
+		}
+
+		tmplFuncMap["PrintBlockOut"] = func(k string) string {
+			m := i.Out.(map[string]interface{})
+			if bs, ok := m["Blocks"]; ok {
+				bsm := bs.(map[string]interface{})
+				if v, ok := bsm[k]; ok {
+					vs := v.([]interface{})
+					res := new(strings.Builder)
+					for _, j := range vs {
+						jj := j.(map[string]interface{})
+						fmt.Fprintf(res, "%v", jj["Out"])
+					}
+					return res.String()
+				}
+			}
+
+			return ""
+		}
+
+		tmplFuncMap["indent"] = func(k string) string {
+			lines := strings.Split(k, "\n")
+			for i := range lines {
+				lines[i] = "    " + lines[i]
+			}
+			return strings.Join(lines, "\n")
+		}
+
 		t, err := template.New("").Funcs(tmplFuncMap).Parse(tmpl.String())
 		if err != nil {
 			p.errorf("failed to parse template %q: %e", tmpl, err)
 		}
-
-		i := conv(out)
 
 		newBuf := new(bytes.Buffer)
 

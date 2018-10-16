@@ -1,10 +1,10 @@
 <!-- __JSON: go list -json .
-## `{{ filepathBase .ImportPath}}`
+## `{{ filepathBase .Out.ImportPath}}`
 
-{{.Doc}}
+{{.Out.Doc}}
 
 ```
-go get -u {{.ImportPath}}
+go get -u {{.Out.ImportPath}}
 ```
 -->
 ## `mdreplace`
@@ -29,10 +29,10 @@ are replaced with command output.
 For example, were we to include the following special comment block:
 
 <!-- __TEMPLATE: cat _examples/hello_world_today
-{{. -}}
+{{.Out -}}
 -->
     <!-- __TEMPLATE: echo -n "hello world" today
-    {{. -}}
+    {{.Out -}}
     -->
     <!-- END -->
 <!-- END -->
@@ -41,7 +41,7 @@ results in:
 
 ---
 <!-- __TEMPLATE: sh -c "cat _examples/hello_world_today | sed -e 's/^    //' | mdreplace -strip"
-{{.}}
+{{.Out}}
 -->
 hello world today
 <!-- END -->
@@ -55,7 +55,7 @@ _To see this in action, look at the [source of the
 ### Usage
 
 ```
-{{. -}}
+{{.Out -}}
 ```
 -->
 ### Usage
@@ -87,7 +87,7 @@ Flags:
 Code fences can appear within templates. Hence the following special template within a markdown file:
 
 <!-- __TEMPLATE: cat _examples/code_fence
-{{. -}}
+{{.Out -}}
 -->
     <!-- __TEMPLATE: echo -n "hello world"
     ```go
@@ -96,7 +96,7 @@ Code fences can appear within templates. Hence the following special template wi
     import "fmt"
 
     func main() {
-            fmt.Println("{{.}}")
+            fmt.Println("{{.Out}}")
     }
     ```
     -->
@@ -107,7 +107,7 @@ results in:
 
 ---
 <!-- __TEMPLATE: sh -c "cat _examples/code_fence | sed -e 's/^    //' | mdreplace -strip"
-{{.}}
+{{.Out}}
 -->
 ```go
 package main
@@ -134,13 +134,13 @@ The `__JSON` block is used where the output from the command is valid JSON. This
 an argument to the template block. For example:
 
 <!-- __TEMPLATE: cat _examples/json_block
-{{. -}}
+{{.Out -}}
 -->
     <!-- __JSON: go list -json encoding/json
-    Package `{{.ImportPath}}` has name `{{.Name}}` and the following doc string:
+    Package `{{.Out.ImportPath}}` has name `{{.Out.Name}}` and the following doc string:
 
     ```
-    {{.Doc}}
+    {{.Out.Doc}}
     ```
     -->
     <!-- END -->
@@ -150,7 +150,7 @@ results in :
 
 ---
 <!-- __TEMPLATE: sh -c "cat _examples/json_block | sed -e 's/^    //' | mdreplace -strip"
-{{.}}
+{{.Out}}
 -->
 Package `encoding/json` has name `json` and the following doc string:
 
@@ -166,10 +166,10 @@ Package json implements encoding and decoding of JSON as defined in RFC 7159.
 Variable expansion also works; use the special `$DOLLAR` variable to expand to the literal `$` sign:
 
 <!-- __TEMPLATE: cat _examples/variable_expansion
-{{. -}}
+{{.Out -}}
 -->
     <!-- __TEMPLATE: sh -c "BANANA=fruit; echo -n \"${DOLLAR}BANANA\""
-    {{.}}
+    {{.Out}}
     -->
     <!-- END -->
 <!-- END -->
@@ -178,7 +178,7 @@ results in :
 
 ---
 <!-- __TEMPLATE: sh -c "cat _examples/variable_expansion | sed -e 's/^    //' | mdreplace -strip"
-{{.}}
+{{.Out}}
 -->
 fruit
 

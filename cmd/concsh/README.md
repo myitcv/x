@@ -1,10 +1,10 @@
 <!-- __JSON: go list -json .
-## `{{ filepathBase .ImportPath}}`
+## `{{ filepathBase .Out.ImportPath}}`
 
-{{.Doc}}
+{{.Out.Doc}}
 
 ```
-go get -u {{.ImportPath}}
+go get -u {{.Out.ImportPath}}
 ```
 -->
 ## `concsh`
@@ -21,7 +21,7 @@ go get -u myitcv.io/cmd/concsh
 ### Usage
 
 ```
-{{. -}}
+{{.Out -}}
 ```
 -->
 ### Usage
@@ -57,7 +57,7 @@ The exit code from `concsh` is `0` if all commands succeed without error, or one
 
 <!-- __TEMPLATE: cat _example/example.sh
 ```bash
-{{. -}}
+{{.Out -}}
 ```
 -->
 ```bash
@@ -73,7 +73,7 @@ which gives output similar to:
 
 <!-- __TEMPLATE: sh _example/example.sh # SORTINVARIANT LONG
 ```
-{{. -}}
+{{.Out -}}
 ```
 -->
 ```
