@@ -1,10 +1,10 @@
 <!-- __JSON: go list -json .
-## `{{ filepathBase .ImportPath}}`
+## `{{ filepathBase .Out.ImportPath}}`
 
-{{.Doc}}
+{{.Out.Doc}}
 
 ```
-go get -u {{.ImportPath}}
+go get -u {{.Out.ImportPath}}
 ```
 -->
 ## `reactVet`
