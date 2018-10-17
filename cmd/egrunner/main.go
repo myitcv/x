@@ -80,6 +80,7 @@ func run() error {
 	toRun := new(bytes.Buffer)
 	toRun.WriteString(`#!/usr/bin/env bash
 set -u
+set -o pipefail
 
 assert()
 {
