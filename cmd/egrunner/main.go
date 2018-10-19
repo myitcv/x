@@ -14,9 +14,23 @@ import (
 	"mvdan.cc/sh/syntax"
 )
 
+var _ flag.Value = (*dockerFlags)(nil)
+
+type dockerFlags []string
+
+func (d *dockerFlags) String() string {
+	return strings.Join(*d, " ")
+}
+
+func (d *dockerFlags) Set(v string) error {
+	*d = append(*d, v)
+	return nil
+}
+
 var (
-	debugOut = false
-	stdOut   = false
+	debugOut     = false
+	stdOut       = false
+	fDockerFlags dockerFlags
 
 	fOut     = flag.String("out", "json", "output format; json(default)|debug|std")
 	fGoRoot  = flag.String("goroot", "", "path to GOROOT to use")
@@ -47,6 +61,7 @@ func (b *block) String() string {
 }
 
 func main() {
+	flag.Var(&fDockerFlags, "df", "flag to pass to docker")
 	flag.Parse()
 
 	if err := run(); err != nil {
@@ -288,6 +303,11 @@ assert()
 	}
 
 	args := []string{"docker", "run", "--rm", "-w", "/root", "-e", "GITHUB_PAT", "-e", "GITHUB_USERNAME", "-e", "GO_VERSION", "-e", "GITHUB_ORG", "-e", "GITHUB_ORG_ARCHIVE", "--entrypoint", "bash", "-v", fmt.Sprintf("%v:/go/bin/%v", ghcli, commgithubcli), "-v", fmt.Sprintf("%v:/%v", tfn, scriptName)}
+
+	for _, df := range fDockerFlags {
+		parts := strings.SplitN(df, "=", 2)
+		args = append(args, parts...)
+	}
 
 	if *fGoRoot != "" {
 		args = append(args, "-v", fmt.Sprintf("%v:/go", *fGoRoot))
