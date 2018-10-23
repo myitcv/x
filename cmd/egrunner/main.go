@@ -303,7 +303,7 @@ assert()
 		return errorf("failed to write to temp file %v: %v", tfn, err)
 	}
 
-	args := []string{"docker", "run", "--rm", "-e", "GITHUB_PAT", "-e", "GITHUB_USERNAME", "-e", "GO_VERSION", "-e", "GITHUB_ORG", "-e", "GITHUB_ORG_ARCHIVE", "--entrypoint", "bash", "-v", fmt.Sprintf("%v:/go/bin/%v", ghcli, commgithubcli), "-v", fmt.Sprintf("%v:/%v", tfn, scriptName)}
+	args := []string{"docker", "run", "--rm", "-w", "/home/gopher", "-e", "GITHUB_PAT", "-e", "GITHUB_USERNAME", "-e", "GO_VERSION", "-e", "GITHUB_ORG", "-e", "GITHUB_ORG_ARCHIVE", "--entrypoint", "bash", "-v", fmt.Sprintf("%v:/go/bin/%v", ghcli, commgithubcli), "-v", fmt.Sprintf("%v:/%v", tfn, scriptName)}
 
 	for _, df := range fDockerFlags {
 		parts := strings.SplitN(df, "=", 2)
