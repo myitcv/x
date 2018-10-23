@@ -33,9 +33,10 @@ var (
 	stdOut       = false
 	fDockerFlags dockerFlags
 
-	fOut     = flag.String("out", "json", "output format; json(default)|debug|std")
-	fGoRoot  = flag.String("goroot", "", "path to GOROOT to use")
-	fGoProxy = flag.String("goproxy", "", "path to GOPROXY to use")
+	fOut       = flag.String("out", "json", "output format; json(default)|debug|std")
+	fGoRoot    = flag.String("goroot", "", "path to GOROOT to use")
+	fGoProxy   = flag.String("goproxy", "", "path to GOPROXY to use")
+	fGithubCLI = flag.String("githubcli", "", "path to githubcli program")
 )
 
 const (
@@ -120,9 +121,16 @@ assert()
 
 `)
 
-	ghcli, err := exec.LookPath(commgithubcli)
-	if err != nil {
-		return errorf("failed to find %v in PATH", commgithubcli)
+	var ghcli string
+	if *fGithubCLI != "" {
+		ghcli = *fGithubCLI
+	} else {
+		ghcli, _ = exec.LookPath(commgithubcli)
+	}
+	if ghcli != "" {
+		if abs, err := filepath.Abs(ghcli); err == nil {
+			ghcli = abs
+		}
 	}
 
 	if len(flag.Args()) != 1 {
@@ -303,7 +311,11 @@ assert()
 		return errorf("failed to write to temp file %v: %v", tfn, err)
 	}
 
-	args := []string{"docker", "run", "--rm", "-w", "/home/gopher", "-e", "GITHUB_PAT", "-e", "GITHUB_USERNAME", "-e", "GO_VERSION", "-e", "GITHUB_ORG", "-e", "GITHUB_ORG_ARCHIVE", "--entrypoint", "bash", "-v", fmt.Sprintf("%v:/go/bin/%v", ghcli, commgithubcli), "-v", fmt.Sprintf("%v:/%v", tfn, scriptName)}
+	args := []string{"docker", "run", "--rm", "-w", "/home/gopher", "-e", "GITHUB_PAT", "-e", "GITHUB_USERNAME", "-e", "GO_VERSION", "-e", "GITHUB_ORG", "-e", "GITHUB_ORG_ARCHIVE", "--entrypoint", "bash", "-v", fmt.Sprintf("%v:/%v", tfn, scriptName)}
+
+	if ghcli != "" {
+		args = append(args, "-v", fmt.Sprintf("%v:/go/bin/%v", ghcli, commgithubcli))
+	}
 
 	for _, df := range fDockerFlags {
 		parts := strings.SplitN(df, "=", 2)
@@ -324,9 +336,10 @@ assert()
 		if err != nil {
 			return errorf("failed to create temp dir for docker build: %v", err)
 		}
-		defer os.Remove(td)
+		defer os.RemoveAll(td)
 		df := filepath.Join(td, "Dockerfile")
-		if err := ioutil.WriteFile(df, []byte(userDockerfile), 0644); err != nil {
+		udf := fmt.Sprintf(userDockerfile, os.Getuid(), os.Getgid())
+		if err := ioutil.WriteFile(df, []byte(udf), 0644); err != nil {
 			return errorf("failed to write temp Dockerfile %v: %v", df, err)
 		}
 
@@ -423,8 +436,8 @@ FROM golang
 ENV PATH=/vbash/bin:/home/gopher/.local/bin:$PATH
 ENV GOPATH=/home/gopher/gopath
 
-RUN groupadd -g 1000 gopher && \
-    adduser --uid 1000 --gid 1000 --disabled-password --gecos "" gopher
+RUN groupadd -g %[2]v gopher && \
+    adduser --uid %[1]v --gid %[2]v --disabled-password --gecos "" gopher
 
 # enable sudo
 RUN usermod -aG sudo gopher
