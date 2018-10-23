@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 
 	"mvdan.cc/sh/syntax"
@@ -302,7 +303,7 @@ assert()
 		return errorf("failed to write to temp file %v: %v", tfn, err)
 	}
 
-	args := []string{"docker", "run", "--rm", "-w", "/root", "-e", "GITHUB_PAT", "-e", "GITHUB_USERNAME", "-e", "GO_VERSION", "-e", "GITHUB_ORG", "-e", "GITHUB_ORG_ARCHIVE", "--entrypoint", "bash", "-v", fmt.Sprintf("%v:/go/bin/%v", ghcli, commgithubcli), "-v", fmt.Sprintf("%v:/%v", tfn, scriptName)}
+	args := []string{"docker", "run", "--rm", "-e", "GITHUB_PAT", "-e", "GITHUB_USERNAME", "-e", "GO_VERSION", "-e", "GITHUB_ORG", "-e", "GITHUB_ORG_ARCHIVE", "--entrypoint", "bash", "-v", fmt.Sprintf("%v:/go/bin/%v", ghcli, commgithubcli), "-v", fmt.Sprintf("%v:/%v", tfn, scriptName)}
 
 	for _, df := range fDockerFlags {
 		parts := strings.SplitN(df, "=", 2)
@@ -317,7 +318,32 @@ assert()
 		args = append(args, "-v", fmt.Sprintf("%v:/goproxy", *fGoProxy), "-e", "GOPROXY=file:///goproxy")
 	}
 
-	args = append(args, "golang", fmt.Sprintf("/%v", scriptName))
+	// build docker image
+	{
+		td, err := ioutil.TempDir("", "egrunner-docker-build")
+		if err != nil {
+			return errorf("failed to create temp dir for docker build: %v", err)
+		}
+		defer os.Remove(td)
+		df := filepath.Join(td, "Dockerfile")
+		if err := ioutil.WriteFile(df, []byte(userDockerfile), 0644); err != nil {
+			return errorf("failed to write temp Dockerfile %v: %v", df, err)
+		}
+
+		var stdout, stderr bytes.Buffer
+		dbcmd := exec.Command("docker", "build", "-q", td)
+		dbcmd.Stdout = &stdout
+		dbcmd.Stderr = &stderr
+		if err := dbcmd.Run(); err != nil {
+			return errorf("failed to run %v: %v\n%s", strings.Join(dbcmd.Args, " "), err, stderr.String())
+		}
+
+		iid := strings.TrimSpace(stdout.String())
+
+		args = append(args, iid)
+	}
+
+	args = append(args, fmt.Sprintf("/%v", scriptName))
 
 	cmd := exec.Command(args[0], args[1:]...)
 	debugf("now running %v via %v\n", tfn, strings.Join(cmd.Args, " "))
@@ -390,3 +416,20 @@ func debugf(format string, args ...interface{}) {
 		fmt.Printf(format, args...)
 	}
 }
+
+const userDockerfile = `
+FROM golang
+
+ENV PATH=/vbash/bin:/home/gopher/.local/bin:$PATH
+ENV GOPATH=/home/gopher/gopath
+
+RUN groupadd -g 1000 gopher && \
+    adduser --uid 1000 --gid 1000 --disabled-password --gecos "" gopher
+
+# enable sudo
+RUN usermod -aG sudo gopher
+RUN mkdir /etc/sudoers.d
+RUN echo "gopher ALL=(ALL:ALL) NOPASSWD: ALL" > /etc/sudoers.d/gopher
+
+USER gopher
+`
