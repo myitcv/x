@@ -255,9 +255,13 @@ assert()
 			if pendingSep && !stdOut {
 				fmt.Fprintf(toRun, "echo \"%v\"\n", outputSeparator)
 			}
+			if !stdOut {
+				fmt.Fprintf(toRun, "cat <<'THISWILLNEVERMATCH' | envsubst '$HOME,$GITHUB_ORG,$GITHUB_USERNAME' \n%v\nTHISWILLNEVERMATCH\n", stmtString(s))
+				fmt.Fprintf(toRun, "echo \"%v\"\n", outputSeparator)
+			}
 			stmts = append(stmts, co)
 			if debugOut || (stdOut && b != nil) {
-				fmt.Fprintf(toRun, "cat <<'THISWILLNEVERMATCH'\n$ %v\nTHISWILLNEVERMATCH\n", stmtString(s))
+				fmt.Fprintf(toRun, "cat <<'THISWILLNEVERMATCH' | envsubst '$HOME,$GITHUB_ORG,$GITHUB_USERNAME' \n$ %v\nTHISWILLNEVERMATCH\n", stmtString(s))
 			}
 			fmt.Fprintf(toRun, "%v\n", stmtString(s))
 
@@ -391,12 +395,18 @@ assert()
 		return errorf("error scanning cmd output: %v", err)
 	}
 
-	if len(lines) != len(stmts) {
+	if len(lines) != 2*len(stmts) {
 		return errorf("had %v statements but %v lines of output", len(stmts), len(lines))
 	}
 
-	for i := range stmts {
-		stmts[i].Out = lines[i]
+	j := 0
+	for i := 0; i < len(lines); {
+		// strip the last \n off the cmd
+		stmts[j].Cmd = lines[i][:len(lines[i])-1]
+		i += 1
+		stmts[j].Out = lines[i]
+		i += 1
+		j += 1
 	}
 
 	tmpl := struct {
@@ -441,7 +451,7 @@ RUN groupadd -g %[2]v gopher && \
 
 # install sudo
 RUN apt-get update
-RUN apt-get install -y sudo tree
+RUN apt-get install -y sudo tree gettext-base
 
 # enable sudo
 RUN usermod -aG sudo gopher
