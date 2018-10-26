@@ -144,7 +144,7 @@ Args:
 	if execute {
 		// ok now process the command, parse the template and write everything
 		cmd := exec.Command(args[0], args[1:]...)
-		out, err := cmd.CombinedOutput()
+		out, err := cmd.Output()
 		if err != nil {
 			p.errorf("failed to run command %q: %v\n%v", origCmdStr, err, string(out))
 		}
