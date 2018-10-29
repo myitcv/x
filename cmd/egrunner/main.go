@@ -33,10 +33,11 @@ var (
 	stdOut       = false
 	fDockerFlags dockerFlags
 
-	fOut       = flag.String("out", "json", "output format; json(default)|debug|std")
-	fGoRoot    = flag.String("goroot", "", "path to GOROOT to use")
-	fGoProxy   = flag.String("goproxy", "", "path to GOPROXY to use")
-	fGithubCLI = flag.String("githubcli", "", "path to githubcli program")
+	fOut        = flag.String("out", "json", "output format; json(default)|debug|std")
+	fGoRoot     = flag.String("goroot", "", "path to GOROOT to use")
+	fGoProxy    = flag.String("goproxy", "", "path to GOPROXY to use")
+	fGithubCLI  = flag.String("githubcli", "", "path to githubcli program")
+	fEnvSubVars = flag.String("envsubst", "HOME,GITHUB_ORG,GITHUB_USERNAME", "comma-separated list of env vars to expand in commands")
 )
 
 const (
@@ -79,6 +80,11 @@ func run() error {
 
 	if *fGoProxy == "" {
 		*fGoProxy = os.Getenv("EGRUNNER_GOPROXY")
+	}
+
+	envsubvars := "$" + strings.Join(strings.Split(*fEnvSubVars, ","), ",$")
+	if envsubvars == "$" {
+		envsubvars = ""
 	}
 
 	switch *fOut {
@@ -256,12 +262,12 @@ assert()
 				fmt.Fprintf(toRun, "echo \"%v\"\n", outputSeparator)
 			}
 			if !stdOut {
-				fmt.Fprintf(toRun, "cat <<'THISWILLNEVERMATCH' | envsubst '$HOME,$GITHUB_ORG,$GITHUB_USERNAME' \n%v\nTHISWILLNEVERMATCH\n", stmtString(s))
+				fmt.Fprintf(toRun, "cat <<'THISWILLNEVERMATCH' | envsubst '%v' \n%v\nTHISWILLNEVERMATCH\n", envsubvars, stmtString(s))
 				fmt.Fprintf(toRun, "echo \"%v\"\n", outputSeparator)
 			}
 			stmts = append(stmts, co)
 			if debugOut || (stdOut && b != nil) {
-				fmt.Fprintf(toRun, "cat <<'THISWILLNEVERMATCH' | envsubst '$HOME,$GITHUB_ORG,$GITHUB_USERNAME' \n$ %v\nTHISWILLNEVERMATCH\n", stmtString(s))
+				fmt.Fprintf(toRun, "cat <<'THISWILLNEVERMATCH' | envsubst '%v' \n$ %v\nTHISWILLNEVERMATCH\n", envsubvars, stmtString(s))
 			}
 			fmt.Fprintf(toRun, "%v\n", stmtString(s))
 
