@@ -1,5 +1,3 @@
-// +build linux
-
 // bindmntresolve prints the real directory path on disk of a possibly bind-mounted path
 package main
 
@@ -10,6 +8,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
+	"runtime"
 	"strings"
 )
 
@@ -50,6 +49,12 @@ func mainerr() error {
 		return fmt.Errorf("failed to resolve symlinks in %v: %v", p, err)
 	} else {
 		p = es
+	}
+
+	findmnt, err := exec.LookPath("findmnt")
+	if err != nil || findmnt == "" || runtime.GOOS != "linux" {
+		fmt.Println(p)
+		return nil
 	}
 
 	targetRegexp := regexp.MustCompile(`^.*\[(.*)\]$`)
