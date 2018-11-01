@@ -1,0 +1,3 @@
+bindmntresolve $WORK
+stdout $WORK
+! stderr .+

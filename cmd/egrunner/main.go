@@ -13,6 +13,7 @@ import (
 	"strings"
 
 	"mvdan.cc/sh/syntax"
+	"myitcv.io/cmd/internal/bindmnt"
 )
 
 var _ flag.Value = (*dockerFlags)(nil)
@@ -321,23 +322,51 @@ assert()
 		return errorf("failed to write to temp file %v: %v", tfn, err)
 	}
 
+	if etfn, err := bindmnt.Resolve(tfn); err == nil {
+		tfn = etfn
+	}
+
 	args := []string{"docker", "run", "--rm", "-w", "/home/gopher", "-e", "GITHUB_PAT", "-e", "GITHUB_USERNAME", "-e", "GO_VERSION", "-e", "GITHUB_ORG", "-e", "GITHUB_ORG_ARCHIVE", "--entrypoint", "bash", "-v", fmt.Sprintf("%v:/%v", tfn, scriptName)}
 
 	if ghcli != "" {
-		args = append(args, "-v", fmt.Sprintf("%v:/go/bin/%v", ghcli, commgithubcli))
+		if eghcli, err := bindmnt.Resolve(ghcli); err == nil {
+			args = append(args, "-v", fmt.Sprintf("%v:/go/bin/%v", eghcli, commgithubcli))
+		}
 	}
 
 	for _, df := range fDockerFlags {
 		parts := strings.SplitN(df, "=", 2)
-		args = append(args, parts...)
+		switch len(parts) {
+		case 1:
+			args = append(args, parts[0])
+		case 2:
+			flag, value := parts[0], parts[1]
+			if flag == "-v" {
+				vparts := strings.Split(value, ":")
+				if len(vparts) != 2 {
+					return errorf("-v flag had unexpected format: %q", value)
+				}
+				src := vparts[0]
+				if esrc, err := bindmnt.Resolve(src); err == nil {
+					value = esrc + ":" + vparts[1]
+				}
+			}
+			args = append(args, flag, value)
+		default:
+			panic("invariant fail")
+		}
 	}
 
 	if *fGoRoot != "" {
-		args = append(args, "-v", fmt.Sprintf("%v:/go", *fGoRoot))
+		if egr, err := bindmnt.Resolve(*fGoRoot); err == nil {
+			args = append(args, "-v", fmt.Sprintf("%v:/go", egr))
+		}
 	}
 
 	if *fGoProxy != "" {
-		args = append(args, "-v", fmt.Sprintf("%v:/goproxy", *fGoProxy), "-e", "GOPROXY=file:///goproxy")
+		if egp, err := bindmnt.Resolve(*fGoProxy); err == nil {
+			args = append(args, "-v", fmt.Sprintf("%v:/goproxy", egp), "-e", "GOPROXY=file:///goproxy")
+		}
 	}
 
 	// build docker image
