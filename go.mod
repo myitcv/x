@@ -10,9 +10,9 @@ require (
 	github.com/jteeuwen/go-bindata v3.0.7+incompatible
 	github.com/kisielk/gotool v1.0.0
 	github.com/kr/fs v0.1.0
-	github.com/kr/pretty v0.1.0 // indirect
 	github.com/onsi/ginkgo v1.6.0 // indirect
 	github.com/onsi/gomega v1.4.1 // indirect
+	github.com/rogpeppe/go-internal v1.0.0
 	github.com/russross/blackfriday v1.5.1
 	github.com/sclevine/agouti v3.0.0+incompatible
 	golang.org/x/net v0.0.0-20180731172858-49c15d80dfbc
