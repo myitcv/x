@@ -229,7 +229,7 @@ func (a AppDef) handleEvent() {
 
 	case langShell:
 		in := strings.NewReader(st.Code())
-		f, err := syntax.NewParser().Parse(in, "stdin")
+		f, err := syntax.NewParser(syntax.KeepComments).Parse(in, "stdin")
 		if err != nil {
 			st.SetAst(err.Error())
 			return
