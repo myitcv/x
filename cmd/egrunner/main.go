@@ -478,7 +478,7 @@ func debugf(format string, args ...interface{}) {
 const userDockerfile = `
 FROM golang
 
-ENV PATH=/vbash/bin:/home/gopher/.local/bin:$PATH
+ENV PATH=/vbash/bin:/home/gopher/.local/bin:/home/gopher/gopath/bin:$PATH
 ENV GOPATH=/home/gopher/gopath
 
 RUN groupadd -g %[2]v gopher && \
@@ -502,4 +502,8 @@ RUN apt-get install -y docker-ce
 RUN usermod -aG docker gopher
 
 USER gopher
+
+RUN mkdir -p $GOPATH/bin
+RUN curl -fsSLo $GOPATH/bin/gobin https://github.com/myitcv/gobin/releases/download/v0.0.3/linux-amd64
+RUN chmod 755 $GOPATH/bin/gobin
 `
