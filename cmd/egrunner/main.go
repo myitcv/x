@@ -42,10 +42,11 @@ var (
 )
 
 const (
-	scriptName      = "script.sh"
-	blockPrefix     = "block:"
-	outputSeparator = "============================================="
-	commentStart    = "**START**"
+	scriptName         = "script.sh"
+	blockPrefix        = "block:"
+	outputSeparator    = "============================================="
+	commentStart       = "**START**"
+	commentEnvSubstAdj = "egrunner_envsubst:"
 
 	commgithubcli = "githubcli"
 
@@ -83,10 +84,7 @@ func run() error {
 		*fGoProxy = os.Getenv("EGRUNNER_GOPROXY")
 	}
 
-	envsubvars := "$" + strings.Join(strings.Split(*fEnvSubVars, ","), ",$")
-	if envsubvars == "$" {
-		envsubvars = ""
-	}
+	envsubvars := strings.Split(*fEnvSubVars, ",")
 
 	switch *fOut {
 	case outJson:
@@ -190,16 +188,86 @@ assert()
 	// find the # START comment
 	var start *syntax.Comment
 
+	// TODO it would be significantly cleaner if we grouped, tidied etc all the statements
+	// and comments into a custom data structure in one phase, then processed it in another.
+	// The mixing of logic below is hard to read. Not to mention much more efficient.
+
+	// process handles comment blocks and any special instructions within them
+	process := func(cb []syntax.Comment) error {
+		for _, c := range cb {
+			l := strings.TrimSpace(c.Text)
+			if strings.HasPrefix(l, commentEnvSubstAdj) {
+				l := strings.TrimPrefix(l, commentEnvSubstAdj)
+				for _, d := range strings.Split(l, ",") {
+					d := strings.TrimSpace(d)
+					if len(d) == 0 {
+						continue
+					}
+					a, d := d[0], d[1:]
+					if len(d) == 0 {
+						return fmt.Errorf("envsubst adjustment invalid: %q", l)
+					}
+
+					switch a {
+					case '+':
+						envsubvars = append(envsubvars, d)
+					case '-':
+						nv := envsubvars[:0]
+						for _, v := range envsubvars {
+							if v != d {
+								nv = append(nv, v)
+							}
+						}
+						envsubvars = nv
+					default:
+						return fmt.Errorf("envsubst adjustment invalid: %q", l)
+					}
+				}
+			}
+		}
+
+		return nil
+	}
+
 	for si, s := range f.Stmts {
-		if start == nil {
-			for _, c := range s.Comments {
+
+		lastNonBlank := uint(0)
+		if last != nil {
+			lastNonBlank = last.Line()
+		}
+		var commBlock []syntax.Comment
+		for _, c := range s.Comments {
+			if start == nil {
 				if s.Pos().After(c.End()) {
 					if strings.TrimSpace(c.Text) == commentStart {
 						start = &c
 					}
 				}
 			}
+
+			// commBlock != nil indicates we have started adding comments to a block
+			// The end of the block is makred by a blank line.
+
+			// Work out whether we have passed a blank line.
+			if c.Pos().Line() > lastNonBlank+1 {
+				if err := process(commBlock); err != nil {
+					return nil
+				}
+				commBlock = make([]syntax.Comment, 0)
+			}
+
+			if commBlock != nil {
+				// this comment is contiguous with last in existing comment
+				commBlock = append(commBlock, c)
+			}
+			lastNonBlank = c.End().Line()
 		}
+		if s.Pos().Line() > lastNonBlank+1 {
+			if err := process(commBlock); err != nil {
+				return err
+			}
+		}
+
 		if start == nil || start.Pos().After(s.Pos()) {
 			continue
 		}
@@ -262,13 +330,17 @@ assert()
 			if pendingSep && !stdOut {
 				fmt.Fprintf(toRun, "echo \"%v\"\n", outputSeparator)
 			}
+			var envsubvarsstr string
+			if len(envsubvars) > 0 {
+				envsubvarsstr = "$" + strings.Join(envsubvars, ",$")
+			}
 			if !stdOut {
-				fmt.Fprintf(toRun, "cat <<'THISWILLNEVERMATCH' | envsubst '%v' \n%v\nTHISWILLNEVERMATCH\n", envsubvars, stmtString(s))
+				fmt.Fprintf(toRun, "cat <<'THISWILLNEVERMATCH' | envsubst '%v' \n%v\nTHISWILLNEVERMATCH\n", envsubvarsstr, stmtString(s))
 				fmt.Fprintf(toRun, "echo \"%v\"\n", outputSeparator)
 			}
 			stmts = append(stmts, co)
 			if debugOut || (stdOut && b != nil) {
-				fmt.Fprintf(toRun, "cat <<'THISWILLNEVERMATCH' | envsubst '%v' \n$ %v\nTHISWILLNEVERMATCH\n", envsubvars, stmtString(s))
+				fmt.Fprintf(toRun, "cat <<'THISWILLNEVERMATCH' | envsubst '%v' \n$ %v\nTHISWILLNEVERMATCH\n", envsubvarsstr, stmtString(s))
 			}
 			fmt.Fprintf(toRun, "%v\n", stmtString(s))
 
@@ -398,7 +470,7 @@ assert()
 	args = append(args, fmt.Sprintf("/%v", scriptName))
 
 	cmd := exec.Command(args[0], args[1:]...)
-	debugf("now running %v via %v\n", tfn, strings.Join(cmd.Args, " "))
+	debugf("now running %v via %v\n%s\n", tfn, strings.Join(cmd.Args, " "), toRun.String())
 
 	if debugOut || stdOut {
 		cmd.Stdout = os.Stdout
