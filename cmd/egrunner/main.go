@@ -34,6 +34,7 @@ var (
 	stdOut       = false
 	fDockerFlags dockerFlags
 
+	fDebug      = flag.Bool("debug", false, "Print debug information for egrunner")
 	fOut        = flag.String("out", "json", "output format; json(default)|debug|std")
 	fGoRoot     = flag.String("goroot", "", "path to GOROOT to use")
 	fGoProxy    = flag.String("goproxy", "", "path to GOPROXY to use")
@@ -42,6 +43,8 @@ var (
 )
 
 const (
+	debug = false
+
 	scriptName         = "script.sh"
 	blockPrefix        = "block:"
 	outputSeparator    = "============================================="
@@ -87,14 +90,12 @@ func run() error {
 	envsubvars := strings.Split(*fEnvSubVars, ",")
 
 	switch *fOut {
-	case outJson:
-	case outStd:
-	case outDebug:
+	case outJson, outStd, outDebug:
 	default:
 		return errorf("unknown option to -out: %v", *fOut)
 	}
 
-	debugOut = *fOut == outDebug
+	debugOut = *fOut == outDebug || debug || *fDebug
 	if !debugOut {
 		stdOut = *fOut == outStd
 	}
@@ -379,6 +380,8 @@ assert()
 		fmt.Fprintf(toRun, "echo \"%v\"\n", outputSeparator)
 	}
 
+	debugf("finished compiling script: \ns%v\n", toRun.String())
+
 	// docker requires the file/directory we are mapping to be within our
 	// home directory because of "security"
 	tf, err := ioutil.TempFile("", ".go_modules_by_example")
@@ -388,11 +391,16 @@ assert()
 
 	tfn := tf.Name()
 
-	defer os.Remove(tf.Name())
+	defer func() {
+		debugf("Removing temp script %v\n", tf.Name())
+		os.Remove(tf.Name())
+	}()
 
 	if err := ioutil.WriteFile(tfn, toRun.Bytes(), 0644); err != nil {
 		return errorf("failed to write to temp file %v: %v", tfn, err)
 	}
+
+	debugf("wrote script to %v\n", tfn)
 
 	if etfn, err := bindmnt.Resolve(tfn); err == nil {
 		tfn = etfn
@@ -447,7 +455,10 @@ assert()
 		if err != nil {
 			return errorf("failed to create temp dir for docker build: %v", err)
 		}
-		defer os.RemoveAll(td)
+		defer func() {
+			debugf("Removing temp dir %v\n", td)
+			os.RemoveAll(td)
+		}()
 		df := filepath.Join(td, "Dockerfile")
 		udf := fmt.Sprintf(userDockerfile, os.Getuid(), os.Getgid())
 		if err := ioutil.WriteFile(df, []byte(udf), 0644); err != nil {
@@ -458,6 +469,7 @@ assert()
 		dbcmd := exec.Command("docker", "build", "-q", td)
 		dbcmd.Stdout = &stdout
 		dbcmd.Stderr = &stderr
+		debugf("building docker image with %v\n", strings.Join(dbcmd.Args, " "))
 		if err := dbcmd.Run(); err != nil {
 			return errorf("failed to run %v: %v\n%s", strings.Join(dbcmd.Args, " "), err, stderr.String())
 		}
@@ -470,7 +482,7 @@ assert()
 	args = append(args, fmt.Sprintf("/%v", scriptName))
 
 	cmd := exec.Command(args[0], args[1:]...)
-	debugf("now running %v via %v\n%s\n", tfn, strings.Join(cmd.Args, " "), toRun.String())
+	debugf("now running %v via %v\n", tfn, strings.Join(cmd.Args, " "))
 
 	if debugOut || stdOut {
 		cmd.Stdout = os.Stdout
@@ -543,7 +555,7 @@ func errorf(format string, args ...interface{}) error {
 
 func debugf(format string, args ...interface{}) {
 	if debugOut {
-		fmt.Printf(format, args...)
+		fmt.Fprintf(os.Stderr, "+ "+format, args...)
 	}
 }
 
