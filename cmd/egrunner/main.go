@@ -127,13 +127,7 @@ assert()
 
 catfile()
 {
-	local comment="//"
-	if [ "$#" -eq 2 ]
-	then
-		comment="$2"
-	fi
-	echo "$comment $1"
-	echo ""
+	echo "\$ cat $1"
 	cat "$1"
 }
 
