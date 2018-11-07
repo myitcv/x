@@ -129,14 +129,39 @@ assert()
 
 	var ghcli string
 	if *fGithubCLI != "" {
-		ghcli = *fGithubCLI
-	} else {
-		ghcli, _ = exec.LookPath(commgithubcli)
-	}
-	if ghcli != "" {
-		if abs, err := filepath.Abs(ghcli); err == nil {
+		if abs, err := filepath.Abs(*fGithubCLI); err == nil {
 			ghcli = abs
 		}
+	} else {
+		// this is a fallback in case any lookups via gobin fail
+		ghcli, _ = exec.LookPath(commgithubcli)
+
+		gobin, err := exec.LookPath("gobin")
+		if err != nil {
+			goto FinishedLookupGithubCLI
+		}
+
+		mbin := exec.Command(gobin, "-mod=readonly", "-p", "myitcv.io/cmd/githubcli")
+		if mout, err := mbin.Output(); err == nil {
+			ghcli = string(mout)
+			goto FinishedLookupGithubCLI
+		}
+
+		gbin := exec.Command(gobin, "-nonet", "-p", "myitcv.io/cmd/githubcli")
+		if gout, err := gbin.Output(); err == nil {
+			ghcli = string(gout)
+		}
+	}
+
+FinishedLookupGithubCLI:
+
+	ghcli = strings.TrimSpace(ghcli)
+
+	if ghcli != "" {
+		// ghcli could still be empty at this point. We do nothing
+		// because it's not guaranteed that it is required in the script.
+		// Hence we let that error happen if and when it does and the user
+		// will be able to work it out (hopefully)
 	}
 
 	if len(flag.Args()) != 1 {
