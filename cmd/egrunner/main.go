@@ -125,6 +125,18 @@ assert()
   fi
 }
 
+catfile()
+{
+	local comment="//"
+	if [ "$#" -eq 2 ]
+	then
+		comment="$2"
+	fi
+	echo "$comment $1"
+	echo ""
+	cat "$1"
+}
+
 `)
 
 	var ghcli string
