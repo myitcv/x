@@ -5,6 +5,12 @@
 
 source $(git rev-parse --show-toplevel)/_scripts/common.bash
 
+if [[ ! "$(goVersion)" =~ go1.(9|10).[0-9]+ ]]
+then
+	go mod tidy
+	go list all > /dev/null
+fi
+
 for i in $(ls _scripts/known_diffs)
 do
 	echo "goVersion $(goVersion)"

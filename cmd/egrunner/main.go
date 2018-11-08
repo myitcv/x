@@ -45,11 +45,13 @@ var (
 const (
 	debug = false
 
-	scriptName         = "script.sh"
-	blockPrefix        = "block:"
-	outputSeparator    = "============================================="
-	commentStart       = "**START**"
+	scriptName      = "script.sh"
+	blockPrefix     = "block:"
+	outputSeparator = "============================================="
+	commentStart    = "**START**"
+
 	commentEnvSubstAdj = "egrunner_envsubst:"
+	commentRewrite     = "egrunner_rewrite:"
 
 	commgithubcli = "githubcli"
 
@@ -87,7 +89,16 @@ func run() error {
 		*fGoProxy = os.Getenv("EGRUNNER_GOPROXY")
 	}
 
+	var rewrites [][2]string
 	envsubvars := strings.Split(*fEnvSubVars, ",")
+
+	rewrite := func(s string) string {
+		for _, r := range rewrites {
+			s = strings.Replace(s, r[0], r[1], -1)
+		}
+
+		return s
+	}
 
 	switch *fOut {
 	case outJson, outStd, outDebug:
@@ -228,13 +239,10 @@ FinishedLookupGithubCLI:
 	process := func(cb []syntax.Comment) error {
 		for _, c := range cb {
 			l := strings.TrimSpace(c.Text)
-			if strings.HasPrefix(l, commentEnvSubstAdj) {
+			switch {
+			case strings.HasPrefix(l, commentEnvSubstAdj):
 				l := strings.TrimPrefix(l, commentEnvSubstAdj)
-				for _, d := range strings.Split(l, ",") {
-					d := strings.TrimSpace(d)
-					if len(d) == 0 {
-						continue
-					}
+				for _, d := range strings.Fields(l) {
 					a, d := d[0], d[1:]
 					if len(d) == 0 {
 						return fmt.Errorf("envsubst adjustment invalid: %q", l)
@@ -255,6 +263,16 @@ FinishedLookupGithubCLI:
 						return fmt.Errorf("envsubst adjustment invalid: %q", l)
 					}
 				}
+			case strings.HasPrefix(l, commentRewrite):
+				l := strings.TrimPrefix(l, commentRewrite)
+				fs, err := splitQuotedFields(l)
+				if err != nil {
+					return fmt.Errorf("failed to handle arguments for rewrite %q: %v", l, err)
+				}
+				if len(fs) != 2 {
+					return fmt.Errorf("rewrite expects exactly 2 (quoted) arguments")
+				}
+				rewrites = append(rewrites, [2]string{fs[0], fs[1]})
 			}
 		}
 
@@ -518,10 +536,32 @@ FinishedLookupGithubCLI:
 	debugf("now running %v via %v\n", tfn, strings.Join(cmd.Args, " "))
 
 	if debugOut || stdOut {
-		cmd.Stdout = os.Stdout
+		cmdout, err := cmd.StdoutPipe()
+		if err != nil {
+			return errorf("failed to create cmd stdout pipe: %v", err)
+		}
+
+		var scanerr error
+		done := make(chan bool)
+
+		scanner := bufio.NewScanner(cmdout)
+		go func() {
+			for scanner.Scan() {
+				fmt.Println(rewrite(scanner.Text()))
+			}
+			if err := scanner.Err(); err != nil {
+				scanerr = err
+			}
+			close(done)
+		}()
+
 		cmd.Stderr = os.Stderr
 		if err := cmd.Run(); err != nil {
 			return errorf("failed to run %v: %v", strings.Join(cmd.Args, " "), err)
+		}
+		<-done
+		if scanerr != nil {
+			return errorf("failed to rewrite output: %v", scanerr)
 		}
 		return nil
 	}
@@ -540,7 +580,7 @@ FinishedLookupGithubCLI:
 			cur = new(strings.Builder)
 			continue
 		}
-		cur.WriteString(l)
+		cur.WriteString(rewrite(l))
 		cur.WriteString("\n")
 	}
 	if err := scanner.Err(); err != nil {
@@ -577,6 +617,46 @@ FinishedLookupGithubCLI:
 	fmt.Printf("%s\n", byts)
 
 	return nil
+}
+
+func splitQuotedFields(s string) ([]string, error) {
+	// Split fields allowing '' or "" around elements.
+	// Quotes further inside the string do not count.
+	var f []string
+	for len(s) > 0 {
+		for len(s) > 0 && isSpaceByte(s[0]) {
+			s = s[1:]
+		}
+		if len(s) == 0 {
+			break
+		}
+		// Accepted quoted string. No unescaping inside.
+		if s[0] == '"' || s[0] == '\'' {
+			quote := s[0]
+			s = s[1:]
+			i := 0
+			for i < len(s) && s[i] != quote {
+				i++
+			}
+			if i >= len(s) {
+				return nil, fmt.Errorf("unterminated %c string", quote)
+			}
+			f = append(f, s[:i])
+			s = s[i+1:]
+			continue
+		}
+		i := 0
+		for i < len(s) && !isSpaceByte(s[i]) {
+			i++
+		}
+		f = append(f, s[:i])
+		s = s[i:]
+	}
+	return f, nil
+}
+
+func isSpaceByte(c byte) bool {
+	return c == ' ' || c == '\t' || c == '\n' || c == '\r'
 }
 
 func errorf(format string, args ...interface{}) error {
