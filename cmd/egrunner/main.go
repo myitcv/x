@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"mvdan.cc/sh/syntax"
@@ -89,12 +90,17 @@ func run() error {
 		*fGoProxy = os.Getenv("EGRUNNER_GOPROXY")
 	}
 
-	var rewrites [][2]string
+	type rewrite struct {
+		p *regexp.Regexp
+		r string
+	}
+
+	var rewrites []rewrite
 	envsubvars := strings.Split(*fEnvSubVars, ",")
 
-	rewrite := func(s string) string {
+	applyRewrite := func(s string) string {
 		for _, r := range rewrites {
-			s = strings.Replace(s, r[0], r[1], -1)
+			s = r.p.ReplaceAllString(s, r.r)
 		}
 
 		return s
@@ -245,7 +251,7 @@ FinishedLookupGithubCLI:
 				for _, d := range strings.Fields(l) {
 					a, d := d[0], d[1:]
 					if len(d) == 0 {
-						return fmt.Errorf("envsubst adjustment invalid: %q", l)
+						return errorf("envsubst adjustment invalid: %q", l)
 					}
 
 					switch a {
@@ -260,19 +266,23 @@ FinishedLookupGithubCLI:
 						}
 						envsubvars = nv
 					default:
-						return fmt.Errorf("envsubst adjustment invalid: %q", l)
+						return errorf("envsubst adjustment invalid: %q", l)
 					}
 				}
 			case strings.HasPrefix(l, commentRewrite):
 				l := strings.TrimPrefix(l, commentRewrite)
 				fs, err := splitQuotedFields(l)
 				if err != nil {
-					return fmt.Errorf("failed to handle arguments for rewrite %q: %v", l, err)
+					return errorf("failed to handle arguments for rewrite %q: %v", l, err)
 				}
 				if len(fs) != 2 {
-					return fmt.Errorf("rewrite expects exactly 2 (quoted) arguments")
+					return errorf("rewrite expects exactly 2 (quoted) arguments; got %v from %q", len(fs), l)
 				}
-				rewrites = append(rewrites, [2]string{fs[0], fs[1]})
+				p, err := regexp.Compile(fs[0])
+				if err != nil {
+					return errorf("failed to compile rewrite regexp %q: %v", fs[0], err)
+				}
+				rewrites = append(rewrites, rewrite{p, fs[1]})
 			}
 		}
 
@@ -301,7 +311,7 @@ FinishedLookupGithubCLI:
 			// Work out whether we have passed a blank line.
 			if c.Pos().Line() > lastNonBlank+1 {
 				if err := process(commBlock); err != nil {
-					return nil
+					return err
 				}
 				commBlock = make([]syntax.Comment, 0)
 			}
@@ -547,7 +557,7 @@ FinishedLookupGithubCLI:
 		scanner := bufio.NewScanner(cmdout)
 		go func() {
 			for scanner.Scan() {
-				fmt.Println(rewrite(scanner.Text()))
+				fmt.Println(applyRewrite(scanner.Text()))
 			}
 			if err := scanner.Err(); err != nil {
 				scanerr = err
@@ -580,7 +590,7 @@ FinishedLookupGithubCLI:
 			cur = new(strings.Builder)
 			continue
 		}
-		cur.WriteString(rewrite(l))
+		cur.WriteString(applyRewrite(l))
 		cur.WriteString("\n")
 	}
 	if err := scanner.Err(); err != nil {
@@ -639,7 +649,7 @@ func splitQuotedFields(s string) ([]string, error) {
 				i++
 			}
 			if i >= len(s) {
-				return nil, fmt.Errorf("unterminated %c string", quote)
+				return nil, errorf("unterminated %c string", quote)
 			}
 			f = append(f, s[:i])
 			s = s[i+1:]
@@ -663,7 +673,7 @@ func errorf(format string, args ...interface{}) error {
 	if debugOut {
 		panic(fmt.Errorf(format, args...))
 	}
-	return fmt.Errorf(format+"\n", args...)
+	return fmt.Errorf(format, args...)
 }
 
 func debugf(format string, args ...interface{}) {
