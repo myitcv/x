@@ -14,6 +14,7 @@ else
 	echo Updating markdown files
 fi
 
+
 if [ $(running_on_ci_server) == "yes" ] || [ "${1:-}" == "-f" ]
 then
 	args="-long -online"

@@ -24,7 +24,7 @@ before_install:
   - docker --version
   - source .docker_details
   - docker pull $DOCKER_IMAGE:$CHROME_CHANNEL | tee
-  - cat Dockerfile.user | envsubst '$CHROME_CHANNEL' | docker build -t $(basename $DOCKER_IMAGE) --build-arg USER=$USER --build-arg UID=$UID --build-arg DOCKER_WORKING_DIR=$DOCKER_WORKING_DIR -
+  - cat Dockerfile.user | envsubst '$CHROME_CHANNEL' | docker build -t $(basename $DOCKER_IMAGE) --build-arg USER=$USER --build-arg UID=$UID --build-arg GID=$(id -g $USER) --build-arg DOCKER_WORKING_DIR=$DOCKER_WORKING_DIR -
 
 script:
-  - docker run -u $USER:$USER --env-file .docker_env_file -v $PWD:$DOCKER_WORKING_DIR -w $DOCKER_WORKING_DIR --rm $(basename $DOCKER_IMAGE) ./_scripts/docker_run.sh
+  - docker run --env-file .docker_env_file -v=/var/run/docker.sock:/var/run/docker.sock -v $PWD:$DOCKER_WORKING_DIR -v=/tmp:/tmp -w $DOCKER_WORKING_DIR --rm $(basename $DOCKER_IMAGE) ./_scripts/docker_run.sh
