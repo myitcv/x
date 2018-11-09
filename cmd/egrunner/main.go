@@ -1,3 +1,4 @@
+// egrunner runs bash scripts in a Docker container to help with creating reproducible examples.
 package main
 
 import (
@@ -146,6 +147,16 @@ catfile()
 {
 	echo "\$ cat $1"
 	cat "$1"
+}
+
+comment()
+{
+	if [ "$#" -eq 0 ] || [ "$1" == "" ]
+	then
+		echo ""
+	else
+		echo "$1" | fold -w 100 -s | sed -e 's/^$/#/' | sed -e 's/^\([^#]\)/# \1/'
+	fi
 }
 
 `)
@@ -705,6 +716,7 @@ RUN curl -fsSL https://download.docker.com/linux/debian/gpg | apt-key add -
 RUN add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/debian $(lsb_release -cs) stable"
 RUN apt-get update
 RUN apt-get install -y docker-ce
+RUN apt-get install -y graphviz
 
 RUN usermod -aG docker gopher
 

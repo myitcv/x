@@ -220,5 +220,21 @@ goVersion() {
 }
 export -f goVersion
 
+checkGoVersion() {
+	# args are build constraints
+	(
+	set -eu
+	td=$(mktemp -d)
+	trap "rm -rf $td" EXIT
+	command cd $td
+	cat <<EOD > blah.go
+// +build $@
+
+package blah
+EOD
+	go list > /dev/null 2>&1
+	)
+}
+
 # **********************
 LOADED_COMMON_FUNCTIONS=true
