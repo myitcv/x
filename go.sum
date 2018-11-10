@@ -88,5 +88,5 @@ honnef.co/go/js/util v0.0.0-20150216223935-96b8dd9d1621 h1:QBApQyt1KyR3SvDWU8sHc
 honnef.co/go/js/util v0.0.0-20150216223935-96b8dd9d1621/go.mod h1:WrAIh8rWfzvMdLVgQ7vpu7aYbDAZ3rHLxydzv2VkL/w=
 honnef.co/go/js/xhr v0.0.0-20150307031022-00e3346113ae h1:2dIKMawnBWvHzZrS8STyu/KdhYIOpnKQpp1WZm+K7TE=
 honnef.co/go/js/xhr v0.0.0-20150307031022-00e3346113ae/go.mod h1:QwoYXdHZpuR080H32s5jqyk7zh/k/U9bDFg2g8OMmOM=
-mvdan.cc/sh v2.5.0+incompatible h1:JNM6l18iQFGZl0dK2n/7Z85sNaFq9zSl3qooNNyl+qA=
-mvdan.cc/sh v2.5.0+incompatible/go.mod h1:IeeQbZq+x2SUGBensq/jge5lLQbS3XT2ktyp3wrt4x8=
+mvdan.cc/sh v2.6.0+incompatible h1:BLDuJ+D75OCaBF7W70+2oALi8aKAjcAiDBNmmwR8BQA=
+mvdan.cc/sh v2.6.0+incompatible/go.mod h1:IeeQbZq+x2SUGBensq/jge5lLQbS3XT2ktyp3wrt4x8=

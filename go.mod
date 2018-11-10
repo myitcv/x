@@ -28,7 +28,7 @@ require (
 	honnef.co/go/js/dom v0.0.0-20180323154144-6da835bec70f
 	honnef.co/go/js/util v0.0.0-20150216223935-96b8dd9d1621 // indirect
 	honnef.co/go/js/xhr v0.0.0-20150307031022-00e3346113ae
-	mvdan.cc/sh v2.5.0+incompatible
+	mvdan.cc/sh v2.6.0+incompatible
 )
 
 // branch: master
