@@ -365,25 +365,13 @@ FinishedLookupGithubCLI:
 		}
 		isAssert := false
 		if ce, ok := s.Cmd.(*syntax.CallExpr); ok {
-			if ce.Args != nil && ce.Args[0].Parts != nil {
-				if li, ok := ce.Args[0].Parts[0].(*syntax.Lit); ok {
-					if li.Value == "assert" {
-						isAssert = true
-					}
-				}
-			}
+			isAssert = len(ce.Args) > 0 && ce.Args[0].Lit() == "assert"
 		}
 		nextIsAssert := false
 		if si < len(f.Stmts)-1 {
 			s := f.Stmts[si+1]
 			if ce, ok := s.Cmd.(*syntax.CallExpr); ok {
-				if ce.Args != nil && ce.Args[0].Parts != nil {
-					if li, ok := ce.Args[0].Parts[0].(*syntax.Lit); ok {
-						if li.Value == "assert" {
-							nextIsAssert = true
-						}
-					}
-				}
+				nextIsAssert = len(ce.Args) > 0 && ce.Args[0].Lit() == "assert"
 			}
 		}
 
