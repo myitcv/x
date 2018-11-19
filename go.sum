@@ -1,3 +1,5 @@
+github.com/Quasilyte/inltest v0.7.0 h1:yHvFAaoXn+6iK2uKtb8mXB9KURz6SDPyszoyBAC0Xk4=
+github.com/Quasilyte/inltest v0.7.0/go.mod h1:dtucUPCtVvdlfhpampYI/MiobiJL3sUD/58/lgeWwFs=
 github.com/fsnotify/fsnotify v1.4.7 h1:IXs+QLmnXW2CcXuY+8Mzv/fWEsPGWxqefPtCP5CnV9I=
 github.com/fsnotify/fsnotify v1.4.7/go.mod h1:jwhsz4b93w/PPRr/qN1Yymfu8t87LnFCMoQvtojpjFo=
 github.com/golang/protobuf v1.2.0 h1:P3YflyNX/ehuJFLhxviNdFxQPkGK5cDcApsge1SqnvM=
