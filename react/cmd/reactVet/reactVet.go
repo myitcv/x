@@ -1,6 +1,6 @@
 // reactVet is a vet program used to check the correctness of myitcv.io/react based packages.
 //
-//For more information see https://github.com/myitcv/react/wiki/reactVet
+//For more information see https://github.com/myitcv/x/blob/master/react/_doc/README.md/reactVet
 //
 package main
 

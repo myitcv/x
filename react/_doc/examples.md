@@ -11,14 +11,14 @@
 * [`immtodoapp.TodoApp`](https://blog.myitcv.io/gopherjs_examples_sites/immtodoapp/) - a reimplementation of `todoapp.TodoApp` using immutable data structures
 * [`markdowneditor.MarkdownEditor`](https://blog.myitcv.io/gopherjs_examples_sites/markdowneditor/) - demonstrates the use of an external Javascript library.
 * [`Latency`](https://blog.myitcv.io/gopherjs_examples_sites/latency/) - a component-based version of [TJ Holowaychuk's](http://tjholowaychuk.com/) [Latency Tools](https://latency.apex.sh/).
-* [Global State Example](https://blog.myitcv.io/gopherjs_examples_sites/globalstate/) - demonstrates the use of [`stateGen`](https://github.com/myitcv/react/tree/master/cmd/stateGen) to create a global state tree that is shared between components.
+* [Global State Example](https://blog.myitcv.io/gopherjs_examples_sites/globalstate/) - demonstrates the use of [`stateGen`](https://github.com/myitcv/x/tree/master/react/cmd/stateGen) to create a global state tree that is shared between components.
 * [Gopherize.me](https://blog.myitcv.io/gopherize.me_site/) - a GopherJS React (frontend only) version of [Ashley McNamara](https://twitter.com/ashleymcnamara) and [Mat Ryer](https://twitter.com/matryer)'s [original version](https://gopherize.me/).
 * [`present` browser client](https://blog.myitcv.io/gopherjs_examples_sites/present/) - a browser-based [`present`](http://godoc.org/golang.org/x/tools/cmd/present) equivalent for loading publicly accessible presentations
 * [Syntax Viewer](https://blog.myitcv.io/gopherjs_examples_sites/syntaxviewer/) - a simple split-screen app for viewing the syntax trees of various languages.
 
-Each of these examples are separate web applications, the source for which can be found [here](https://github.com/myitcv/react/tree/master/examples/sites).
+Each of these examples are separate web applications, the source for which can be found [here](https://github.com/myitcv/x/tree/master/react/examples/sites).
 
-The sites use various example components that can be found in sub directories beneath [here](https://github.com/myitcv/react/tree/master/examples).
+The sites use various example components that can be found in sub directories beneath [here](https://github.com/myitcv/x/tree/master/react/examples).
 
 ### Get examples working locally
 
@@ -45,4 +45,4 @@ cd "$(go list -f '{{.Dir}}' myitcv.io/react)/examples/sites"
 gopherjs serve
 ```
 
-Each of the sites under [`sites/`](https://github.com/myitcv/react/tree/master/examples/sites) are now available via http://localhost:8080/myitcv.io/react/examples/sites
+Each of the sites under [`sites/`](https://github.com/myitcv/x/tree/master/react/examples/sites) are now available via http://localhost:8080/myitcv.io/react/examples/sites

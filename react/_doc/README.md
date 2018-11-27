@@ -16,7 +16,7 @@ See the [Changelog](changelog.md) for notices of significant updates.
 * Examples to get you started, and `reactGen -init` to create a skeleton web app
 * Beta; API surface _may_ change
 
-Please [raise issues](https://github.com/myitcv/react/issues) if you find problems
+Please [raise issues](https://github.com/myitcv/x/issues/new?title=react:) if you find problems
 
 ### Links
 
@@ -25,7 +25,7 @@ For consumers of the package:
 * [Examples](examples.md)
 * [Creating a GopherJS React app](creating_app.md)
 * [Golang UK talk: _"Creating interactive frontend apps with GopherJS and React."_](https://youtu.be/emoUiK-GHkE)
- ([slides](http://blog.myitcv.io/gopherjs_examples_sites/present/?url=https://raw.githubusercontent.com/myitcv/react/master/_talks/2017/golang_uk.slide&hideAddressBar=true))
+ ([slides](https://blog.myitcv.io/gopherjs_examples_sites/present/?url=https://raw.githubusercontent.com/myitcv/x/master/react/_talks/2017/golang_uk.slide&hideAddressBar=true))
 * [Gotchas](gotchas.md) (including significant differences to the React API)
 
 For developers of this package:

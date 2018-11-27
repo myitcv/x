@@ -9,4 +9,4 @@ gopherjs serve
 
 Now navigate to [http://localhost:8080/myitcv.io/react/examples/sites/latency/](http://localhost:8080/myitcv.io/react/examples/sites/latency/).
 
-See [the wiki](https://github.com/myitcv/react/wiki) for more details
+See [the wiki](https://github.com/myitcv/x/blob/master/react/_doc/README.md) for more details

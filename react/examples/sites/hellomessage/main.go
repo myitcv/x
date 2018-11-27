@@ -29,7 +29,7 @@ func main() {
 			&react.AProps{
 				ClassName: "github-fork-ribbon right-top",
 				Target:    "_blank",
-				Href:      "https://github.com/myitcv/react/blob/master/examples/sites/timer/main.go",
+				Href:      "https://github.com/myitcv/x/blob/master/react/examples/sites/timer/main.go",
 				Title:     "Source on GitHub",
 			},
 			react.S("Source on GitHub"),

@@ -25,21 +25,21 @@ This changelog was created when the code used to live at https://github.com/myit
 * **Breaking change**: introduction of element types to complement component definitions. See https://github.com/myitcv/react/pull/73 for more detail
 * Add various missing HTML element: `<h4>`, `<i>`, `<footer>`, `<img>`
 * Add blog examples to repo so we can be sure they compile
-* Another fun example available: http://blog.myitcv.io/gopherize.me_site/
+* Another fun example available: https://blog.myitcv.io/gopherize.me_site/
 
 ### [2017-05-02](https://github.com/myitcv/react/tree/890c91fce3c81cc2fec2d58a78d20d8a44ff9e67) - CSS, `stateGen` and JSX goodies
 
 * Initial cut of [CSS](https://godoc.org/myitcv.io/react#CSS) support for core HTML components
 * **Breaking change**: refactor events to be interface based: [#53](https://github.com/myitcv/react/pull/53)
-* By kind permission of [@tjholowaychuk](https://twitter.com/tjholowaychuk), included a basic component-based version of his [Latency Checker](http://blog.myitcv.io/gopherjs_examples_sites/latency/) as an example
+* By kind permission of [@tjholowaychuk](https://twitter.com/tjholowaychuk), included a basic component-based version of his [Latency Checker](https://blog.myitcv.io/gopherjs_examples_sites/latency/) as an example
 * Include Github source ribbon links on all example pages for convenience
-* First cut of an [global state example app](http://blog.myitcv.io/gopherjs_examples_sites/globalstate/) that uses [`stateGen`](https://github.com/myitcv/react/tree/master/cmd/stateGen): [#61](https://github.com/myitcv/react/pull/61)
+* First cut of an [global state example app](https://blog.myitcv.io/gopherjs_examples_sites/globalstate/) that uses [`stateGen`](https://github.com/myitcv/x/tree/master/react/cmd/stateGen): [#61](https://github.com/myitcv/react/pull/61)
 * First cut of JSX-like support. All components needing constant blocks of HTML updated to use `jsx.HTML`, `jsx.HTMLElem` or `jsx.Markdown` (see the [latency checker for example](https://github.com/myitcv/react/blob/890c91fce3c81cc2fec2d58a78d20d8a44ff9e67/examples/sites/latency/latency.go#L78-L83)). Also includes a first cut of `reactVet` to ensure correct usage of `myitcv.io/react/jsx`:  [#65](https://github.com/myitcv/react/pull/65)
 
 ### [2017-04-19](https://github.com/myitcv/react/tree/827b0efd23aab5fb50b528f6204d5d89e2db7272) - moved to `myitcv.io/react`
 
 * **Breaking change:** moved package to [`myitcv.io/react`](https://myitcv.io/react)
-* Use [Highlight.js](https://highlightjs.org/) to highlight code in the [examples showcase](http://blog.myitcv.io/gopherjs_examples_sites/examplesshowcase/)
+* Use [Highlight.js](https://highlightjs.org/) to highlight code in the [examples showcase](https://blog.myitcv.io/gopherjs_examples_sites/examplesshowcase/)
 * Initial cut of support for [Preact](https://github.com/developit/preact) - thanks to [@developit](https://github.com/developit) for the pointers on `preact-compat` and [@tjholowaychuk](https://twitter.com/tjholowaychuk) for the initial inspiration to look into Preact.
 
 ### [2017-04-13](https://github.com/myitcv/react/tree/648bf1950ae20f0ad155e4faabc276252c7f3ff9) - proper props
@@ -69,7 +69,7 @@ This changelog was created when the code used to live at https://github.com/myit
 ### [2017-03-14](https://github.com/myitcv/react/tree/c19b110f5f7b154dd37d753b44f485146fa417f7) - spring clean
 
 * Code cleanup and various bug fixes
-* All the [examples](https://github.com/myitcv/react/tree/master/examples) updated to latest best practice; updated the live examples site
+* All the [examples](https://github.com/myitcv/x/tree/master/react/examples) updated to latest best practice; updated the live examples site
 * More code-level documentation, `go doc`-level comment updates, docs updates (including improved instructions on [getting the examples running locally](examples.md))
 * Initial cut of `reactGen`, a `go generate` tool to help with component development - see [Creating a GopherJS React App](creating_app.md)
 * Support for `ComponentWillReceiveProps` lifecycle events

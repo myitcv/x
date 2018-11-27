@@ -6,7 +6,7 @@
 Package react is a set of GopherJS bindings for Facebook's React, a Javascript
 library for building user interfaces.
 
-For more information see https://github.com/myitcv/react/wiki
+For more information see https://github.com/myitcv/x/blob/master/react/_doc/README.md
 
 */
 package react

@@ -46,7 +46,7 @@ package.
 
 ### DOM Access
 
-See [the tests in `myitcv.io/react`](https://github.com/myitcv/react/blob/master/a_elem_test.go) for examples of DOM
+See [the tests in `myitcv.io/react`](https://github.com/myitcv/x/blob/master/react/a_elem_test.go) for examples of DOM
 access.
 
 ### TODO

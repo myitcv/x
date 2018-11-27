@@ -6,7 +6,7 @@
 reactGen is a go generate generator that helps to automate the process of
 writing GopherJS React web applications.
 
-For more information see https://github.com/myitcv/react/wiki
+For more information see https://github.com/myitcv/x/blob/master/react/_doc/README.md
 
 */
 package main
