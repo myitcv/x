@@ -1,6 +1,6 @@
 ## Creating a GopherJS React app
 
-This doc article has also been written up in a [blog post](http://blog.myitcv.io/2017/04/16/myitcv.io_react-gopherjs-bindings-for-react.html)
+This doc article has also been written up in a [blog post](https://blog.myitcv.io/2017/04/16/myitcv.io_react-gopherjs-bindings-for-react.html)
 
 ### Initial setup
 
@@ -175,7 +175,7 @@ See the [various examples](examples.md) for instances of these methods but take 
 
 ### React's `.js` files
 
-By default, React's [production version `.js` files](https://facebook.github.io/react/docs/installation.html#development-and-production-versions) (`react.min.js` and `react-dom.min.js`) are bundled with a GopherJS build that references the `myitcv.io/react` package. This means you don't have to separately load React (see [the Examples Showcase `index.html` file](https://github.com/myitcv/react/blob/master/examples/sites/examplesshowcase/index.html) for example).
+By default, React's [production version `.js` files](https://facebook.github.io/react/docs/installation.html#development-and-production-versions) (`react.min.js` and `react-dom.min.js`) are bundled with a GopherJS build that references the `myitcv.io/react` package. This means you don't have to separately load React (see [the Examples Showcase `index.html` file](https://github.com/myitcv/x/blob/master/react/examples/sites/examplesshowcase/index.html) for example).
 
 To bundle the development version `.js` files (which "includes many helpful warnings"), provide the build tag `debug`:
 

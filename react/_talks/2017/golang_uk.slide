@@ -57,27 +57,27 @@ For the purposes of this talk:
 
 * 
 
-.iframe http://blog.myitcv.io/gopherjs_examples_sites/globalstate/?hideGithubRibbon=true 600 975
+.iframe https://blog.myitcv.io/gopherjs_examples_sites/globalstate/?hideGithubRibbon=true 600 975
 
 
 * 
 
-.iframe http://blog.myitcv.io/gopherjs_examples_sites/markdowneditor/?hideGithubRibbon=true 600 975
+.iframe https://blog.myitcv.io/gopherjs_examples_sites/markdowneditor/?hideGithubRibbon=true 600 975
 
 
 * 
 
-.iframe http://blog.myitcv.io/gopherjs_examples_sites/immtodoapp/?hideGithubRibbon=true 600 975
+.iframe https://blog.myitcv.io/gopherjs_examples_sites/immtodoapp/?hideGithubRibbon=true 600 975
 
 
 * 
 
-.iframe http://blog.myitcv.io/gopherize.me_site/?hideGithubRibbon=true 600 975
+.iframe https://blog.myitcv.io/gopherize.me_site/?hideGithubRibbon=true 600 975
 
 
 * 
 
-.iframe http://blog.myitcv.io/gopherjs_examples_sites/latency/?hideGithubRibbon=true 600 975
+.iframe https://blog.myitcv.io/gopherjs_examples_sites/latency/?hideGithubRibbon=true 600 975
 
 
 * How do we make HTML and CSS dynamic in this way?
@@ -215,7 +215,7 @@ _Package_myitcv.io/react_is_a_set_of_GopherJS_bindings_for_Facebook's_React_
 
 * 
 
-.iframe http://blog.myitcv.io/gopherjs_examples_sites/helloworldbootstrap/ 600 975
+.iframe https://blog.myitcv.io/gopherjs_examples_sites/helloworldbootstrap/ 600 975
 
 * What did reactGen generate?
 
@@ -360,7 +360,7 @@ The result?
 
 * 
 
-.iframe http://blog.myitcv.io/gopherjs_examples_sites/blog/2017_04_16/ 600 975
+.iframe https://blog.myitcv.io/gopherjs_examples_sites/blog/2017_04_16/ 600 975
 
 
 * React dev tools work
@@ -370,7 +370,7 @@ The result?
 
 * 
 
-.iframe http://blog.myitcv.io/gopherize.me_site/?hideGithubRibbon=true 600 975
+.iframe https://blog.myitcv.io/gopherize.me_site/?hideGithubRibbon=true 600 975
 
 * gopherize.me React component hierarchy
 
@@ -419,7 +419,7 @@ You have (almost) the entire standard library at your disposal
 
 * More details/getting started/etc
 
-- [[https://github.com/myitcv/react/wiki][`myitcv.io/react` wiki]]
-- [[http://blog.myitcv.io/][My blog]]
+- [[https://github.com/myitcv/x/blob/master/react/_doc/README.md][`myitcv.io/react` README]]
+- [[https://blog.myitcv.io/][My blog]]
 - [[https://gophers.slack.com/messages/gopherjs][GopherJS Slack Channel]]
 

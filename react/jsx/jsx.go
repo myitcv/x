@@ -4,7 +4,7 @@ Package jsx allows you to render blocks of HTML as myitcv.io/react elements.
 It is a temporary runtime solution for what will become a compile-time
 transpilation, much like JSX's relationship with Javascript.
 
-For more information see https://github.com/myitcv/react/wiki
+For more information see https://github.com/myitcv/x/blob/master/react/_doc/README.md
 
 */
 package jsx

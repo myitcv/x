@@ -66,7 +66,7 @@ func (p ImmExamplesDef) Render() react.Element {
 		of composition.</p>
 
 		<p>For the source code, raising issues, questions etc, please see
-		<a href="https://github.com/myitcv/react/tree/master/examples" target="_blank">the Github repo</a>.</p>
+		<a href="https://github.com/myitcv/x/tree/master/react/examples" target="_blank">the Github repo</a>.</p>
 
 		<p>Note the examples below show the Go source code from <code>master</code>.</p>
 		`)

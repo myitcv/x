@@ -8,8 +8,8 @@ Uses largely a copy-paste of much of the [original `present` command](https://go
 
 A hosted version of this program can be found here:
 
-http://blog.myitcv.io/gopherjs_examples_sites/present/
+https://blog.myitcv.io/gopherjs_examples_sites/present/
 
 My [GolangUK 2017 talk
-slides](http://blog.myitcv.io/gopherjs_examples_sites/present/?url=https://raw.githubusercontent.com/myitcv/react/master/_talks/2017/golang_uk.slide&hideAddressBar=true)
+slides](https://blog.myitcv.io/gopherjs_examples_sites/present/?url=https://raw.githubusercontent.com/myitcv/x/master/react/_talks/2017/golang_uk.slide&hideAddressBar=true)
 give a good example of some actual slides loaded within the program.
