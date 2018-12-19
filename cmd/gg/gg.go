@@ -32,7 +32,7 @@ func main() {
 
 	pre := time.Now()
 	defer func() {
-		verbosef("total time: %v\n", time.Now().Sub(pre).Seconds()*1000)
+		verbosef("total time: %.2fms\n", time.Now().Sub(pre).Seconds()*1000)
 	}()
 
 	ps := loadPkgs(flag.Args())
@@ -102,22 +102,18 @@ func main() {
 		// because we know in the case of the latter that their output packages
 		// are mutually exclusive
 		if len(is) > 0 {
+			var ips []string
 			for _, i := range is {
-				i := i
-				iwg.Add(1)
-				go func() {
-					defer func() {
-						iwg.Done()
-					}()
-					pre := time.Now()
-					cmd := exec.Command("go", "install", i.ImportPath)
-					out, err := cmd.CombinedOutput()
-					if err != nil {
-						fatalf("failed to run %v: %v\n%s", strings.Join(cmd.Args, " "), err, out)
-					}
-					verbosef("%v (%v)\n", strings.Join(cmd.Args, " "), time.Now().Sub(pre).Seconds()*1000)
-				}()
+				ips = append(ips, i.ImportPath)
 			}
+			pre := time.Now()
+			cmd := exec.Command("go", "install")
+			cmd.Args = append(cmd.Args, ips...)
+			out, err := cmd.CombinedOutput()
+			if err != nil {
+				fatalf("failed to run %v: %v\n%s", strings.Join(cmd.Args, " "), err, out)
+			}
+			verbosef("%v (%.2fms)\n", strings.Join(cmd.Args, " "), time.Now().Sub(pre).Seconds()*1000)
 		}
 		if len(gs) > 0 {
 			// when we are done with this block of work we need to reload
@@ -140,9 +136,14 @@ func main() {
 					rdeps[rd] = true
 				}
 
+				// We initialise the pre snap to the zero snap which looks wrong
+				// but is in fact right. Later we determine whether we have work to
+				// do based on pre != post. If there is a diff, we set pre = post.
+				// Hence we need to start with post being where we start.
+
 				state[g] = &pkgState{
-					pre:  g.snap(),
-					post: g.zeroSnap(),
+					pre:  g.zeroSnap(),
+					post: g.snap(),
 				}
 			}
 
@@ -183,7 +184,7 @@ func main() {
 								fatalf("failed to run %v: %v\n%s", strings.Join(cmd.Args, " "), err, out)
 							}
 
-							verbosef("%v iteration %v (%.2fms)\n", strings.Join(cmd.Args, " "), gs.count, time.Now().Sub(pre).Seconds()*1000)
+							verbosef("%v iteration %v (%.2fms)\n%s", strings.Join(cmd.Args, " "), gs.count, time.Now().Sub(pre).Seconds()*1000, out)
 							done <- g
 						}()
 					} else {
