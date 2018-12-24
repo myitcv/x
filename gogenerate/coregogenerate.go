@@ -87,8 +87,12 @@ func (g *generator) matches() (err error) {
 	// If we encounter an error, we abort the package.
 	defer func() {
 		e := recover()
-		if e, isErr := e.(error); isErr {
-			err = e
+		if e != nil {
+			if e, isErr := e.(genError); isErr {
+				err = e
+			} else {
+				panic(e)
+			}
 		}
 	}()
 
@@ -232,7 +236,13 @@ Words:
 // It then exits the program (with exit status 1) because generation stops
 // at the first error.
 func (g *generator) errorf(format string, args ...interface{}) {
-	panic(fmt.Errorf("%s:%d: %s", filepath.Join(g.dir, g.file), g.lineNum, fmt.Sprintf(format, args...)))
+	panic(genError(fmt.Sprintf("%s:%d: %s", filepath.Join(g.dir, g.file), g.lineNum, fmt.Sprintf(format, args...))))
+}
+
+type genError string
+
+func (g genError) Error() string {
+	return string(g)
 }
 
 // expandVar expands the $XXX invocation in word. It is called

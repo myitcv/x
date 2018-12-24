@@ -1,0 +1,88 @@
+# Tests for when generators add new imports. This simply uses
+# a gobin -m generator
+
+# first run
+gg -p 1 -trace ./...
+cmpenv stderr trace1
+
+# tidy up
+rmglob */gen_*.go
+rm p1/gen_input1_copy1.go p1/gen_input2_copy2.go
+! exists p1/gen_input1_copy1.go p1/gen_input2_copy2.go
+
+# first tests
+
+# second run
+gg -p 1 -trace ./...
+
+# second checks
+cmpenv stderr trace2
+cd p1
+exists gen_input1_copy1.go gen_input2_copy1.go
+
+-- go.mod --
+module mod.com
+
+require example.com v1.0.0
+
+-- tools.go --
+// +build tools
+
+package tools
+
+require _ "example.com/copy1"
+
+-- p1/input1 --
+package p1
+
+import _ "example.com/another"
+
+-- p1/input2 --
+package p1
+
+import _ "mod.com/p2"
+
+-- p1/p1.go --
+package p1
+
+//go:generate gobin -m -run example.com/copy1 input1
+//go:generate gobin -m -run example.com/copy1 input2
+
+-- p1/p1_test.go --
+package p1
+
+-- p2/p2.go --
+package p2
+
+-- trace1 --
+go list -deps -test -json ./...
+go: finding example.com v1.0.0
+go list -deps -json example.com/copy1
+go: downloading example.com v1.0.0
+hash {Pkg: mod.com/p2 [G]}
+hash {Pkg: example.com/copyimpl}
+hash {Pkg: example.com/copy1}
+hash gobinModDep gobinModDep: example.com/copy1 (example.com/copy1)
+generate {Pkg: mod.com/p1 [G]}
+run generator: gobin -m -run example.com/copy1 input1
+ran generator: gobin -m -run example.com/copy1 input1
+run generator: gobin -m -run example.com/copy1 input2
+ran generator: gobin -m -run example.com/copy1 input2
+go list -deps -json example.com/another
+hash {Pkg: example.com/another}
+generate {Pkg: mod.com/p1 [G]}
+run generator: gobin -m -run example.com/copy1 input1
+ran generator: gobin -m -run example.com/copy1 input1
+run generator: gobin -m -run example.com/copy1 input2
+ran generator: gobin -m -run example.com/copy1 input2
+hash {Pkg: mod.com/p1 [G]}
+-- trace2 --
+go list -deps -test -json ./...
+go list -deps -json example.com/copy1
+hash {Pkg: mod.com/p2 [G]}
+hash {Pkg: example.com/copyimpl}
+hash {Pkg: example.com/copy1}
+hash gobinModDep gobinModDep: example.com/copy1 (example.com/copy1)
+go list -deps -json example.com/another
+hash {Pkg: example.com/another}
+hash {Pkg: mod.com/p1 [G]}

@@ -1,0 +1,95 @@
+-- .mod --
+module example.com
+
+-- .info --
+{"Version":"v1.0.0","Time":"2018-10-22T18:45:39Z"}
+
+-- go.mod --
+module example.com
+
+-- another/another.go --
+package another
+
+-- copyimpl/copyimpl.go --
+package copyimpl
+
+import (
+	"flag"
+	"io"
+	"log"
+	"os"
+	"path/filepath"
+	"strconv"
+	"time"
+)
+
+var (
+	fOutput = flag.String("outdir:output", ".", "where to put first files")
+	fExt    = flag.String("ext", ".go", "extension to apply to generated files")
+)
+
+func Doit(i int) {
+	copyN := strconv.Itoa(i)
+	flag.Parse()
+	args := flag.Args()
+	switch len(args) {
+	case 1, 2:
+	default:
+		log.Fatalf("expected 1 or 2 args; got %v", len(args))
+	}
+
+	n := 0.0
+	if len(args) == 2 {
+		pn, err := strconv.ParseFloat(args[1], 64)
+		if err != nil {
+			log.Fatalf("failed to parse sleep time from %v: %v", args[0], err)
+		}
+		n = pn
+	}
+	time.Sleep(time.Duration(n * float64(time.Second)))
+
+	in := args[0]
+	out := filepath.Join(*fOutput, "gen_"+filepath.Base(in)+"_copy"+copyN+*fExt)
+
+	inf, err := os.Open(in)
+	if err != nil {
+		log.Fatalf("failed to open %v: %v", in, err)
+	}
+	outf, err := os.Create(out)
+	if err != nil {
+		log.Fatalf("failed to open (for writing) %v: %v", out, err)
+	}
+
+	if _, err := io.Copy(outf, inf); err != nil {
+		log.Fatalf("failed to copy from %v to %v: %v", in, out, err)
+	}
+
+	if err := outf.Close(); err != nil {
+		log.Fatalf("failed to close %v: %v", out, err)
+	}
+}
+
+-- copy1/main.go --
+package main
+
+import "example.com/copyimpl"
+
+func main() {
+	copyimpl.Doit(1)
+}
+-- copy2/main.go --
+package main
+
+import "example.com/copyimpl"
+
+func main() {
+	copyimpl.Doit(2)
+}
+-- copy3/main.go --
+package main
+
+import "example.com/copyimpl"
+
+func main() {
+	copyimpl.Doit(3)
+}
