@@ -6,15 +6,12 @@ package main
 import (
 	"bytes"
 	"go/ast"
-	"go/build"
-	"go/parser"
 	"go/token"
 	"go/types"
 	"path/filepath"
-	"sort"
 
+	"golang.org/x/tools/go/packages"
 	"myitcv.io/gogenerate"
-	"myitcv.io/hybridimporter"
 	"myitcv.io/immutable/util"
 )
 
@@ -31,71 +28,47 @@ func execute(dir string, envPkg string, licenseHeader string, cmds gogenCmds) {
 		fatalf("could not make absolute path from %v: %v", dir, err)
 	}
 
-	bpkg, err := build.ImportDir(absDir, 0)
-	if err != nil {
-		fatalf("could not resolve package from dir %v: %v", dir, err)
+	config := &packages.Config{
+		Dir:   absDir,
+		Mode:  packages.LoadSyntax,
+		Fset:  token.NewFileSet(),
+		Tests: false,
 	}
 
-	fset := token.NewFileSet()
-
-	pkgs, err := parser.ParseDir(fset, dir, nil, parser.AllErrors|parser.ParseComments)
+	pkgs, err := packages.Load(config, absDir)
 	if err != nil {
-		fatalf("could not parse dir %v: %v", dir, err)
+		fatalf("could not load packages from dir %v: %v", dir, err)
 	}
 
-	pkg, ok := pkgs[envPkg]
+	pkg := pkgs[0]
 
-	if !ok {
+	if pkg.Name != envPkg {
 		pps := make([]string, 0, len(pkgs))
-		for k := range pkgs {
-			pps = append(pps, k)
+		for _, k := range pkgs {
+			pps = append(pps, k.Name)
 		}
 		fatalf("expected to have parsed %v, instead parsed %v", envPkg, pps)
 	}
 
 	var checkFiles []*ast.File
 	var fns []string
-	for fn, f := range pkg.Files {
+
+	for indx, fn := range pkg.GoFiles {
 		// skip files that we generated
 		if gogenerate.FileGeneratedBy(fn, immutableGenCmd) {
 			continue
 		}
+		f := pkg.Syntax[indx]
 		checkFiles = append(checkFiles, f)
 		fns = append(fns, fn)
 	}
 
-	sort.Strings(fns)
-
-	imp, err := hybridimporter.New(&build.Default, fset, ".", "")
-	if err != nil {
-		fatalf("failed to create importer for %v: %v", bpkg.ImportPath, err)
-	}
-
-	info := &types.Info{
-		Defs:  make(map[*ast.Ident]types.Object),
-		Uses:  make(map[*ast.Ident]types.Object),
-		Types: make(map[ast.Expr]types.TypeAndValue),
-	}
-
-	conf := types.Config{
-		IgnoreFuncBodies: true,
-		Importer:         imp,
-		Error:            func(err error) {},
-	}
-
-	_, err = conf.Check(bpkg.ImportPath, fset, checkFiles, info)
-	if err != nil {
-		if _, ok := err.(types.Error); !ok {
-			fatalf("failed to type check %v: %v", bpkg.ImportPath, err)
-		}
-	}
-
 	out := &output{
 		dir:       dir,
-		info:      info,
-		fset:      fset,
-		pkgName:   envPkg,
-		pkgPath:   bpkg.ImportPath,
+		info:      pkg.TypesInfo,
+		fset:      pkg.Fset,
+		pkgName:   pkg.Name,
+		pkgPath:   pkg.PkgPath,
 		license:   licenseHeader,
 		goGenCmds: cmds,
 		files:     make(map[*ast.File]*fileTmpls),
@@ -105,12 +78,9 @@ func execute(dir string, envPkg string, licenseHeader string, cmds gogenCmds) {
 		methods:   make(map[string]string),
 	}
 
-	for _, fn := range fns {
-
-		f := pkg.Files[fn]
+	for _, f := range checkFiles {
 		out.curFile = f
-
-		out.commMaps[f] = ast.NewCommentMap(fset, f, f.Comments)
+		out.commMaps[f] = ast.NewCommentMap(pkg.Fset, f, f.Comments)
 		out.gatherImmTypes()
 	}
 
