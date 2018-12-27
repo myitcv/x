@@ -23,8 +23,8 @@ RUN echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >
   apt -qq -y update && \
   apt-get -qq -y install google-chrome-${CHROME_CHANNEL}
 
-ENV NODE_VERSION=v10.10.0
-ENV NPM_VERSION=v6.4.1
+ENV NODE_VERSION=v10.15.0
+ENV NPM_VERSION=v6.5.0
 ENV NVM_VERSION=v0.33.11
 ENV NVM_DIR=/nvm
 ENV PATH=$NVM_DIR/versions/node/$NODE_VERSION/bin:$PATH
