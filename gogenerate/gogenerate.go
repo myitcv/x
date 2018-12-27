@@ -13,10 +13,11 @@ import (
 	"bytes"
 	"flag"
 	"fmt"
-	"go/build"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"golang.org/x/tools/go/packages"
 )
 
 // These constants correspond in name and value to the details given in
@@ -259,22 +260,23 @@ func FilesContainingCmd(dir string, command string) (map[string]int, error) {
 		return nil, nil
 	}
 
-	pkg, err := build.ImportDir(dir, build.IgnoreVendor)
+	cfg := &packages.Config{
+		Mode:  packages.LoadFiles,
+		Tests: true,
+	}
+	pkgs, err := packages.Load(cfg, dir)
 	if err != nil {
 		return nil, err
 	}
 
-	// GoFiles+CgoFiles+TestGoFiles+XTestGoFiles per go list
-	// these are all relative to path
-	gofiles := make([]string, 0, len(pkg.GoFiles)+len(pkg.CgoFiles)+len(pkg.TestGoFiles)+len(pkg.XTestGoFiles))
-	gofiles = append(gofiles, pkg.GoFiles...)
-	gofiles = append(gofiles, pkg.CgoFiles...)
-	gofiles = append(gofiles, pkg.TestGoFiles...)
-	gofiles = append(gofiles, pkg.XTestGoFiles...)
+	pkg := pkgs[0]
 
 	matchMap := make(map[string]int)
 
-	for _, f := range gofiles {
+	// GoFiles+CgoFiles+TestGoFiles+XTestGoFiles per go list
+	// these are all relative to path
+	for _, x := range pkg.GoFiles {
+		_, f := filepath.Split(x)
 		checkMatch := func(line int, args []string) error {
 			if filepath.Base(args[0]) == command {
 				matchMap[f] += 1
@@ -283,7 +285,7 @@ func FilesContainingCmd(dir string, command string) (map[string]int, error) {
 			return nil
 		}
 
-		err = DirFunc(pkg.ImportPath, dir, f, checkMatch)
+		err = DirFunc(pkg.PkgPath, dir, f, checkMatch)
 
 		if err != nil {
 			return nil, err
