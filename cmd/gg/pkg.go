@@ -317,9 +317,13 @@ func readPkgs(pkgs []string, dontScan bool, notInPkgSpec bool) ([]*pkg, []string
 		args = append(args, pkgs...)
 		cmd := exec.Command(args[0], args[1:]...)
 
-		out, err := cmd.CombinedOutput()
+		out, err := cmd.Output()
 		if err != nil {
-			fatalf("failed to run %v: %v\n%s", strings.Join(cmd.Args, " "), err, out)
+			var stderr []byte
+			if err, ok := err.(*exec.ExitError); ok {
+				stderr = err.Stderr
+			}
+			fatalf("failed to run %v: %v\n%s", strings.Join(cmd.Args, " "), err, stderr)
 		}
 
 		dec := json.NewDecoder(bytes.NewReader(out))
