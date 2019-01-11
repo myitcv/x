@@ -5,21 +5,16 @@ import (
 	"flag"
 	"fmt"
 	"go/ast"
-	"go/parser"
 	"go/printer"
 	"go/token"
 	"go/types"
 	"os"
-	"os/exec"
-	"path"
 	"path/filepath"
 	"sort"
 	"strings"
 
-	"go/build"
-
+	"golang.org/x/tools/go/packages"
 	"myitcv.io/gogenerate"
-	"myitcv.io/hybridimporter"
 	"myitcv.io/immutable"
 	"myitcv.io/immutable/util"
 )
@@ -31,8 +26,7 @@ const (
 var fset = token.NewFileSet()
 
 type immutableVetter struct {
-	pkgs map[string]*ast.Package
-	bpkg *build.Package
+	pkgs []*packages.Package
 
 	wd string
 
@@ -74,12 +68,7 @@ func main() {
 		fatalf("could not get the working directory")
 	}
 
-	specs, err := ImportPaths(flag.Args())
-	if err != nil {
-		fatalf("failed to resolve package patterns: %v", err)
-	}
-
-	emsgs := vet(wd, specs)
+	emsgs := vet(wd, flag.Args())
 
 	for _, msg := range emsgs {
 		fmt.Fprintf(os.Stderr, "%v\n", msg)
@@ -90,117 +79,13 @@ func main() {
 	}
 }
 
-func ImportPaths(vs []string) ([]string, error) {
-	if len(vs) == 0 {
-		return nil, nil
-	}
-
-	args := []string{"go", "list"}
-	args = append(args, vs...)
-	cmd := exec.Command(args[0], args[1:]...)
-
-	var stdout, stderr strings.Builder
-	cmd.Stdout = &stdout
-	cmd.Stderr = &stderr
-
-	if err := cmd.Run(); err != nil {
-		return nil, fmt.Errorf("failed to resolve import paths: %v\n%s", err, stderr.String())
-	}
-
-	res := strings.Split(strings.TrimSpace(stdout.String()), "\n")
-
-	for i, v := range res {
-		// inefficiently handles CR
-		res[i] = strings.TrimSpace(v)
-	}
-
-	return res, nil
-}
-
-func loadImmIntf() {
-	ip := "myitcv.io/immutable"
-
-	bpkg, err := build.Import(ip, "", 0)
-	if err != nil {
-		fatalf("failed to import %v: %v", ip, err)
-	}
-
-	pkgs, err := parser.ParseDir(fset, bpkg.Dir, nil, 0)
-	if err != nil {
-		fatalf("failed to parse dir %v for package %v: %v", bpkg.Dir, ip, err)
-	}
-
-	pn := path.Base(ip)
-
-	pkg, ok := pkgs[pn]
-	if !ok {
-		fatalf("failed to find package named %v in dir %v", pn, bpkg.Dir)
-	}
-
-	files := make([]*ast.File, 0, len(pkg.Files))
-
-	for _, f := range pkg.Files {
-		files = append(files, f)
-	}
-
-	imp, err := hybridimporter.New(&build.Default, fset, ".", "")
-	if err != nil {
-		fatalf("failed to create importer: %v", err)
-	}
-
-	conf := types.Config{
-		FakeImportC: true,
-		Importer:    imp,
-	}
-
-	tpkg, err := conf.Check(ip, fset, files, nil)
-	if err != nil {
-		fatalf("type checking %v failed, %v", ip, err)
-	}
-
-	o := tpkg.Scope().Lookup("Immutable")
-
-	if o == nil {
-		fatalf("failed to find anything called Immutable in pkg scope of %v", ip)
-	}
-
-	tn, ok := o.(*types.TypeName)
-	if !ok {
-		fatalf("Immutable is not a *types.TypeName: %T", o)
-	}
-
-	nmd, ok := tn.Type().(*types.Named)
-	if !ok {
-		fatalf("Immutable type is not a *types.Named: %T", tn.Type())
-	}
-
-	intf, ok := nmd.Underlying().(*types.Interface)
-	if !ok {
-		fatalf("Underlying type is not a *types.Interface: %T", nmd.Underlying())
-	}
-
-	immIntf = intf
-}
-
-func vet(wd string, specs []string) []immErr {
+func vet(wd string, args []string) []immErr {
 	var emsgs []immErr
 
-	loadImmIntf()
-
 	// vetting phase: vet all packages packages passed in through the command line
-	for _, spec := range specs {
+	iv := newImmutableVetter(wd, args)
 
-		// reuse spec and import paths map to depPkg
-		bpkg, err := build.Import(spec, wd, 0)
-		if err != nil {
-			fatalf("unable to import %v relative to %v: %v", spec, wd, err)
-		}
-
-		iv := newImmutableVetter(bpkg, wd)
-
-		emsgs = append(emsgs, iv.vetPackages()...)
-
-	}
+	emsgs = append(emsgs, iv.vetPackages()...)
 
 	for i := range emsgs {
 		rel, err := filepath.Rel(wd, emsgs[i].pos.Filename)
@@ -446,27 +331,60 @@ func isImmListOrMap(t types.Type) bool {
 	return false
 }
 
-func newImmutableVetter(ipkg *build.Package, wd string) *immutableVetter {
-	goFiles := make(map[string]bool)
+func newImmutableVetter(wd string, args []string) *immutableVetter {
+	ip := "myitcv.io/immutable"
+	allPkgs := append(args, ip)
 
-	for _, v := range [][]string{ipkg.GoFiles, ipkg.TestGoFiles, ipkg.XTestGoFiles} {
-		for _, f := range v {
-			goFiles[f] = true
-		}
+	cfg := &packages.Config{
+		Mode:  packages.LoadSyntax,
+		Fset:  fset,
+		Tests: true,
 	}
-
-	isGoFile := func(fi os.FileInfo) bool {
-		return goFiles[fi.Name()]
-	}
-
-	pkgs, err := parser.ParseDir(fset, ipkg.Dir, isGoFile, parser.ParseComments)
+	pkgs, err := packages.Load(cfg, allPkgs...)
 	if err != nil {
-		fatalf("could not parse package directory for %v", ipkg.Name)
+		fatalf("could not load pacakages %v: %v", pkgs, err)
 	}
+
+	var immPkg *packages.Package
+
+	vetPkgs := []*packages.Package{}
+	for _, p := range pkgs {
+		if p.PkgPath == ip {
+			immPkg = p
+			continue
+		}
+		vetPkgs = append(vetPkgs, p)
+	}
+
+	if immPkg == nil {
+		fatalf("failed to load immutable package")
+	}
+
+	o := immPkg.Types.Scope().Lookup("Immutable")
+
+	if o == nil {
+		fatalf("failed to find anything called Immutable in pkg scope of %v", ip)
+	}
+
+	tn, ok := o.(*types.TypeName)
+	if !ok {
+		fatalf("Immutable is not a *types.TypeName: %T", o)
+	}
+
+	nmd, ok := tn.Type().(*types.Named)
+	if !ok {
+		fatalf("Immutable type is not a *types.Named: %T", tn.Type())
+	}
+
+	intf, ok := nmd.Underlying().(*types.Interface)
+	if !ok {
+		fatalf("Underlying type is not a *types.Interface: %T", nmd.Underlying())
+	}
+
+	immIntf = intf
 
 	return &immutableVetter{
-		pkgs:      pkgs,
-		bpkg:      ipkg,
+		pkgs:      vetPkgs,
 		vcls:      make(map[*ast.CompositeLit]bool),
 		wd:        wd,
 		skipFiles: make(map[string]bool),
@@ -484,41 +402,13 @@ func (iv *immutableVetter) isImmTmpl(t types.Type) bool {
 
 func (iv *immutableVetter) vetPackages() []immErr {
 	for _, pkg := range iv.pkgs {
+		info := pkg.TypesInfo
+
 		iv.rngs = make(map[*ast.Ident]bool)
-
-		// make a list of files for using it in Check func
-		files := make([]*ast.File, 0, len(pkg.Files))
-
-		for _, f := range pkg.Files {
-			files = append(files, f)
-		}
-
-		ctxt := build.Default
-
-		imp, err := hybridimporter.New(&ctxt, fset, iv.wd, iv.bpkg.ImportPath)
-		if err != nil {
-			fatalf("failed to create importer: %v", err)
-		}
-		// check types for the core package
-		conf := types.Config{
-			Importer: imp,
-		}
-		info := &types.Info{
-			Selections: make(map[*ast.SelectorExpr]*types.Selection),
-			Defs:       make(map[*ast.Ident]types.Object),
-			Types:      make(map[ast.Expr]types.TypeAndValue),
-			Implicits:  make(map[ast.Node]types.Object),
-			Scopes:     make(map[ast.Node]*types.Scope),
-		}
-		_, err = conf.Check(iv.bpkg.ImportPath, fset, files, info)
-		if err != nil {
-			fatalf("type checking failed, %v", err)
-		}
+		iv.immTmpls = make(map[types.Type]bool)
 		iv.info = info
 
-		iv.immTmpls = make(map[types.Type]bool)
-
-		for _, f := range pkg.Files {
+		for _, f := range pkg.Syntax {
 			for _, d := range f.Decls {
 				gd, ok := d.(*ast.GenDecl)
 				if !ok {
@@ -556,7 +446,9 @@ func (iv *immutableVetter) vetPackages() []immErr {
 			}
 		}
 
-		ast.Walk(iv, pkg)
+		for _, fnode := range pkg.Syntax {
+			ast.Walk(iv, fnode)
+		}
 
 		for exp, t := range info.Types {
 			out := bytes.NewBuffer(nil)
