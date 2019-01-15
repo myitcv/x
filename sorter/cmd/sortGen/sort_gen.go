@@ -18,6 +18,7 @@ import (
 	"os"
 	"path"
 	"regexp"
+	"runtime"
 	"sort"
 	"strings"
 	"unicode"
@@ -31,8 +32,9 @@ import (
 )
 
 const (
-	sortGenCmd  = "sortGen"
-	orderPrefix = "order"
+	sortGenCmd           = "sortGen"
+	sortGenCmdImportPath = "myitcv.io/sorter/cmd/sortGen"
+	orderPrefix          = "order"
 )
 
 // matching related vars
@@ -87,17 +89,31 @@ func main() {
 		fatalf("unable to get working directory: %v", err)
 	}
 
-	dirFiles, err := gogenerate.FilesContainingCmd(wd, sortGenCmd)
+	tags := make(map[string]bool)
+
+	goos := os.Getenv("GOOS")
+	if goos == "" {
+		goos = runtime.GOOS
+	}
+	tags[goos] = true
+
+	goarch := os.Getenv("GOARCH")
+	if goarch == "" {
+		goarch = runtime.GOARCH
+	}
+	tags[goarch] = true
+
+	pathDirFiles, err := gogenerate.FilesContainingCmd(wd, sortGenCmdImportPath, tags)
 	if err != nil {
 		fatalf("could not determine if we are the first file: %v", err)
 	}
 
-	if dirFiles == nil {
-		fatalf("cannot find any files containing the %v directive", sortGenCmd)
+	if pathDirFiles == nil {
+		fatalf("cannot find any files containing the %v or %v directive", sortGenCmdImportPath, sortGenCmd)
 	}
 
-	if dirFiles[envFile] != 1 {
-		fatalf("expected a single occurrence of %v directive in %v. Got: %v", sortGenCmd, envFile, dirFiles)
+	if pathDirFiles[envFile] > 1 {
+		fatalf("expected a single occurrence of %v directive in %v. Got: %v", sortGenCmdImportPath, envFile, pathDirFiles)
 	}
 
 	license, err := gogenerate.CommentLicenseHeader(fLicenseFile)

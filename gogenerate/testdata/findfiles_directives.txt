@@ -1,0 +1,56 @@
+# testing method FilesContainingCmd with build directives
+cmd . mod/cmd/someCmd apple,pineapple
+stdout 'somefunc.go: 2\nyetanotherfunc.go: 2'
+
+-- go.mod --
+
+module testmod
+-- main.go --
+package main
+
+import "fmt"
+
+func main() {
+	 fmt.Println("welcome")
+}
+-- somefunc.go --
+// +build apple
+
+package main
+
+//go:generate gobin -m -run mod/cmd/someCmd
+//go:generate gobin -run mod/cmd/someCmd -flag arg1
+
+
+import "fmt"
+
+func somefunc() {
+	 fmt.Println("hello")
+}
+-- otherfunc.go --
+// +build banana
+
+package main
+
+//go:generate someCmd
+//go:generate someCmd
+//go:generate gobin -run mod/cmd/someCmd -flag arg1
+
+import "fmt"
+
+func otherfunc() {
+	 fmt.Println("hello")
+}
+-- yetanotherfunc.go --
+// +build pineapple
+
+package main
+
+//go:generate someCmd
+//go:generate gobin -run mod/cmd/someCmd@latest -flag arg1
+
+import "fmt"
+
+func yetanotherfunc() {
+	 fmt.Println("hello")
+}

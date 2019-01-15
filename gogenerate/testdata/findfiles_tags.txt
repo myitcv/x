@@ -1,0 +1,31 @@
+# testing method FilesContainingCmd with file name tags
+cmd . mod/cmd/someCmd linux
+stdout 'main_linux.go: 4'
+
+-- go.mod --
+
+module testmod
+-- main_linux.go --
+package main
+
+//go:generate someCmd
+//go:generate gobin -m -run mod/cmd/someCmd
+//go:generate gobin -run mod/cmd/someCmd -flag arg1
+//go:generate gobin -run mod/cmd/someCmd@latest -flag arg1
+
+import "fmt"
+
+func main() {
+	 fmt.Println("hello")
+}
+-- main_windows.go --
+package main
+
+//go:generate someCmd
+//go:generate gobin -run mod/cmd/someCmd -flag arg1
+
+import "fmt"
+
+func main() {
+	 fmt.Println("hello")
+}

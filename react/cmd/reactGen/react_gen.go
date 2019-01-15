@@ -16,6 +16,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"runtime"
 
 	"myitcv.io/gogenerate"
 )
@@ -57,7 +58,21 @@ func mainGen(wd string) {
 		fatalf("env not correct; missing %v", gogenerate.GOFILE)
 	}
 
-	dirFiles, err := gogenerate.FilesContainingCmd(wd, reactGenCmd)
+	tags := make(map[string]bool)
+
+	goos := os.Getenv("GOOS")
+	if goos == "" {
+		goos = runtime.GOOS
+	}
+	tags[goos] = true
+
+	goarch := os.Getenv("GOARCH")
+	if goarch == "" {
+		goarch = runtime.GOARCH
+	}
+	tags[goarch] = true
+
+	dirFiles, err := gogenerate.FilesContainingCmd(wd, reactGenCmd, tags)
 	if err != nil {
 		fatalf("could not determine if we are the first file: %v", err)
 	}
