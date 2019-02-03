@@ -1,0 +1,20 @@
+# testing method FilesContainingCmd
+cmd . mod/cmd/someCmd
+stdout 'main.go: 4'
+
+-- go.mod --
+
+module testmod
+-- main.go --
+package main
+
+//go:generate someCmd
+//go:generate gobin -m -run mod/cmd/someCmd
+//go:generate gobin -run mod/cmd/someCmd -flag arg1
+//go:generate gobin -run mod/cmd/someCmd@latest -flag arg1
+
+import "fmt"
+
+func main() {
+	 fmt.Println("hello")
+}

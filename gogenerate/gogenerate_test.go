@@ -6,6 +6,7 @@ package gogenerate
 import (
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 )
 
@@ -28,7 +29,21 @@ Checks:
 
 		path := filepath.Join(cwd, c.d)
 
-		res, err := FilesContainingCmd(path, c.cmds)
+		tags := make(map[string]bool)
+
+		goos := os.Getenv("GOOS")
+		if goos == "" {
+			goos = runtime.GOOS
+		}
+		tags[goos] = true
+
+		goarch := os.Getenv("GOARCH")
+		if goarch == "" {
+			goarch = runtime.GOARCH
+		}
+		tags[goarch] = true
+
+		res, err := FilesContainingCmd(path, c.cmds, tags)
 		if err != nil {
 			t.Errorf("Got unexpected error find matches in %v: %v", c.d, err)
 			continue Checks

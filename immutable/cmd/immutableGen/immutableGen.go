@@ -8,12 +8,14 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"runtime"
 
 	"myitcv.io/gogenerate"
 )
 
 const (
-	immutableGenCmd = "immutableGen"
+	immutableGenCmd           = "immutableGen"
+	immutableGenCmdImportPath = "myitcv.io/immutable/cmd/immutableGen"
 )
 
 var (
@@ -53,17 +55,31 @@ func main() {
 		fatalf("unable to get working directory: %v", err)
 	}
 
-	dirFiles, err := gogenerate.FilesContainingCmd(wd, immutableGenCmd)
+	tags := make(map[string]bool)
+
+	goos := os.Getenv("GOOS")
+	if goos == "" {
+		goos = runtime.GOOS
+	}
+	tags[goos] = true
+
+	goarch := os.Getenv("GOARCH")
+	if goarch == "" {
+		goarch = runtime.GOARCH
+	}
+	tags[goarch] = true
+
+	pathDirFiles, err := gogenerate.FilesContainingCmd(wd, immutableGenCmdImportPath, tags)
 	if err != nil {
 		fatalf("could not determine if we are the first file: %v", err)
 	}
 
-	if dirFiles == nil {
-		fatalf("cannot find any files containing the %v directive", immutableGenCmd)
+	if pathDirFiles == nil {
+		fatalf("cannot find any files containing the %v or %v directive", immutableGenCmdImportPath, immutableGenCmd)
 	}
 
-	if dirFiles[envFile] != 1 {
-		fatalf("expected a single occurrence of %v directive in %v. Got: %v", immutableGenCmd, envFile, dirFiles)
+	if pathDirFiles[envFile] > 1 {
+		fatalf("expected a single occurrence of %v directive in %v. Got: %v", immutableGenCmdImportPath, envFile, pathDirFiles)
 	}
 
 	licenseHeader, err := gogenerate.CommentLicenseHeader(fLicenseFile)

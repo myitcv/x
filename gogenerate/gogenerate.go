@@ -13,11 +13,14 @@ import (
 	"bytes"
 	"flag"
 	"fmt"
+	"go/parser"
+	"go/token"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 
-	"golang.org/x/tools/go/packages"
+	"github.com/rogpeppe/go-internal/imports"
 )
 
 // These constants correspond in name and value to the details given in
@@ -249,48 +252,110 @@ func DefaultLogLevel(f *string, ll LogLevel) {
 
 // FilesContainingCmd returns a map of Go file name (defined by go list as
 // GoFiles + CgoFiles + TestGoFiles + XTestGoFiles) in the directory dir, to a
-// count of the number of times directive command appears in that file.  (after
-// quote and variable expansion as described by go generate -help). When
-// comparing commands, the filepath.Base of each is compared. The file names
+// count of the number of times directive command appears in that file (after
+// quote and variable expansion as described by go generate -help). Commands
+// can be gobin commands or plain PATH-based command calls. When comparing
+// PATH-based commands, the filepath.Base of each is compared. The file names
 // will, by definition, be relative to dir
-func FilesContainingCmd(dir string, command string) (map[string]int, error) {
-
-	command = filepath.Base(strings.TrimSpace(command))
-	if command == "" {
-		return nil, nil
-	}
-
-	cfg := &packages.Config{
-		Mode:  packages.LoadFiles,
-		Tests: true,
-	}
-	pkgs, err := packages.Load(cfg, dir)
+func FilesContainingCmd(dir string, command string, tags map[string]bool) (map[string]int, error) {
+	pkgs, err := getCandidateFiles(dir, tags)
 	if err != nil {
 		return nil, err
 	}
 
-	pkg := pkgs[0]
+	command = strings.TrimSpace(command)
+	matches := map[string]int{}
+	cmdstr := filepath.Base(filepath.FromSlash(command))
+	cmdIsPathBased := string(os.PathSeparator) == "/" || strings.Index(command, string(os.PathSeparator)) == -1
 
-	matchMap := make(map[string]int)
+	for pname, files := range pkgs {
+		for _, f := range files {
+			fname := filepath.Base(f)
+			checkMatch := func(line int, args []string) error {
+				gencmd := filepath.Base(args[0])
+				if gencmd == "gobin" && cmdIsPathBased {
+					// NOTE: We want to only deal with gobin cmd for now
 
-	// GoFiles+CgoFiles+TestGoFiles+XTestGoFiles per go list
-	// these are all relative to path
-	for _, x := range pkg.GoFiles {
-		_, f := filepath.Split(x)
-		checkMatch := func(line int, args []string) error {
-			if filepath.Base(args[0]) == command {
-				matchMap[f] += 1
+					// NOTE: Create flagset similar to the gobin cmd to parse all flags and consume
+					// output of Args() to determine if the import command is a part of the args
+					fs := flag.NewFlagSet("gobin", 0)
+					fs.Bool("m", false, "resolve dependencies via the main module (as given by go env GOMOD)")
+					fs.String("mod", "", "provide additional control over updating and use of go.mod")
+					frun := fs.Bool("run", false, "run the provided main package")
+					fs.Bool("p", false, "print gobin install cache location for main packages")
+					fs.Bool("v", false, "print the module path and version for main packages")
+					fs.Bool("d", false, "stop after installing main packages to the gobin install cache")
+					fs.Bool("u", false, "check for the latest tagged version of main packages")
+					fs.Bool("nonet", false, "prevent network access")
+					fs.Bool("debug", false, "print debug information")
+
+					err := fs.Parse(args[1:])
+					if err != nil {
+						return fmt.Errorf("unable to parse gobin flags: %v", err)
+					}
+
+					patterns := fs.Args()[0]
+					cmdPath := strings.Split(patterns, "@")[0]
+					if *frun && cmdPath == command {
+						matches[fname] += 1
+					}
+
+				} else if gencmd == cmdstr {
+					matches[fname] += 1
+				}
+
+				return nil
 			}
 
-			return nil
-		}
-
-		err = DirFunc(pkg.PkgPath, dir, f, checkMatch)
-
-		if err != nil {
-			return nil, err
+			err := DirFunc(pname, dir, fname, checkMatch)
+			if err != nil {
+				return nil, err
+			}
 		}
 	}
 
-	return matchMap, nil
+	return matches, nil
+}
+
+func getCandidateFiles(dir string, tags map[string]bool) (map[string][]string, error) {
+	packages := make(map[string][]string, 0)
+
+	filterFn := func(fi os.FileInfo) bool {
+		return imports.MatchFile(fi.Name(), tags)
+	}
+
+	fset := token.NewFileSet()
+	pkgs, err := parser.ParseDir(fset, dir, filterFn, parser.PackageClauseOnly|parser.ParseComments)
+	if err != nil {
+		return nil, fmt.Errorf("could not run ParseDir: %v", err)
+	}
+
+	for _, p := range pkgs {
+		files := []string{}
+		for name, f := range p.Files {
+			var comments bytes.Buffer
+			for _, cg := range f.Comments {
+				if cg == f.Doc || cg.Pos() > f.Package {
+					break
+				}
+
+				for _, cm := range cg.List {
+					comments.WriteString(cm.Text + "\n")
+				}
+
+				comments.WriteString("\n")
+			}
+
+			if imports.ShouldBuild(comments.Bytes(), tags) {
+				files = append(files, name)
+			}
+		}
+
+		if len(files) > 0 {
+			sort.SliceStable(files, func(i, j int) bool { return files[i] < files[j] })
+			packages[p.Name] = files
+		}
+	}
+
+	return packages, nil
 }
