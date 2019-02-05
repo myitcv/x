@@ -42,6 +42,9 @@ for i in $(find !(_vendor) -name go.mod -execdir pwd \;)
 do
 	pushd $i > /dev/null
 
+	echo "dir: $i"
+	echo "subpackages: $(subpackages)"
+
 	go generate $(subpackages)
 
 	ensure_go_formatted $(sub_git_files | grep -v '^_vendor/' | non_gen_go_files)
