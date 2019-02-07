@@ -1,0 +1,32 @@
+# Test for endless generators, i.e. infinite recursion in gg
+
+# first run
+go list ./...
+! gg -p 1 -trace ./...
+! stdout .+
+stderr '\Qhit max number of iterations (10) for mod.com/p1\E'
+
+-- go.mod --
+module mod.com
+
+-- p1/p1.go --
+package p1
+
+//go:generate gobin -m -run mod.com/gen
+
+-- gen/gen.go --
+package main
+
+import (
+	"fmt"
+	"io/ioutil"
+	"time"
+)
+
+func main() {
+	now := []byte(fmt.Sprintf("%v\n", time.Now()))
+	if err := ioutil.WriteFile("gen_p1_gen.txt", now, 0666); err != nil {
+		panic(err)
+	}
+}
+

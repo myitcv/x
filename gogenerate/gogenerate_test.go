@@ -125,22 +125,41 @@ func TestFileIsGenerated(t *testing.T) {
 
 func TestFileGeneratedBy(t *testing.T) {
 	checks := []struct {
-		n string
-		c string
-		r bool
+		n             string
+		addFileEnding bool
+		c             string
+		r             bool
 	}{
-		{"gen_bananaGen.go", "bananaGen", true},
-		{"gen_bananaGen_test.go", "bananaGen", true},
-		{"gen_a_bananaGen.go", "bananaGen", true},
-		{"gen_a_bananaGen_test.go", "bananaGen", true},
-		{"gen_abananaGen.go", "bananaGen", false},
-		{"gen_", "bananaGen", false},
+		{"gen_bananaGen", true, "bananaGen", true},
+		{"gen_bananaGen", true, "example.com/bananaGen", true},
+		{"gen_bananaGen_test", true, "bananaGen", true},
+		{"gen_bananaGen_test", true, "exmaple.com/bananaGen", true},
+		{"gen_a_bananaGen", true, "bananaGen", true},
+		{"gen_a_bananaGen", true, "example.com/bananaGen", true},
+		{"gen_a_bananaGen_test", true, "bananaGen", true},
+		{"gen_a_bananaGen_test", true, "example.com/bananaGen", true},
+		{"gen_abananaGen", true, "bananaGen", false},
+		{"gen_", false, "bananaGen", false},
 	}
 
 	for _, c := range checks {
-		r := FileGeneratedBy(c.n, c.c)
+		fn := c.n
+		if c.addFileEnding {
+			fn += ".go"
+		}
+		r := FileGeneratedBy(fn, c.c)
 		if r != c.r {
-			t.Errorf("Expected FileGeneratedBy(%q, %q) to be %v got %v", c.n, c.c, c.r, r)
+			t.Errorf("Expected FileGeneratedBy(%q, %q) to be %v got %v", fn, c.c, c.r, r)
+		}
+	}
+	for _, c := range checks {
+		fn := c.n
+		if c.addFileEnding {
+			fn += ".proto"
+		}
+		r := AnyFileGeneratedBy(fn, c.c)
+		if r != c.r {
+			t.Errorf("Expected FileGeneratedBy(%q, %q) to be %v got %v", fn, c.c, c.r, r)
 		}
 	}
 }

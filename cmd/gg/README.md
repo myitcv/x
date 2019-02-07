@@ -9,7 +9,7 @@ go get -u {{.Out.ImportPath}}
 -->
 ## `gg`
 
-gg is a dependency-aware wrapper for go generate.
+<no value>
 
 ```
 go get -u myitcv.io/cmd/gg

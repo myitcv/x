@@ -565,10 +565,13 @@ FinishedLookupGithubCLI:
 		}()
 
 		cmd.Stderr = os.Stderr
-		if err := cmd.Run(); err != nil {
-			return errorf("failed to run %v: %v", strings.Join(cmd.Args, " "), err)
+		if err := cmd.Start(); err != nil {
+			return errorf("failed to start %v: %v", strings.Join(cmd.Args, " "), err)
 		}
 		<-done
+		if err := cmd.Wait(); err != nil {
+			return errorf("failed to run %v: %v", strings.Join(cmd.Args, " "), err)
+		}
 		if scanerr != nil {
 			return errorf("failed to rewrite output: %v", scanerr)
 		}

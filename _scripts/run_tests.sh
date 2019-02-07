@@ -6,6 +6,7 @@
 source "$(git rev-parse --show-toplevel)/_scripts/common.bash"
 
 # TODO: work out a better way of priming the build tools
+go install github.com/myitcv/gobin
 go install myitcv.io/cmd/concsh myitcv.io/cmd/pkgconcat
 go install golang.org/x/tools/cmd/goimports
 
@@ -49,7 +50,7 @@ do
 
 	go test $(subpackages)
 
-	install_main_go $(subpackages)
+	install_main_go $(subpackages | grep -v myitcv.io/cmd/gg/internal/go)
 
 	go vet $(subpackages)
 
