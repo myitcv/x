@@ -233,6 +233,14 @@ func mainerr() (reterr error) {
 		}()
 	}
 
+	self, err := os.Executable()
+	if err != nil {
+		return fmt.Errorf("could not resolve path name for the executable that started the current process: %v", err)
+	}
+	selfHash := newHash("## " + self)
+	gg.hashFile(selfHash, "", self)
+	gg.selfHash = selfHash.Sum()
+
 	gg.run()
 
 	return reterr
@@ -284,6 +292,9 @@ type gg struct {
 	cache *cache.Cache
 
 	tempDir string
+
+	// self is the filepath to self
+	selfHash [hashSize]byte
 }
 
 func (g *gg) allDeps() []dep {

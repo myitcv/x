@@ -35,11 +35,18 @@ const (
 	optionLong          = "LONG"
 	optionOnline        = "ONLINE"
 	optionSortInvariant = "SORTINVARIANT"
+	optionNegate        = "NEGATE"
+	optionStdout        = "STDOUT"
+	optionStderr        = "STDERR"
 )
 
 var options = []string{
 	optionLong,
 	optionOnline,
+	optionSortInvariant,
+	optionNegate,
+	optionStdout,
+	optionStderr,
 }
 
 type lexer struct {
@@ -278,6 +285,7 @@ func (l *lexer) backup() {
 // lexCmdAndArgs borrows a lot in style from the go generate command
 // parsing of arguments in go:generate directives
 func (l *lexer) lexCmdAndArgs() stateFn {
+
 Words:
 	for {
 		l.acceptRun(" \t")
