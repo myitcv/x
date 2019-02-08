@@ -24,6 +24,10 @@ func (p *processor) processCommonBlock(prefix string, conv func(string, []byte) 
 	sortInvariant := false
 	execute := true
 
+	stdout := false
+	stderr := false
+	negate := false
+
 Args:
 	for {
 		i := p.next()
@@ -46,6 +50,12 @@ Args:
 					execute = execute && *fOnline
 				case optionSortInvariant:
 					sortInvariant = true
+				case optionStdout:
+					stdout = true
+				case optionStderr:
+					stderr = true
+				case optionNegate:
+					negate = true
 				default:
 					p.errorf("unknown option %v", i.val)
 				}
@@ -77,6 +87,11 @@ Args:
 		})
 
 		args = append(args, t)
+	}
+
+	if !stdout && !stderr {
+		stdout = true
+		stderr = true
 	}
 
 	debugf("Will run with args \"%v\"\n", strings.Join(args, "\", \""))
@@ -143,13 +158,26 @@ Args:
 
 	if execute {
 		// ok now process the command, parse the template and write everything
+		var out bytes.Buffer
 		cmd := exec.Command(args[0], args[1:]...)
-		out, err := cmd.CombinedOutput()
-		if err != nil {
-			p.errorf("failed to run command %q: %v\n%v", origCmdStr, err, string(out))
+		if stdout {
+			cmd.Stdout = &out
+		}
+		if stderr {
+			cmd.Stderr = &out
 		}
 
-		i := conv(strings.Join(cmd.Args, " "), out)
+		// TODO not ideal that we could only capture either stdout/stderr in the
+		// case a command unexpectedly succeeds/fails
+		if err := cmd.Run(); err != nil {
+			if _, isee := err.(*exec.ExitError); !isee || !negate {
+				p.errorf("unexpected command failure %q: %v\n%s", origCmdStr, err, out.Bytes())
+			}
+		} else if negate {
+			p.errorf("unexpected command success %q: %v\n%s", origCmdStr, err, out.Bytes())
+		}
+
+		i := conv(strings.Join(cmd.Args, " "), out.Bytes())
 
 		// TODO gross hack for now
 		tmplFuncMap["PrintCmd"] = func(k string) interface{} {

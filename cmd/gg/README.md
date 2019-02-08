@@ -3,62 +3,83 @@
 
 {{.Out.Doc}}
 
-```
-go get -u {{.Out.ImportPath}}
-```
 -->
 ## `gg`
 
 <no value>
 
-```
-go get -u myitcv.io/cmd/gg
-```
 <!-- END -->
 
-_Very much work in progress._
+<!-- __TEMPLATE: gobin -m -run myitcv.io/cmd/gg -h # NEGATE
+{{.Out}}
+-->
+gg is a cached-based wrapper around go generate directives.
 
-## Usage
+Usage:
+        gg [-p n] [-r n] [-trace] [-tags 'tag list'] [packages]
 
-```bash
-# list all go:generate directives in packages ./...
-gg -l ./...
+gg runs go generate directives found in packages according to the reverse
+dependency graph implied by those packages' imports, and the dependencies of
+the go generate directives. gg works in both GOPATH and modules modes.
 
-# run go generate according to the "algorithm" described below on packages ./...
-# here, immutableGen generates code that contains go:generate directives
-gg -typed stringer -untyped sortGen,immutableGen,keyGen ./...
-```
+The packages argument is similar to the packages argument for the go command;
+see 'go help packages' for more information. In module mode, it is an error if
+packages resolves to packages outside of the main module.
 
-`gg` was born out of the following scenario:
+The -tags flag is similar to the build flag that can be passed to the go
+command. It takes a space-separated list of build tags to consider satisfied as
+gg runs, and can appear multiple times.
 
-* it's a good idea to clean all generated files as part of a CI build and regenerate; therefore we need a simple,
-  reliable means to re-run `go generate` (or similar) on an entire repo of packages
-* some `go generate` programs will generate code that itself contains `go generate` directives; this requires `go generate`
-  to be called multiple times before a "fixed point" is reached
-* some `go generate` programs do type checking (e.g. [`stringer`](https://godoc.org/golang.org/x/tools/cmd/stringer));
-  let's call these **typed generators** (vs **untyped generators**)
-* typed generators often (always?) fail in situations where a package does not compile
-* we therefore need to ensure our untyped generators run first and repeatedly until there are no more changes (if we
-  assume that it is generally generated code from the untyped generators that allows a package to otherwise compile)
-* then we can run the typed generators; it there is any change, we need to rinse and repeat with the untyped generators,
-  then the typed generators... until we reach a fixed point with the typed generators
+The -p flag controls the concurrency level of gg. By default will assume a -p
+value of GOMAXPROCS. go generate directives only ever run in serial and never
+concurrently with other work (this may be relaxed in the future to allow
+concurrent execution of go generate directives). A -p value of 1 implies serial
+execution of work in a well defined order.
 
-Whilst it's possible to achieve all of this on a per-project basis by writing a relatively simple program to wrap things
-up, there is some merit in writing a tool to wrap `go generate`:
+The -trace flag outputs a log of work being executed by gg. It is most useful
+when specified along with -p 1 (else the order of execution of work is not well
+defined).
 
-* the tool can be reused by others
-* existing `go generate` programs can be re-used with zero effort (other than needing to classify them as either typed
-  or untyped)
+Note: at present, gg does not understand the GOFLAGS environment variable.
+Neither does it pass the effective build tags via GOFLAGS to each go generate
+directive. For more details see:
+
+https://github.com/golang/go/issues/26849#issuecomment-460301061
+
+go generate directives can take three forms:
+
+  //go:generate command ...
+  //go:generate gobin -run main_pkg[@version] ...
+  //go:generate gobin -m -run main_pkg[@version] ...
+
+The first form, a simple command-based directive, is a relative or absolute
+PATH-resolved command.
+
+The second form similar to the command-based directive, except that the path of
+the resulting command is resolved via gobin's semantics (see gobin -help).
+
+The third form uses the main module for resolution of the generator and its
+dependencies. Those dependencies take part in the reverse dependency graph. Use
+of this form is, by definition, only possible in module mode.
+
+Where the third form of go generate directive is used, it may be necessary to
+declare tool dependencies in your main module. For more information on how to
+do this see:
+
+https://github.com/golang/go/wiki/Modules#how-can-i-track-tool-dependencies-for-a-module
 
 
-## TODO
+TODO
+====
+The following is a rough list of TODOs for gg:
 
-* The code is very much WIP
-* Docs
-* Some automatic means of detecting typed vs untyped generators?
+* add support for parsing of GOFLAGS
+* add support for setting of GOFLAGS for go generate directives
+* consider supporting concurrent execution of go generate directives
+* define semantics for when generated files are removed by a generator
+* add full tests for cgo
 
-## Credit
+flag: help requested
+exit status 1
 
-* https://github.com/rsc/gt
-* `go generate` source code in [the main Go repo](https://github.com/golang/go/tree/master/src/cmd/go)
-
+<!-- END -->
