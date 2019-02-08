@@ -1,0 +1,29 @@
+# Test for circular import dependencies (via xtest)
+
+# Test that skip cache does just that
+gg -p 1 -trace ./...
+cmpenv stderr trace1
+gg -p 1 -trace ./...
+cmpenv stderr trace2
+gg -p 1 -trace -skipCache ./...
+cmpenv stderr trace1
+
+-- go.mod --
+module mod.com
+
+-- p1/p1.go --
+package p1
+
+//go:generate echo p1/p1.go
+
+-- trace1 --
+go list -deps -test -json ./...
+hash commandDep commandDep: echo
+generate {Pkg: mod.com/p1 [G]}
+run generator: echo p1/p1.go
+ran generator: echo p1/p1.go
+hash {Pkg: mod.com/p1 [G]}
+-- trace2 --
+go list -deps -test -json ./...
+hash commandDep commandDep: echo
+hash {Pkg: mod.com/p1 [G]}

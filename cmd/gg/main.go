@@ -35,6 +35,7 @@ const (
 	trace     = false
 	traceTime = false
 	hashDebug = false
+	skipCache = false
 )
 
 type tagsFlag []string
@@ -51,6 +52,7 @@ func (t *tagsFlag) Set(s string) error {
 
 var (
 	flagSet           = flag.NewFlagSet(os.Args[0], flag.ContinueOnError)
+	fskipCache        = flagSet.Bool("skipCache", skipCache, "skip fetching items from cache")
 	fDebug            = flagSet.Bool("debug", debug, "debug mode")
 	fTrace            = flagSet.Bool("trace", trace, "trace timings")
 	fTraceTime        = flagSet.Bool("traceTime", traceTime, "trace timings")
@@ -400,6 +402,10 @@ func (g *gg) generate(w *pkg) (moreWork []dep) {
 		// TODO performance: in theory we could reuse the "post" from the previous round
 		// for pre. Unclear whether there would be any benefit from so doing
 		pre := g.hashOutDirs(outDirOrder, w, hw, dirNames)
+
+		if *fskipCache {
+			goto CacheMiss
+		}
 
 		if fp, _, err := g.cache.GetFile(hw.Sum()); err == nil {
 			r, err := newArchiveReader(fp)
@@ -769,10 +775,9 @@ func (g *gg) run() {
 		if *fWorkP == 1 {
 			sortDeps(work)
 		}
-		var i int
 		todo := make(map[dep]bool)
 		var haveGenerate bool
-		for {
+		for i := 0; ; i++ {
 			if i == len(work) || haveGenerate || len(todo) == *fWorkP {
 				work = work[i:]
 				break
@@ -785,7 +790,6 @@ func (g *gg) run() {
 				haveGenerate = true
 			}
 			todo[w] = true
-			i++
 		}
 		var todoOrder []dep
 		for w := range todo {
@@ -1523,6 +1527,9 @@ func (g *gg) resolveGobinModDep(patt string) *gobinModDep {
 		importPath: ip,
 		pkg:        g.pkgLookup[patt],
 		depsMap:    newDepsMap(),
+	}
+	if d.pkg != nil {
+		g.addDep(d, d.pkg)
 	}
 	g.gobinModLookup[ip] = d
 	return d
