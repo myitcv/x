@@ -1,18 +1,17 @@
-<!-- __JSON: go list -json .
-## `{{ filepathBase .Out.ImportPath}}`
-
-{{.Out.Doc}}
+<!-- __JSON: go list -json
+### `{{.Out.ImportPath}}`
 
 -->
-## `gg`
-
-<no value>
+### `myitcv.io/cmd/gg`
 
 <!-- END -->
 
 <!-- __TEMPLATE: gobin -m -run myitcv.io/cmd/gg -h # NEGATE
+```
 {{.Out}}
+```
 -->
+```
 gg is a cached-based wrapper around go generate directives.
 
 Usage:
@@ -79,7 +78,7 @@ The following is a rough list of TODOs for gg:
 * define semantics for when generated files are removed by a generator
 * add full tests for cgo
 
-flag: help requested
 exit status 1
 
+```
 <!-- END -->
