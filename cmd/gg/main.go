@@ -85,7 +85,9 @@ func main1() int {
 	defer tabber.Flush()
 	defer logTiming("end main")
 	if err := mainerr(); err != nil {
-		fmt.Fprintln(os.Stderr, err)
+		if err != flag.ErrHelp {
+			fmt.Fprintln(os.Stderr, err)
+		}
 		return 1
 	}
 	return 0
