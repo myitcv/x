@@ -26,11 +26,10 @@ gopherize.me"
 diff -wu <(cat <<< "$nested_order" | sort) <(nested_test_dirs | sort)
 for i in $nested_order
 do
+	echo "=============================" #!
+	echo "$i/_scripts/run_tests.sh" #!
 	pushd $i > /dev/null
-	echo "---- $i"
 	./_scripts/run_tests.sh
-	echo "----"
-	echo ""
 	popd > /dev/null
 done
 
@@ -41,6 +40,8 @@ done
 
 for i in $(find !(_vendor) -name go.mod -execdir pwd \;)
 do
+	echo "=============================" #!
+	echo "$i: regular run" #!
 	pushd $i > /dev/null
 
 	go generate $(subpackages)

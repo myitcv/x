@@ -8,15 +8,9 @@ RUN export go_bootstrap="$(curl -s https://golang.org/dl/?mode=json | jq -r '.[0
 
 ENV PATH=/go/bin:$PATH
 
-RUN git clone -q https://github.com/myitcv/vbash /vbash/src/github.com/myitcv/vbash && \
-  export GOPATH=/vbash && \
-  go install github.com/myitcv/vbash
-
 ARG CHROME_CHANNEL
 
 RUN pip install awscli
-
-ENV PATH=/vbash/bin:$PATH
 
 RUN echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google-chrome.list && \
   curl -sL https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - && \
@@ -41,3 +35,7 @@ RUN curl -fsSL https://download.docker.com/linux/debian/gpg | apt-key add -
 RUN add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
 RUN apt-get update
 RUN apt-get install -y docker-ce
+
+ARG VBASH
+
+COPY $VBASH /usr/bin/

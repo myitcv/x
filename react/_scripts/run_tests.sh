@@ -16,7 +16,7 @@ cd "${BASH_SOURCE%/*}/.."
 
 for i in $(cat .vendored_bin_deps .bin_deps)
 do
-	go install $i
+	go install $i ##
 done
 
 sub_git_files | gen_files | xargs rm -f
