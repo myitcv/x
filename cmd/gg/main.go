@@ -245,6 +245,14 @@ func mainerr() (reterr error) {
 	gg.hashFile(selfHash, "", self)
 	gg.selfHash = selfHash.Sum()
 
+	gopath, err := exec.LookPath("go")
+	if err != nil {
+		return fmt.Errorf("could not resolve path name for go: %v", err)
+	}
+	goHash := newHash("## " + gopath)
+	gg.hashFile(goHash, "", gopath)
+	gg.goHash = goHash.Sum()
+
 	gg.run()
 
 	return reterr
@@ -299,6 +307,11 @@ type gg struct {
 
 	// self is the filepath to self
 	selfHash [hashSize]byte
+
+	// gohash is the hash of the go binary found in PATH. Because we only use
+	// the list functionality of cmd/go, this should be sufficient. i.e. we
+	// don't need to separately hash the compile tool for example.
+	goHash [hashSize]byte
 }
 
 func (g *gg) allDeps() []dep {
@@ -372,6 +385,8 @@ func (g *gg) generate(w *pkg) (moreWork []dep) {
 		}
 
 		hw := newHash("## generate " + w.ImportPath)
+		fmt.Fprintf(hw, "gg %v", g.selfHash)
+		fmt.Fprintf(hw, "go %v", g.goHash)
 		fmt.Fprintf(hw, "goos %v goarch %v\n", g.GOOS, g.GOARCH)
 		// we add tags to the generate hash because we can't know a generator
 		// will use them.
