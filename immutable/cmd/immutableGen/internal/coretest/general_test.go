@@ -32,7 +32,7 @@ func TestEmbedAccess(t *testing.T) {
 	c1 := new(Clash1).SetNoClash1("NoClash1")
 	c2 := new(pkga.Clash2).SetNoClash2("NoClash2")
 	a := new(pkga.PkgA).SetAddress("home").SetPkgB(b)
-	e2 := new(Embed2).SetAge(42)
+	e2 := new(Embed2).SetAge(42).setOtherdetails("otherdetails")
 	e1 := new(Embed1).WithMutable(func(e1 *Embed1) {
 		e1.SetName("Paul")
 		e1.SetEmbed2(e2)
@@ -52,6 +52,12 @@ func TestEmbedAccess(t *testing.T) {
 		want := 42
 		if got := e1.Age(); want != got {
 			t.Fatalf("e1.Age(): want %v, got %v", want, got)
+		}
+	}
+	{
+		want := "otherdetails"
+		if got := e1.otherdetails(); want != got {
+			t.Fatalf("e1.otherdetails(): want %v, got %v", want, got)
 		}
 	}
 	{

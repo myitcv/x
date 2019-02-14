@@ -148,6 +148,7 @@ func (o *output) calcMethodSets() {
 					}
 					seen[kt] = true
 					debugf("using type check on %T %v\n", h.typ, h.typ)
+					isPkgLocal := o.isPkgLocal(h.typ)
 					if v, ok := util.IsImmType(h.typ).(util.ImmTypeStruct); ok {
 						is := v.Struct
 						for i := 0; i < is.NumFields(); i++ {
@@ -162,8 +163,9 @@ func (o *output) calcMethodSets() {
 								continue
 							}
 							name = strings.TrimPrefix(name, "field_")
-							// we can only consider exported fields
-							if r, _ := utf8.DecodeRuneInString(name); unicode.IsLower(r) {
+							// we can only consider exported fields where the
+							// named type (if it is such) belongs to another package
+							if r, _ := utf8.DecodeRuneInString(name); !isPkgLocal && unicode.IsLower(r) {
 								continue
 							}
 							typStr := varTypeString(f)
@@ -183,7 +185,7 @@ func (o *output) calcMethodSets() {
 					} else if v, ok := h.typ.Underlying().(*types.Struct); ok {
 						for i := 0; i < v.NumFields(); i++ {
 							f := v.Field(i)
-							if !f.Exported() {
+							if !isPkgLocal && !f.Exported() {
 								continue
 							}
 							typStr := varTypeString(f)
@@ -229,6 +231,24 @@ func (o *output) calcMethodSets() {
 			debugf("===============\n")
 		}
 	}
+}
+
+func (o *output) isPkgLocal(t types.Type) bool {
+	// TODO this does not support **T types
+	ct := t
+	for {
+		if pt, ok := ct.(*types.Pointer); !ok {
+			break
+		} else {
+			ct = pt.Elem()
+		}
+	}
+	if nt, ok := ct.(*types.Named); ok {
+		return o.pkgPath == nt.Obj().Pkg().Path()
+	}
+
+	// TODO in what circumstances is it wrong to return true?
+	return true
 }
 
 func (o *output) findFieldFromVar(v *types.Var) (field *ast.Field, err error) {

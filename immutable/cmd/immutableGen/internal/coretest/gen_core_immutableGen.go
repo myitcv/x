@@ -1568,16 +1568,26 @@ func (s *Embed1) SetPostcode(n string) *Embed1 {
 	v0 := s.SetPkgA(v1)
 	return v0
 }
+func (s *Embed1) otherdetails() string {
+	return s.Embed2().otherdetails()
+}
+func (s *Embed1) setOtherdetails(n string) *Embed1 {
+	v1 := s.Embed2().setOtherdetails(n)
+	v0 := s.SetEmbed2(v1)
+	return v0
+}
 
 //
 // Embed2 is an immutable type and has the following template:
 //
 // 	struct {
-// 		Age int
+// 		Age		int
+// 		otherdetails	string
 // 	}
 //
 type Embed2 struct {
-	field_Age int
+	field_Age          int
+	field_otherdetails string
 
 	mutable bool
 	__tmpl  *_Imm_Embed2
@@ -1663,6 +1673,21 @@ func (s *Embed2) SetAge(n int) *Embed2 {
 
 	res := *s
 	res.field_Age = n
+	return &res
+}
+func (s *Embed2) otherdetails() string {
+	return s.field_otherdetails
+}
+
+// setOtherdetails is the setter for Otherdetails()
+func (s *Embed2) setOtherdetails(n string) *Embed2 {
+	if s.mutable {
+		s.field_otherdetails = n
+		return s
+	}
+
+	res := *s
+	res.field_otherdetails = n
 	return &res
 }
 

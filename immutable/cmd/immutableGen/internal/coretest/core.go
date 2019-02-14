@@ -7,7 +7,7 @@ import (
 	"myitcv.io/immutable/cmd/immutableGen/internal/coretest/pkga"
 )
 
-//go:generate immutableGen -licenseFile license.txt -G "echo \"hello world\""
+//go:generate gobin -m -run myitcv.io/immutable/cmd/immutableGen -licenseFile license.txt -G "echo \"hello world\""
 
 // a comment about MyMap
 type _Imm_MyMap map[string]int
@@ -101,7 +101,8 @@ type _Imm_Embed1 struct {
 }
 
 type _Imm_Embed2 struct {
-	Age int
+	Age          int
+	otherdetails string
 }
 
 type NonImmStruct struct {
