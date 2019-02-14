@@ -9,6 +9,9 @@ import (
 	"go/token"
 	"go/types"
 	"path/filepath"
+	"regexp"
+	"sort"
+	"strings"
 
 	"golang.org/x/tools/go/packages"
 	"myitcv.io/gogenerate"
@@ -29,10 +32,9 @@ func execute(dir string, envPkg string, licenseHeader string, cmds gogenCmds) {
 	}
 
 	config := &packages.Config{
-		Dir:   absDir,
 		Mode:  packages.LoadSyntax,
 		Fset:  token.NewFileSet(),
-		Tests: false,
+		Tests: true,
 	}
 
 	pkgs, err := packages.Load(config, absDir)
@@ -40,7 +42,49 @@ func execute(dir string, envPkg string, licenseHeader string, cmds gogenCmds) {
 		fatalf("could not load packages from dir %v: %v", dir, err)
 	}
 
-	pkg := pkgs[0]
+	forTest := regexp.MustCompile(` \[[^\]]+\]$`)
+
+	testPkgs := make(map[string]*packages.Package)
+	var nonTestPkg *packages.Package
+
+	// Becase of https://github.com/golang/go/issues/27910 we have to
+	// apply some janky logic to find the "right" package
+	for _, p := range pkgs {
+		switch {
+		case strings.HasSuffix(p.PkgPath, ".test"):
+			// we don't ever want this package
+			continue
+		case forTest.MatchString(p.ID):
+			testPkgs[p.Name] = p
+		default:
+			nonTestPkg = p
+		}
+	}
+
+	ids := func() []string {
+		var ids []string
+		for _, p := range pkgs {
+			ids = append(ids, p.ID)
+		}
+		sort.Strings(ids)
+		return ids
+	}
+
+	if nonTestPkg == nil {
+		fatalf("always expect to have the actual package. Got %v", ids())
+	}
+
+	var pkg *packages.Package
+
+	if strings.HasSuffix(envPkg, "_test") {
+		if pkg = testPkgs[envPkg]; pkg == nil {
+			fatalf("called with package name %v, but go/packages did not give us such a package. Got %v", envPkg, ids())
+		}
+	} else {
+		if pkg = testPkgs[envPkg]; pkg == nil {
+			pkg = nonTestPkg
+		}
+	}
 
 	if pkg.Name != envPkg {
 		pps := make([]string, 0, len(pkgs))
@@ -135,6 +179,7 @@ type embedded struct {
 	typ  types.Type
 	es   string
 	path []string
+	info *types.Info
 }
 
 type field struct {
