@@ -1,0 +1,39 @@
+! exists gen_helpflagtopkgdoc.go
+go generate
+exists gen_helpflagtopkgdoc.go
+
+go doc
+cmp stdout doc.golden
+
+-- go.mod --
+module mod.com
+
+-- main.go --
+package main
+
+//go:generate helpflagtopkgdoc
+
+import (
+	"flag"
+	"fmt"
+	"os"
+)
+
+func main() {
+	fs := flag.NewFlagSet(os.Args[0], flag.ContinueOnError)
+	fs.Usage = func() {
+		fmt.Fprintf(os.Stderr, `
+This is our package doc. Very simple really. It has a very long line that go doc will wrap. The source code will look different however. Makes it hard to test.
+`[1:])
+	}
+	switch err := fs.Parse(os.Args[1:]); err {
+	case flag.ErrHelp:
+		os.Exit(2)
+	default:
+		panic(err)
+	}
+}
+-- doc.golden --
+This is our package doc. Very simple really. It has a very long line that go
+doc will wrap. The source code will look different however. Makes it hard to
+test.
