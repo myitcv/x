@@ -1,0 +1,47 @@
+! exists gen_helpflagtopkgdoc.go
+! go generate
+! stdout .+
+stderr 'written output differs from actual go doc:'
+stderr '^\+this is some rubbish'
+
+-- go.mod --
+module mod.com
+
+-- a.go --
+// this is some rubbish
+package main
+
+//go:generate helpflagtopkgdoc
+
+import (
+	"flag"
+	"fmt"
+	"os"
+)
+
+func main() {
+	fs := flag.NewFlagSet(os.Args[0], flag.ContinueOnError)
+	fs.Usage = func() {
+		fmt.Fprintf(os.Stderr, `
+This is our package doc
+
+Very simple really
+`[1:])
+	}
+	switch err := fs.Parse(os.Args[1:]); err {
+	case flag.ErrHelp:
+		os.Exit(2)
+	default:
+		panic(err)
+	}
+}
+-- errout --
+written output differs from report go doc:
+ This is our package doc
+
++
+ Very simple really
++
++this is some rubbish
+
+main.go:4: running "helpflagtopkgdoc": exit status 1

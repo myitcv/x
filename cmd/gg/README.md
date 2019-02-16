@@ -72,9 +72,9 @@ required in [cond] it must be double-quoted.
 
 The predefined conditions are:
 
-- [exists:file] for whether the (relative) file path exists
-- [exec:prog] for whether prog is available for execution (found by
-  exec.LookPath)
+  [exists:file] for whether the (relative) file path exists
+  [exec:prog]   for whether prog is available for execution (found by
+                exec.LookPath)
 
 Where the third form of go generate directive is used, it may be necessary to
 declare tool dependencies in your main module. For more information on how to
@@ -86,17 +86,16 @@ By default, gg uses the directory gg-artefacts under your user cache directory.
 See the documentation for os.UserCacheDir for OS-specific details on how to
 configure its location. Setting GGCACHE overrides the default.
 
-
 TODO
-====
+
 The following is a rough list of TODOs for gg:
 
-* add support for parsing of GOFLAGS
-* add support for setting of GOFLAGS for go generate directives
-* consider supporting concurrent execution of go generate directives
-* define semantics for when generated files are removed by a generator
-* add full tests for cgo
-* document how to use -outdir: and -infiles: prefixed-flags
+	* add support for parsing of GOFLAGS
+	* add support for setting of GOFLAGS for go generate directives
+	* consider supporting concurrent execution of go generate directives
+	* define semantics for when generated files are removed by a generator
+	* add full tests for cgo
+	* document how to use -outdir: and -infiles: prefixed-flags
 
 
 ```

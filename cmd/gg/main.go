@@ -28,6 +28,7 @@ import (
 	"myitcv.io/gogenerate"
 )
 
+//go:generate gobin -m -run myitcv.io/cmd/helpflagtopkgdoc
 //go:generate gobin -m -run myitcv.io/cmd/gg/internal/genmain
 
 const (
@@ -91,9 +92,10 @@ func main1() int {
 	defer tabber.Flush()
 	defer logTiming("end main")
 	if err := mainerr(); err != nil {
-		if err != flag.ErrHelp {
-			fmt.Fprintln(os.Stderr, err)
+		if err == flag.ErrHelp {
+			return 2
 		}
+		fmt.Fprintln(os.Stderr, err)
 		return 1
 	}
 	return 0
