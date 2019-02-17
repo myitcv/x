@@ -15,7 +15,7 @@ done
 
 sub_git_files | gen_files | xargs rm -f
 
-go generate $(subpackages)
+gobin -m -run myitcv.io/cmd/gg $(subpackages)
 go test $(subpackages)
 
 install_main_go $(subpackages)

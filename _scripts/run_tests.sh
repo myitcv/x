@@ -32,10 +32,6 @@ do
 	popd > /dev/null
 done
 
-# TODO re-enable this once we correctly calculate the dependency graph
-# and only run things in parallel where we can
-#
-# run_nested_tests
 
 for i in $(find !(_vendor) -name go.mod -execdir pwd \;)
 do
@@ -43,7 +39,7 @@ do
 	echo "$i: regular run" #!
 	pushd $i > /dev/null
 
-	go generate $(subpackages)
+	gobin -m -run myitcv.io/cmd/gg $(subpackages)
 
 	ensure_go_formatted $(sub_git_files | grep -v '^_vendor/' | non_gen_go_files)
 	ensure_go_gen_formatted $(sub_git_files | grep -v '^_vendor/' | gen_go_files)
@@ -53,6 +49,9 @@ do
 	install_main_go $(subpackages | grep -v myitcv.io/cmd/gg/internal/go)
 
 	go vet $(subpackages)
+
+	go mod tidy
+	go list all > /dev/null
 
 	popd > /dev/null
 done
