@@ -166,12 +166,14 @@ func mainerr() (reterr error) {
 		return fTags[i] < fTags[j]
 	})
 
-	ucd, err := os.UserCacheDir()
-	if err != nil {
-		return fmt.Errorf("failed to determine user cache dir: %v", err)
+	artefactsCacheDir := os.Getenv("GGCACHE")
+	if artefactsCacheDir == "" {
+		ucd, err := os.UserCacheDir()
+		if err != nil {
+			return fmt.Errorf("failed to determine user cache dir: %v", err)
+		}
+		artefactsCacheDir = filepath.Join(ucd, "gg-artefacts")
 	}
-
-	artefactsCacheDir := filepath.Join(ucd, "gg-artefacts")
 	if err := os.MkdirAll(artefactsCacheDir, 0777); err != nil {
 		return fmt.Errorf("failed to create build cache dir %v: %v", artefactsCacheDir, err)
 	}
@@ -318,6 +320,9 @@ func (g *gg) allDeps() []dep {
 	var res []dep
 	for _, p := range g.pkgLookup {
 		res = append(res, p)
+		if p.x != nil {
+			res = append(res, p.x)
+		}
 	}
 	for _, gb := range g.gobinModLookup {
 		res = append(res, gb)
@@ -699,7 +704,7 @@ func (g *gg) run() {
 	// to whether they should be generated. Keep a slice of those to be generated
 	// for convenience.
 	for _, p := range pkgs {
-		np := g.newPkg(p)
+		np := g.newPkg(p, len(p.Match) > 0)
 		if len(p.Match) > 0 {
 			np.generate = true
 			if np.x != nil {
@@ -736,20 +741,10 @@ func (g *gg) run() {
 	// we will simply end up recording the dependency on that generator
 	// (it can't by definition be an import dependency).
 	for _, p := range g.pkgLookup {
-		visit := func(p *pkg) {
-			if !p.generate {
-				return
-			}
-			g.refreshDirectiveDeps(p, gobinModMisses)
-
-			if p.x != nil {
-				g.refreshDirectiveDeps(p.x, gobinModMisses)
-			}
+		if !p.generate {
+			continue
 		}
-		visit(p)
-		if p.x != nil {
-			visit(p.x)
-		}
+		g.refreshDirectiveDeps(p, gobinModMisses)
 	}
 	logTiming("initial refreshDirectiveDeps complete")
 
@@ -890,6 +885,17 @@ func (g *gg) run() {
 			}
 		}
 	}
+
+	var notDone []dep
+	for _, d := range g.allDeps() {
+		if !d.Done() {
+			notDone = append(notDone, d)
+		}
+	}
+	if len(notDone) > 0 {
+		sortDeps(notDone)
+		g.fatalf("the following deps are not done: %v", notDone)
+	}
 }
 
 func (g *gg) addDepsFromImports(p *pkg) {
@@ -986,7 +992,7 @@ func (g *gg) loadMisses(pkgMisses, dirMisses missingDeps) {
 		if _, ok := g.pkgLookup[p.ImportPath]; ok {
 			continue
 		}
-		newPkgs = append(newPkgs, g.newPkgImpl(p))
+		newPkgs = append(newPkgs, g.newPkgImpl(p, false))
 	}
 
 	if len(patts) > 0 {
@@ -1496,12 +1502,12 @@ func (g *gg) fatalf(format string, args ...interface{}) {
 	panic(fmt.Errorf(format, args...))
 }
 
-func (g *gg) newPkg(p *Package) *pkg {
-	res := g.newPkgImpl(p)
+func (g *gg) newPkg(p *Package, createXPkg bool) *pkg {
+	res := g.newPkgImpl(p, createXPkg)
 	return res
 }
 
-func (g *gg) newPkgImpl(p *Package) *pkg {
+func (g *gg) newPkgImpl(p *Package, createXPkg bool) *pkg {
 	if _, ok := g.pkgLookup[p.ImportPath]; ok {
 		g.fatalf("tried to add pre-existing pkg %v", p.ImportPath)
 	}
@@ -1512,7 +1518,7 @@ func (g *gg) newPkgImpl(p *Package) *pkg {
 		Package: p,
 		depsMap: newDepsMap(),
 	}
-	if len(p.XTestGoFiles) > 0 {
+	if createXPkg && len(p.XTestGoFiles) > 0 {
 		res.x = &pkg{
 			Package: deriveXTest(p),
 			depsMap: newDepsMap(),
@@ -1521,9 +1527,6 @@ func (g *gg) newPkgImpl(p *Package) *pkg {
 	}
 	g.pkgLookup[p.ImportPath] = res
 	g.dirLookup[p.Dir] = res
-	if p.ImportPath == "example.com/rename" {
-		fmt.Printf("adding pkg dep example.com/rename\n")
-	}
 	return res
 }
 

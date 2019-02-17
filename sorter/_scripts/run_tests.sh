@@ -11,14 +11,14 @@ rm -f $(sub_git_files | gen_files)
 go install myitcv.io/sorter/cmd/sortGen
 go install myitcv.io/immutable/cmd/immutableGen
 
-go generate $(subpackages)
+gobin -m -run myitcv.io/cmd/gg $(subpackages)
 go install $(subpackages)
 go vet $(subpackages)
 go test $(subpackages)
 
 pushd cmd/sortGen/_testFiles/ > /dev/null
 
-go generate $(subpackages)
+gobin -m -run myitcv.io/cmd/gg $(subpackages)
 go test $(subpackages)
 go install $(subpackages)
 go vet $(subpackages)

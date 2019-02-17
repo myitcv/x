@@ -9,7 +9,7 @@ cd "${BASH_SOURCE%/*}/.."
 
 go install myitcv.io/immutable/cmd/immutableGen myitcv.io/immutable/cmd/immutableVet
 
-go generate $(subpackages) ./cmd/immutableVet/_testFiles
+gobin -m -run myitcv.io/cmd/gg $(subpackages) ./cmd/immutableVet/_testFiles
 go install $(subpackages)
 go test $(subpackages)
 go vet $(subpackages)

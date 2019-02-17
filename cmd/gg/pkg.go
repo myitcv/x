@@ -34,7 +34,7 @@ func (p *pkg) Ready() bool {
 }
 
 func (p *pkg) Done() bool {
-	return p.Ready() && (!p.generate || p.generated) && p.hash != nilHash
+	return p.Ready() && (!p.generate || p.generated) && (p.hash != nilHash || p.isXTest)
 }
 
 func (p *pkg) Undo() {

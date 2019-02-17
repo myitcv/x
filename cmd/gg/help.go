@@ -65,6 +65,10 @@ do this see:
 
 https://github.com/golang/go/wiki/Modules#how-can-i-track-tool-dependencies-for-a-module
 
+By default, gg uses the directory gg-artefacts under your user cache directory.
+See the documentation for os.UserCacheDir for OS-specific details on how to
+configure its location. Setting GGCACHE overrides the default.
+
 
 TODO
 ====
