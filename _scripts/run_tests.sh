@@ -32,6 +32,9 @@ do
 	popd > /dev/null
 done
 
+# TODO come up with a better way of doing mutli-OS-ARCH stuff
+GOOS=linux GOARCH=amd64 gobin -m -run myitcv.io/cmd/gg myitcv.io/cmd/protoc
+GOOS=darwin GOARCH=amd64 gobin -m -run myitcv.io/cmd/gg myitcv.io/cmd/protoc
 
 for i in $(find !(_vendor) -name go.mod -execdir pwd \;)
 do
