@@ -13,7 +13,7 @@ require (
 	github.com/myitcv/vbash v0.0.0-20190212205646-bda31596aee3
 	github.com/onsi/ginkgo v1.7.0 // indirect
 	github.com/onsi/gomega v1.4.3 // indirect
-	github.com/rogpeppe/go-internal v1.2.1
+	github.com/rogpeppe/go-internal v1.2.2
 	github.com/russross/blackfriday v1.5.1
 	github.com/sclevine/agouti v3.0.0+incompatible
 	golang.org/x/net v0.0.0-20180906233101-161cd47e91fd

@@ -1,0 +1,36 @@
+# add a dependency on self
+go mod edit -require=myitcv.io@v0.0.0 -replace=myitcv.io=$MAINMOD
+
+# run
+protoc -go_out=. -infiles:input input.proto
+
+# test
+go test
+
+exists gen_input_protoc.go
+exec gofmt -d gen_input_protoc.go
+
+-- go.mod --
+module mod
+
+-- input.proto --
+syntax = "proto3";
+package mod;
+
+message Person {
+  string name = 1;
+  int32 id = 2;
+  string email = 3;
+}
+
+-- mod_test.go --
+package mod
+
+import (
+	"testing"
+)
+
+var p Person
+
+func TestSimple(t *testing.T) {
+}
