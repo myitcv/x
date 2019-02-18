@@ -78,7 +78,6 @@ The following is a rough list of TODOs for gg:
 * define semantics for when generated files are removed by a generator
 * add full tests for cgo
 
-exit status 1
 
 ```
 <!-- END -->
