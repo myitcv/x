@@ -57,7 +57,7 @@ do
 	popd > /dev/null
 done
 
-_scripts/update_readmes.sh
+./_scripts/update_readmes.sh
 
 if [ $(running_on_ci_server) == "yes" ]
 then

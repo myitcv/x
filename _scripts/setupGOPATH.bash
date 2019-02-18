@@ -26,5 +26,5 @@ then
 
 fi
 
-LOADED_SETUP_GOPATH=true
+autostash_or_export LOADED_SETUP_GOPATH=true
 
