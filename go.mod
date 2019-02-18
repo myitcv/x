@@ -9,7 +9,7 @@ require (
 	github.com/jteeuwen/go-bindata v3.0.7+incompatible
 	github.com/kisielk/gotool v1.0.0
 	github.com/kr/fs v0.1.0
-	github.com/myitcv/gobin v0.0.5
+	github.com/myitcv/gobin v0.0.7
 	github.com/myitcv/vbash v0.0.0-20190212205646-bda31596aee3
 	github.com/onsi/ginkgo v1.7.0 // indirect
 	github.com/onsi/gomega v1.4.3 // indirect
