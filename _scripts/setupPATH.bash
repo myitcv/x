@@ -10,4 +10,4 @@ source "${BASH_SOURCE%/*}/commonEnv.bash"
 
 autostash_or_export PATH="$(readlink -m "${BASH_SOURCE%/*}/../.bin"):$CHROMEDRIVER_INSTALL_DIR/$CHROMEDRIVER_VERSION:$PROTOBUF_INSTALL_DIR/$PROTOBUF_VERSION/bin:$PATH"
 
-LOADED_SETUP_PATH=true
+autostash_or_export LOADED_SETUP_PATH=true

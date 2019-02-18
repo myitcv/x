@@ -58,7 +58,7 @@ source "${BASH_SOURCE%/*}/setupGOPATH.bash"
 gg="go generate"
 
 # *****************************************
-LOADED_COMMON_BASH="true"
+autostash_or_export LOADED_COMMON_BASH="true"
 # *****************************************
 
 source "${BASH_SOURCE%/*}/setupPATH.bash"

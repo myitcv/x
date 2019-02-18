@@ -39,4 +39,4 @@ fi
 
 autostash_or_export PROTOBUF_INCLUDE="$PROTOBUF_INSTALL_DIR/$PROTOBUF_VERSION/include"
 
-LOADED_COMMON_ENV=true
+autostash_or_export LOADED_COMMON_ENV=true

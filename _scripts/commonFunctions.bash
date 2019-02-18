@@ -237,4 +237,4 @@ EOD
 }
 
 # **********************
-LOADED_COMMON_FUNCTIONS=true
+autostash_or_export LOADED_COMMON_FUNCTIONS=true
