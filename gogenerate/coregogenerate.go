@@ -49,20 +49,37 @@ import (
 // A generator represents the state of a single Go source file
 // being scanned for generator commands.
 type generator struct {
-	f        func(line int, dirArgs []string) error
-	r        io.Reader
-	dir      string // full rooted directory of file.
-	file     string // base name of file.
-	pkg      string
-	commands map[string][]string
-	lineNum  int // current line number.
-	env      []string
+	f            func(prefix string, line int, dirArgs []string) error
+	r            io.Reader
+	dir          string // full rooted directory of file.
+	file         string // base name of file.
+	pkg          string
+	commands     map[string][]string
+	lineNum      int // current line number.
+	env          []string
+	hasDirPrefix func([]byte) (string, bool)
 }
 
 // DirFunc runs f(cmds) on each go generate directive (as defined by
 // go generate -help) found in the absolute-named file that is part
 // of package pkg
 func DirFunc(pkg string, dir, file string, f func(line int, dirArgs []string) error) error {
+	return dirFunc(pkg, dir, file, hasGoGeneratePrefix, func(prefix string, line int, dirArgs []string) error {
+		return f(line, dirArgs)
+	})
+}
+
+// DirFuncFunc runs f(cmds) on each go generate directive identified by
+// hasDirPrefix found in the absolute-named file that is part of package pkg.
+// Note, you will likely want hasDirPrefix to distinguish between potentially
+// ambiguous directives that share a common prefix. This is typically done by
+// ensuring that the prefix is followed by some whitespace. The prefix returned
+// in the callback to f will be the result of strings.TrimSpace.
+func DirFuncFunc(pkg string, dir, file string, hasDirPrefix func([]byte) (string, bool), f func(prefix string, line int, dirArgs []string) error) error {
+	return dirFunc(pkg, dir, file, hasDirPrefix, f)
+}
+
+func dirFunc(pkg string, dir, file string, hasDirPrefix func([]byte) (string, bool), f func(prefix string, line int, dirArgs []string) error) error {
 	fi, err := os.Open(filepath.Join(dir, file))
 	if err != nil {
 		return err
@@ -70,12 +87,13 @@ func DirFunc(pkg string, dir, file string, f func(line int, dirArgs []string) er
 	defer fi.Close()
 
 	g := &generator{
-		f:        f,
-		pkg:      pkg,
-		commands: make(map[string][]string),
-		dir:      dir,
-		file:     file,
-		r:        fi,
+		f:            f,
+		pkg:          pkg,
+		commands:     make(map[string][]string),
+		dir:          dir,
+		file:         file,
+		r:            fi,
+		hasDirPrefix: hasDirPrefix,
 	}
 
 	return g.matches()
@@ -88,8 +106,8 @@ func (g *generator) matches() (err error) {
 	defer func() {
 		e := recover()
 		if e != nil {
-			if e, isErr := e.(genError); isErr {
-				err = e
+			if ge, isErr := e.(genError); isErr {
+				err = ge
 			} else {
 				panic(e)
 			}
@@ -107,7 +125,7 @@ func (g *generator) matches() (err error) {
 		buf, err = input.ReadSlice('\n')
 		if err == bufio.ErrBufferFull {
 			// Line too long - consume and ignore.
-			if isGoGenerate(buf) {
+			if _, ok := g.hasDirPrefix(buf); ok {
 				g.errorf("directive too long")
 			}
 			for err == bufio.ErrBufferFull {
@@ -121,18 +139,21 @@ func (g *generator) matches() (err error) {
 
 		if err != nil {
 			// Check for marker at EOF without final \n.
-			if err == io.EOF && isGoGenerate(buf) {
-				err = io.ErrUnexpectedEOF
+			if err == io.EOF {
+				if _, ok := g.hasDirPrefix(buf); ok {
+					err = io.ErrUnexpectedEOF
+				}
 			}
 			break
 		}
 
-		if !isGoGenerate(buf) {
+		prefix, ok := g.hasDirPrefix(buf)
+		if !ok {
 			continue
 		}
 
 		g.setEnv()
-		words := g.split(string(buf))
+		words := g.split(string(buf), prefix)
 		if len(words) == 0 {
 			g.errorf("no arguments to directive")
 		}
@@ -141,8 +162,7 @@ func (g *generator) matches() (err error) {
 			continue
 		}
 
-		err := g.f(g.lineNum, words)
-		if err != nil {
+		if err := g.f(strings.TrimSpace(prefix), g.lineNum, words); err != nil {
 			g.errorf("callback error: %v", err)
 		}
 	}
@@ -153,8 +173,14 @@ func (g *generator) matches() (err error) {
 	return nil
 }
 
-func isGoGenerate(buf []byte) bool {
-	return bytes.HasPrefix(buf, []byte(GoGeneratePrefix+" ")) || bytes.HasPrefix(buf, []byte(GoGeneratePrefix+"\t"))
+func hasGoGeneratePrefix(buf []byte) (string, bool) {
+	if h := []byte(GoGeneratePrefix + " "); bytes.HasPrefix(buf, h) {
+		return string(h), true
+	}
+	if h := []byte(GoGeneratePrefix + "\t"); bytes.HasPrefix(buf, h) {
+		return string(h), true
+	}
+	return "", false
 }
 
 // setEnv sets the extra environment variables used when executing a
@@ -173,10 +199,11 @@ func (g *generator) setEnv() {
 // split breaks the line into words, evaluating quoted
 // strings and evaluating environment variables.
 // The initial //go:generate element is present in line.
-func (g *generator) split(line string) []string {
+func (g *generator) split(line string, prefix string) []string {
 	// Parse line, obeying quoted strings.
 	var words []string
-	line = line[len("//go:generate ") : len(line)-1] // Drop preamble and final newline.
+	line = strings.TrimPrefix(line, prefix) // Drop preamble
+	line = line[:len(line)-1]               // Drop final newline.
 	// There may still be a carriage return.
 	if len(line) > 0 && line[len(line)-1] == '\r' {
 		line = line[:len(line)-1]

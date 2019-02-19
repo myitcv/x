@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"go/parser"
@@ -36,6 +37,9 @@ const (
 	traceTime = false
 	hashDebug = false
 	skipCache = false
+
+	goGeneratePrefix = "//go:generate"
+	ggPrefix         = goGeneratePrefix + ":gg"
 )
 
 type tagsFlag []string
@@ -230,8 +234,8 @@ func mainerr() (reterr error) {
 	if !*fDebug {
 		defer func() {
 			if err := recover(); err != nil {
-				if rerr, ok := err.(error); ok {
-					reterr = rerr
+				if ggerr, ok := err.(ggerror); ok {
+					reterr = ggerr
 				} else {
 					panic(fmt.Errorf("got something other than an error: %v [%T]", err, err))
 				}
@@ -403,6 +407,10 @@ func (g *gg) generate(w *pkg) (moreWork []dep) {
 		dirNames := make(map[string]map[generator]bool)
 		for _, d := range w.dirs {
 			fmt.Fprintf(hw, "%v\n", d.HashString())
+			if d.gen == nil {
+				// we simply hash the special gg directive
+				continue
+			}
 			gens := dirNames[d.gen.DirectiveName()]
 			if gens == nil {
 				gens = make(map[generator]bool)
@@ -461,7 +469,43 @@ func (g *gg) generate(w *pkg) (moreWork []dep) {
 		// go generate
 
 		logTrace("generate %v", w)
+	RangeDirs:
 		for _, d := range w.dirs {
+			if d.gen == nil {
+				// special gg directive. We know the only possible command for now
+				// is break. Verify the conditions are satisfied and break if so,
+				// else continue to the next dir
+				dirArgs := d.args
+				for strings.HasPrefix(dirArgs[0], "[") && strings.HasSuffix(dirArgs[0], "]") {
+					cond := dirArgs[0]
+					cond = cond[1 : len(cond)-1]
+					cond = strings.TrimSpace(cond)
+					dirArgs = dirArgs[1:]
+					want := true
+					if strings.HasPrefix(cond, "!") {
+						want = false
+						cond = strings.TrimSpace(cond[1:])
+					}
+					switch {
+					case strings.HasPrefix(cond, "exists:"):
+						fn := strings.TrimSpace(strings.TrimPrefix(cond, "exists:"))
+						fn = filepath.Join(w.Dir, fn)
+						_, err := os.Stat(fn)
+						if want != (err == nil) {
+							continue RangeDirs
+						}
+					case strings.HasPrefix(cond, "exec:"):
+						fn := strings.TrimSpace(strings.TrimPrefix(cond, "exec:"))
+						_, err := exec.LookPath(fn)
+						if want != (err == nil) {
+							continue RangeDirs
+						}
+					default:
+						panic("should not be here; we checked the conditions earlier")
+					}
+				}
+				break RangeDirs
+			}
 			cmd := exec.Command(d.args[0], d.args[1:]...)
 			if *fTrace {
 				cmd.Stdout = os.Stdout
@@ -1281,29 +1325,46 @@ func (g *gg) refreshDirectiveDeps(p *pkg, misses missingDeps) {
 	}
 
 	for _, file := range files {
-		err := gogenerate.DirFunc(p.Name, p.Dir, file, func(line int, dirArgs []string) error {
+		hasDirPrefix := func(buf []byte) (string, bool) {
+			for _, c := range []string{goGeneratePrefix, ggPrefix} {
+				for _, v := range []string{" ", "\t"} {
+					if p := []byte(c + v); bytes.HasPrefix(buf, p) {
+						return string(p), true
+					}
+				}
+			}
+			return "", false
+		}
+		err := gogenerate.DirFuncFunc(p.Name, p.Dir, file, hasDirPrefix, func(prefix string, line int, dirArgs []string) error {
+			dir := &directive{
+				pkgName: p.Name,
+				file:    file,
+				line:    line,
+				args:    dirArgs,
+			}
+			p.dirs = append(p.dirs, dir)
+
+			if prefix == ggPrefix {
+				return nil
+			}
+
+			// regular go:generate directive
 			gen, err := g.resolveDir(p.Dir, dirArgs)
-			if err != nil {
+			if err != nil && err != ggdir {
 				return fmt.Errorf("failed to resolve directive: %v", err)
 			}
+			dir.gen = gen
 			outDirs, err := parseOutDirs(p.Dir, dirArgs)
 			if err != nil {
 				return fmt.Errorf("failed to parse out dirs in %v:%v: %v", filepath.Join(p.Dir, file), line, err)
 			}
+			dir.outDirs = outDirs
 			for i, v := range outDirs {
 				if v == p.Dir {
 					outDirs = append(outDirs[:i], outDirs[i+1:]...)
 					break
 				}
 			}
-			p.dirs = append(p.dirs, directive{
-				pkgName: p.Name,
-				file:    file,
-				line:    line,
-				args:    dirArgs,
-				gen:     gen,
-				outDirs: outDirs,
-			})
 			switch gen := gen.(type) {
 			case *gobinModDep:
 				// If this gobinModDep does not have an underlying pkg, then we haven't previously
@@ -1499,7 +1560,13 @@ func (g *gg) hashDeps(hw io.Writer, d dep) {
 }
 
 func (g *gg) fatalf(format string, args ...interface{}) {
-	panic(fmt.Errorf(format, args...))
+	panic(ggerror(fmt.Sprintf(format, args...)))
+}
+
+type ggerror string
+
+func (g ggerror) Error() string {
+	return string(g)
 }
 
 func (g *gg) newPkg(p *Package, createXPkg bool) *pkg {
@@ -1602,8 +1669,8 @@ func (g *gg) resolveCommandDep(name string) *commandDep {
 var _ dep = (*pkg)(nil)
 
 func (g *gg) resolveDir(dir string, dirArgs []string) (generator, error) {
-	switch dirArgs[0] {
-	case "gobin":
+	switch a0 := dirArgs[0]; {
+	case a0 == "gobin":
 		args := dirArgs[1:]
 		mainMod, patt, err := gobinParse(args)
 		if err != nil {
@@ -1614,9 +1681,39 @@ func (g *gg) resolveDir(dir string, dirArgs []string) (generator, error) {
 		} else {
 			return g.resolveGobinGlobalDep(patt), nil
 		}
-	case "go":
+	case a0 == "go":
 		return nil, fmt.Errorf("do not yet know how to handle go command-based directives")
+	case a0[0] == '[':
+		// special gg directive is identified by at least one condition
+		// followed by a single command. At the moment, the single command
+		// we understand is break
+		for strings.HasPrefix(dirArgs[0], "[") && strings.HasSuffix(dirArgs[0], "]") {
+			cond := dirArgs[0]
+			cond = cond[1 : len(cond)-1]
+			cond = strings.TrimSpace(cond)
+			dirArgs = dirArgs[1:]
+			if strings.HasPrefix(cond, "!") {
+				cond = strings.TrimSpace(cond[1:])
+			}
+			switch {
+			case strings.HasPrefix(cond, "exists:"):
+			case strings.HasPrefix(cond, "exec:"):
+			default:
+				return nil, fmt.Errorf("unknown condition in special gg directive")
+			}
+		}
+		if len(dirArgs) != 1 {
+			return nil, fmt.Errorf("missing command in special gg directive")
+		}
+		// If we add further commands, be sure to add the corresponding logic in
+		// *gg.generate (which currently assumes only break exists)
+		if dirArgs[0] != "break" {
+			return nil, fmt.Errorf("unknown command %q in special gg directive", dirArgs[0])
+		}
+		return nil, ggdir
 	default:
 		return g.resolveCommandDep(dirArgs[0]), nil
 	}
 }
+
+var ggdir = errors.New("directive is a special gg directive")

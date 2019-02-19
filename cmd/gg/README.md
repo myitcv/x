@@ -61,6 +61,21 @@ The third form uses the main module for resolution of the generator and its
 dependencies. Those dependencies take part in the reverse dependency graph. Use
 of this form is, by definition, only possible in module mode.
 
+gg also understands a special form of directive:
+
+  //go:generate:gg [cond] break
+
+This special directives include a [cond] prefix. At present, a single command
+is understood: break. If the preceding conditions are satisfied, no further
+go:generate directives are exectuted in this iteration. Note, if spaces are
+required in [cond] it must be double-quoted.
+
+The predefined conditions are:
+
+- [exists:file] for whether the (relative) file path exists
+- [exec:prog] for whether prog is available for execution (found by
+  exec.LookPath)
+
 Where the third form of go generate directive is used, it may be necessary to
 declare tool dependencies in your main module. For more information on how to
 do this see:
