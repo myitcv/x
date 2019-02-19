@@ -17,7 +17,7 @@ type pkg struct {
 
 	depsMap
 
-	dirs []directive
+	dirs []*directive
 
 	isXTest bool
 	x       *pkg

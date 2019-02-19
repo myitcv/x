@@ -1,0 +1,46 @@
+# Test for special gg command break with condition
+
+# first run
+gg -p 1 -trace ./...
+cmpenv stderr trace1
+
+cp p1/blah.orig p1/blah.go
+exec ls p1
+
+# second run
+gg -p 1 -trace ./...
+cmpenv stderr trace2
+
+-- go.mod --
+module mod.com
+
+-- p1/p1.go --
+package p1
+
+//go:generate echo check
+//go:generate:gg [!exists:blah.go] break
+//go:generate echo blah.go exists
+//go:generate:gg [exists:again.go] break
+//go:generate echo again.go does not exist
+
+-- p1/blah.orig --
+package p1
+
+-- trace1 --
+go list -deps -test -json ./...
+hash commandDep commandDep: echo
+generate {Pkg: mod.com/p1 [G]}
+run generator: echo check
+ran generator: echo check
+hash {Pkg: mod.com/p1 [G]}
+-- trace2 --
+go list -deps -test -json ./...
+hash commandDep commandDep: echo
+generate {Pkg: mod.com/p1 [G]}
+run generator: echo check
+ran generator: echo check
+run generator: echo blah.go exists
+ran generator: echo blah.go exists
+run generator: echo again.go does not exist
+ran generator: echo again.go does not exist
+hash {Pkg: mod.com/p1 [G]}
