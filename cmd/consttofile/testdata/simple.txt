@@ -1,0 +1,15 @@
+go generate
+cmp output.golden gen_myfile_consttofile.txt
+
+-- go.mod --
+module mod
+
+-- mod.go --
+package mod
+
+//go:generate consttofile myfile_txt
+
+const myfile_txt = "This is a \" special\n file\n"
+-- output.golden --
+This is a " special
+ file

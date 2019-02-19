@@ -1,0 +1,23 @@
+! go generate ./p
+stderr 'constant badfile does not specifcy an extension'
+
+! go generate ./q
+stderr 'constant badfile_ does not specifcy an extension'
+
+-- go.mod --
+module mod.com
+
+-- p/p.go --
+package p
+
+//go:generate consttofile badfile
+
+const badfile = "badfile"
+
+-- q/q.go --
+package q
+
+//go:generate consttofile badfile_
+
+const badfile_ = "badfile"
+
