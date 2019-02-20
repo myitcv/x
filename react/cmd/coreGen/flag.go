@@ -9,8 +9,8 @@ import (
 )
 
 var (
-	fLicenseFile = gogenerate.LicenseFileFlag()
-	fGoGenLog    = gogenerate.LogFlag()
+	fLicenseFile = gogenerate.LicenseFileFlag(flag.CommandLine)
+	fGoGenLog    = gogenerate.LogFlag(flag.CommandLine)
 	fCore        = flag.Bool("core", false, "indicates we are generating for a core component (only do props expansion)")
 	fInit        initFlag
 )
