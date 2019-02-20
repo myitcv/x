@@ -20,8 +20,8 @@ const (
 
 var (
 	fGoGenCmds   gogenCmds
-	fLicenseFile = gogenerate.LicenseFileFlag()
-	fGoGenLog    = gogenerate.LogFlag()
+	fLicenseFile = gogenerate.LicenseFileFlag(flag.CommandLine)
+	fGoGenLog    = gogenerate.LogFlag(flag.CommandLine)
 	fDebug       = flag.Bool("debug", false, "print debug messages")
 )
 

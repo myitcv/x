@@ -23,8 +23,8 @@ const (
 )
 
 var (
-	fLicenseFile = gogenerate.LicenseFileFlag()
-	fGoGenLog    = gogenerate.LogFlag()
+	fLicenseFile = gogenerate.LicenseFileFlag(flag.CommandLine)
+	fGoGenLog    = gogenerate.LogFlag(flag.CommandLine)
 )
 
 func main() {

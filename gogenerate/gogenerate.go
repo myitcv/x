@@ -204,7 +204,7 @@ var outputsSet = make(map[string]bool)
 // OutPkgFlag defines a new flag "outpkg:"+key that can accept a list of
 // package specifications that represent output targets above and beyond the
 // default of self.
-func OutPkgFlag(key string) *outputs {
+func OutPkgFlag(key string, fs *flag.FlagSet) *outputs {
 	if outputsSet[key] {
 		panic(fmt.Errorf("already defined outpkg flag for key %q", key))
 	}
@@ -214,21 +214,21 @@ func OutPkgFlag(key string) *outputs {
 
 	var res outputs
 
-	flag.Var(&res, "outpkg:"+key, "list of output packages in addition to self")
+	fs.Var(&res, "outpkg:"+key, "list of output packages in addition to self")
 
 	return &res
 }
 
 // LogFlag defines a command line string flag named according to the constant
 // FlagLog and returns a pointer to the string the flag sets
-func LogFlag() *string {
-	return flag.String(FlagLog, string(LogFatal), "log level; one of info, warning, error, fatal")
+func LogFlag(fs *flag.FlagSet) *string {
+	return fs.String(FlagLog, string(LogFatal), "log level; one of info, warning, error, fatal")
 }
 
 // LicenseFileFlag defines a command line string flag named according to the
 // constant FlagLicenseFile and returns a pointer ot the string that flag set
-func LicenseFileFlag() *string {
-	return flag.String(FlagLicenseFile, "", "file that contains a license header to be inserted at the top of each generated file")
+func LicenseFileFlag(fs *flag.FlagSet) *string {
+	return fs.String(FlagLicenseFile, "", "file that contains a license header to be inserted at the top of each generated file")
 }
 
 // CommentLicenseHeader is a convenience function to be used in conjunction
