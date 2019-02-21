@@ -19,9 +19,11 @@ import (
 	"net/url"
 	"path"
 	"path/filepath"
+	"strings"
 
 	"honnef.co/go/js/xhr"
 
+	"golang.org/x/net/html"
 	"golang.org/x/tools/present"
 )
 
@@ -98,7 +100,56 @@ func (x xhrFileReader) ReadFile(filename string) ([]byte, error) {
 		return nil, err
 	}
 
-	return []byte(req.ResponseText), nil
+	resp := req.ResponseText
+
+	if strings.HasSuffix(filename, ".html") {
+		// let's guess that this came about because of a .html action
+		// and hence that we need to resolve relative hrefs
+		doc, err := html.Parse(strings.NewReader(resp))
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse HTML for %v (url %v)", filename, u)
+		}
+		var f func(*html.Node)
+		f = func(n *html.Node) {
+			if n.Type == html.ElementNode && n.Data == "img" {
+				for ai, a := range n.Attr {
+					if a.Key == "src" {
+						v, err := url.Parse(a.Val)
+						if err != nil {
+							panic(fmt.Errorf("failed to parse URL from img href %v in %v (url %v)", a.Val, filename, u))
+						}
+
+						n.Attr[ai].Val = x.rootUrl.ResolveReference(v).String()
+					}
+				}
+			}
+			for c := n.FirstChild; c != nil; c = c.NextSibling {
+				f(c)
+			}
+		}
+
+		err = func() (err error) {
+			defer func() {
+				if r := recover(); r != nil {
+					err = r.(error)
+				}
+			}()
+			f(doc)
+			return
+		}()
+
+		if err != nil {
+			return nil, err
+		}
+
+		var sb strings.Builder
+		if err := html.Render(&sb, doc); err != nil {
+			return nil, fmt.Errorf("failed to re-render HTML doc %v (url %v): %v", filename, u, err)
+		}
+		resp = sb.String()
+	}
+
+	return []byte(resp), nil
 }
 
 // renderDoc reads the present file, gets its template representation,
