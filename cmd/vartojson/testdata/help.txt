@@ -1,0 +1,3 @@
+! vartojson -help
+! stdout .+
+stderr ^'\QThe vartojson command writes the JSON marshaled value of a variable to a file.\E'$

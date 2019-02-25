@@ -1,0 +1,13 @@
+! go generate ./...
+stderr ^'\Qfailed to find declaration of jsonval\E'$
+
+-- go.mod --
+module mod.com
+
+-- p/p.go --
+package p
+
+import "mod.com/q"
+
+//go:generate vartojson jsonval
+
