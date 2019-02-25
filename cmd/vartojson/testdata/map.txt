@@ -1,0 +1,26 @@
+go test ./...
+go generate ./...
+cmp p/gen_jsonval_vartojson.json p/jsonval.golden
+
+-- go.mod --
+module mod.com
+
+-- p/p.go --
+package p
+
+//go:generate vartojson jsonval
+
+var jsonval = map[string]string{
+	"test": "value",
+}
+
+-- p/jsonval.golden --
+{
+  "test": "value"
+}
+-- q/q.go --
+package q
+
+type Package struct {
+	Name string `json:"name"`
+}

@@ -1,0 +1,38 @@
+go test ./...
+go generate ./...
+cmp p/jsonval.golden p/jsonval.json
+
+-- go.mod --
+module mod.com
+
+-- p/p.go --
+package p
+
+//import "mod.com/q"
+
+//go:generate vartojson jsonval
+
+var jsonval = 5
+
+//var jsonval = another{
+//	Age: 5,
+//	Other: q.Package{
+//		Name: "Paul",
+//	},
+//}
+//
+//type another struct {
+//	Age   int
+//	Other q.Package
+//}
+
+-- p/jsonval.golden --
+{
+	"name": "Paul"
+}
+-- q/q.go --
+package q
+
+type Package struct {
+	Name string `json:"name"`
+}

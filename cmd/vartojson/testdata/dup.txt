@@ -1,0 +1,18 @@
+! go generate ./...
+stderr ^'\Qfound declaration of jsonval at p.go:7:15\E'$
+stderr ^'\Qfound declaration of jsonval at p.go:10:15\E'$
+
+-- go.mod --
+module mod.com
+
+-- p/p.go --
+package p
+
+import "mod.com/q"
+
+//go:generate vartojson jsonval
+
+var jsonval = q.Package{
+	Name: "Paul",
+}
+var jsonval = 5
