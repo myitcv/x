@@ -1358,7 +1358,12 @@ func (g *gg) refreshDirectiveDeps(p *pkg, misses missingDeps) {
 			if err != nil {
 				return fmt.Errorf("failed to parse out dirs in %v:%v: %v", filepath.Join(p.Dir, file), line, err)
 			}
+			inFilePatts, err := parseInFilePatts(p.Dir, dirArgs)
+			if err != nil {
+				return fmt.Errorf("failed to parse in files in %v:%v: %v", filepath.Join(p.Dir, file), line, err)
+			}
 			dir.outDirs = outDirs
+			dir.inFilePatts = inFilePatts
 			for i, v := range outDirs {
 				if v == p.Dir {
 					outDirs = append(outDirs[:i], outDirs[i+1:]...)
@@ -1415,7 +1420,10 @@ func (g *gg) undo(d dep) {
 }
 
 func (g *gg) hashFile(hw io.Writer, dir, file string) {
-	fp := filepath.Join(dir, file)
+	fp := file
+	if !filepath.IsAbs(file) {
+		fp = filepath.Join(dir, file)
+	}
 	fmt.Fprintf(hw, "file: %v\n", fp)
 	f, err := os.Open(fp)
 	if err != nil {
@@ -1454,6 +1462,7 @@ func (g *gg) hashOutDirs(outDirs []string, p *pkg, outHash io.Writer, dirNames m
 			p.SysoFiles,
 			p.SwigFiles,
 			p.SwigCXXFiles,
+			g.inFiles(p),
 		)
 		for _, f := range inputFiles {
 			seen[f] = true
@@ -1512,6 +1521,72 @@ func (g *gg) hashOutDirs(outDirs []string, p *pkg, outHash io.Writer, dirNames m
 		}
 	}
 	return fileHash
+}
+
+func (g *gg) inFiles(p *pkg) []string {
+	// verify that the inFilePatts for the directives are contained within directories
+	// in the package's dependency graph. This also populates *pkg.inFiles
+	var patts []string
+	for _, d := range p.dirs {
+		patts = append(patts, d.inFilePatts...)
+	}
+	if len(patts) == 0 {
+		return nil
+	}
+	inFiles := make(map[string]bool)
+	work := []dep{p}
+	seen := make(map[dep]bool)
+	pkgDirs := map[string]bool{
+		".": true,
+	}
+	for len(work) > 0 {
+		w := work[0]
+		work = work[1:]
+		if seen[w] {
+			continue
+		}
+		seen[w] = true
+		switch w := w.(type) {
+		case *pkg:
+			pkgDirs[w.Dir] = true
+		case *gobinModDep:
+			pkgDirs[w.pkg.Dir] = true
+		}
+		for d := range w.Deps().deps {
+			work = append(work, d)
+		}
+	}
+
+Patts:
+	for _, patt := range patts {
+		absPatt := patt
+		if !filepath.IsAbs(patt) {
+			absPatt = filepath.Join(p.Dir, patt)
+		}
+		ms, err := filepath.Glob(absPatt)
+		if err != nil {
+			g.fatalf("failed to glob %v: %v", absPatt, err)
+		}
+		for _, m := range ms {
+			dir := filepath.Dir(m)
+			if _, ok := pkgDirs[dir]; ok {
+				inFiles[m] = true
+				continue Patts
+			}
+			var dirs []string
+			for d := range pkgDirs {
+				dirs = append(dirs, d)
+			}
+			sort.Strings(dirs)
+			g.fatalf("inFile pattern %v (%v) does not resolve to a directory within the dependency graph for %v: %v", patt, absPatt, p.ImportPath, dirs)
+		}
+	}
+	var res []string
+	for f := range inFiles {
+		res = append(res, f)
+	}
+	sort.Strings(res)
+	return res
 }
 
 func (g *gg) shouldBuildFile(path string) bool {

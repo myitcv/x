@@ -126,3 +126,34 @@ func parseOutDirs(dir string, args []string) ([]string, error) {
 	sort.Strings(dirs)
 	return dirs, nil
 }
+
+func parseInFilePatts(dir string, args []string) ([]string, error) {
+	inFilePatts := make(map[string]bool)
+	for i := 0; i < len(args); i++ {
+		v := args[i]
+		if v == "--" {
+			break
+		}
+		if !strings.HasPrefix(v, "-"+gogenerate.FlagInFilesPrefix) {
+			continue
+		}
+		v = strings.TrimPrefix(v, "-"+gogenerate.FlagInFilesPrefix)
+		j := strings.Index(v, "=")
+		var p string
+		if j == -1 {
+			if i+1 == len(args) || args[i+1] == "--" {
+				return nil, fmt.Errorf("invalid in files pattern flag amongst: %v", args)
+			}
+			p = args[i+1]
+		} else {
+			p = v[j+1:]
+		}
+		inFilePatts[p] = true
+	}
+	var patts []string
+	for p := range inFilePatts {
+		patts = append(patts, p)
+	}
+	sort.Strings(patts)
+	return patts, nil
+}

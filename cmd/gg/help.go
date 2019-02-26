@@ -94,5 +94,6 @@ The following is a rough list of TODOs for gg:
 * consider supporting concurrent execution of go generate directives
 * define semantics for when generated files are removed by a generator
 * add full tests for cgo
+* document how to use -outdir: and -infiles: prefixed-flags
 
 `[1:]
