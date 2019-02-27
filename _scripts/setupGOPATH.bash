@@ -15,11 +15,6 @@ autostash_or_export GOBIN="$(readlink -m "${BASH_SOURCE%/*}/../.bin")"
 
 autostash_or_export PATH="$GOBIN:$PATH"
 
-if [[ "$(goVersion)" =~ go1.(9|10).[0-9]+ ]]
-then
-	autostash_or_export GOPATH="$(readlink -m "${BASH_SOURCE%/*}/../_vendor"):${BASH_SOURCE%/*}/../../../"
-fi
-
 if [ $(running_on_ci_server) == "yes" ]
 then
 	export GO111ROOT="$HOME/go111/go"

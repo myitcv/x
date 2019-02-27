@@ -12,7 +12,7 @@ go install golang.org/x/tools/cmd/goimports
 # in case we don't have any matching files in the globs below
 shopt -s nullglob
 
-z=$(goimports -l $(git ls-files | grep -v '^_vendor' | grep -v '^react/_talks' | grep '.go$' | grep -v '/gen_[^/]*$'))
+z=$(goimports -l $(git ls-files | grep -v '^react/_talks' | grep '.go$' | grep -v '/gen_[^/]*$'))
 if [ ! -z "$z" ]
 then
 	echo "The following files are not formatted:"
@@ -21,7 +21,7 @@ then
 	exit 1
 fi
 
-z=$(gofmt -l $(git ls-files | grep -v '^_vendor' | grep -v '^react/_talks' | grep '/gen_[^/]*.go$'))
+z=$(gofmt -l $(git ls-files | grep -v '^react/_talks' | grep '/gen_[^/]*.go$'))
 
 if [ ! -z "$z" ]
 then
