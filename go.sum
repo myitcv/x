@@ -27,8 +27,8 @@ github.com/kr/pretty v0.1.0/go.mod h1:dAy3ld7l9f0ibDNOQOHHMYYIIbhfbHSm3C4ZsoJORN
 github.com/kr/pty v1.1.1/go.mod h1:pFQYn66WHrOpPYNljwOMqo10TkYh1fy3cYio2l3bCsQ=
 github.com/kr/text v0.1.0 h1:45sCR5RtlFHMR4UwH9sdQ5TC8v0qDQCHnXt+kaKSTVE=
 github.com/kr/text v0.1.0/go.mod h1:4Jbv+DJW3UT/LiOwJeYQe1efqtUx/iVham/4vfdArNI=
-github.com/myitcv/gobin v0.0.7 h1:frdmckQRG3iAXXBbhst/CdbBRNRNBzPXKzPYAj/aiTU=
-github.com/myitcv/gobin v0.0.7/go.mod h1:ls+aW1M2tnZ+I/ANd/jBlqZpG6IY3Kbdq1q++Sb1Lak=
+github.com/myitcv/gobin v0.0.8 h1:hQORun03Mlnm8yp/OgKX8UYSIVZQ8ebTWf3aahY1u+s=
+github.com/myitcv/gobin v0.0.8/go.mod h1:ls+aW1M2tnZ+I/ANd/jBlqZpG6IY3Kbdq1q++Sb1Lak=
 github.com/myitcv/gopherjs v0.0.0-20181127201855-87822abcb5da h1:0CN6elWYnZPSZ1HKs6WDJ1Zq4um1AlCKb9mbRGN6+9o=
 github.com/myitcv/gopherjs v0.0.0-20181127201855-87822abcb5da/go.mod h1:+hbiahOXtaQVul9rb+ZH7/WXxTkkLWf/LtHzbqjjfPo=
 github.com/myitcv/vbash v0.0.1 h1:fje+IcgzQVS2eE1MEwAb0prqPR/ioYRKDzbqm17oIkY=
