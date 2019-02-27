@@ -36,7 +36,7 @@ done
 GOOS=linux GOARCH=amd64 gobin -m -run myitcv.io/cmd/gg myitcv.io/cmd/protoc
 GOOS=darwin GOARCH=amd64 gobin -m -run myitcv.io/cmd/gg myitcv.io/cmd/protoc
 
-for i in $(find !(_vendor) -name go.mod -execdir pwd \;)
+for i in $(find -name go.mod -execdir pwd \;)
 do
 	echo "=============================" #!
 	echo "$i: regular run" #!
@@ -44,8 +44,8 @@ do
 
 	gobin -m -run myitcv.io/cmd/gg $(subpackages)
 
-	ensure_go_formatted $(sub_git_files | grep -v '^_vendor/' | non_gen_go_files)
-	ensure_go_gen_formatted $(sub_git_files | grep -v '^_vendor/' | gen_go_files)
+	ensure_go_formatted $(sub_git_files | non_gen_go_files)
+	ensure_go_gen_formatted $(sub_git_files | gen_go_files)
 
 	go test $(subpackages)
 

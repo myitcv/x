@@ -5,6 +5,8 @@
 
 source "$(git rev-parse --show-toplevel)/_scripts/common.bash"
 
+which vbash
+
 ./_scripts/install_go.sh
 ./_scripts/setupCIEnv.sh
 ./_scripts/run_tests.sh
