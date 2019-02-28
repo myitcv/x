@@ -6,26 +6,30 @@ import (
 	"go/ast"
 	"go/parser"
 	"go/token"
+	"os"
+	"path"
 	"path/filepath"
 	"sort"
 	"strings"
 
-	"github.com/kisielk/gotool"
+	"myitcv.io/internal/golist"
 )
 
 const (
 	ImmPrefix = "_Imm_"
 )
 
-type ignorePaths []string
+type ignorePaths struct {
+	vals []string
+}
 
 func (i *ignorePaths) Set(value string) error {
-	*i = append(*i, value)
+	i.vals = append(i.vals, value)
 	return nil
 }
 
 func (i *ignorePaths) String() string {
-	return fmt.Sprint(*i)
+	return fmt.Sprintf("%v", i.vals)
 }
 
 var fImm = flag.Bool("imm", false, "filter out _Imm_ types but use their position for the corresponding generated type")
@@ -42,25 +46,54 @@ type match struct {
 
 func main() {
 	flag.Parse()
-	pkgs := gotool.ImportPaths([]string{"./..."})
+	pkgs, err := golist.List(append(fIgnorePaths.vals, "./..."))
+	if err != nil {
+		panic(err)
+	}
+
+	mods, err := golist.ListM(nil)
+	if err != nil {
+		panic(err)
+	}
+	if len(mods) == 0 {
+		panic(fmt.Errorf("only works in module mode"))
+	}
+
+	mainMod := mods[0]
+
+	wd, err := os.Getwd()
+	if err != nil {
+		panic(err)
+	}
+
+	rel, err := filepath.Rel(mainMod.Dir, wd)
+	if err != nil {
+		panic(err)
+	}
+	prefix := path.Join(mainMod.Path, filepath.ToSlash(rel))
 
 	fset := token.NewFileSet()
 
 	matches := make(map[match]string)
 
-Parse:
-	for _, dir := range pkgs {
-		for _, p := range fIgnorePaths {
-			if dir == p {
-				continue Parse
+	for _, p := range pkgs {
+		switch len(p.Match) {
+		case 1:
+			if p.Match[0] != "./..." {
+				continue
 			}
+		default:
+			continue
 		}
-		pkgs, err := parser.ParseDir(fset, dir, nil, 0)
+		pkgs, err := parser.ParseDir(fset, p.Dir, nil, 0)
 		if err != nil {
 			panic(err)
 		}
 
-		base := filepath.Dir(dir)
+		base := strings.TrimPrefix(path.Dir(p.ImportPath), prefix)
+		if base == "" {
+			base = "/"
+		}
 
 		for pn, pkg := range pkgs {
 			for _, f := range pkg.Files {
@@ -109,7 +142,7 @@ Parse:
 			}
 		}
 
-		out = append(out, fmt.Sprintf("%v: ./%v.%v", pos, k.path, k.name))
+		out = append(out, fmt.Sprintf("%v: .%v.%v", pos, k.path, k.name))
 	}
 
 	sort.Strings(out)
