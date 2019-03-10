@@ -54,6 +54,8 @@ do
 	go vet $(subpackages)
 
 	go mod tidy
+
+	# TODO: remove once we drop Go 1.11 support
 	go list all > /dev/null
 
 	popd > /dev/null
