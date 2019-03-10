@@ -16,9 +16,9 @@ require (
 	github.com/rogpeppe/go-internal v1.2.2
 	github.com/russross/blackfriday v1.5.1
 	github.com/sclevine/agouti v3.0.0+incompatible
-	golang.org/x/net v0.0.0-20180906233101-161cd47e91fd
+	golang.org/x/net v0.0.0-20190213061140-3a22650c66bd
 	golang.org/x/oauth2 v0.0.0-20181017192945-9dcd33a902f4
-	golang.org/x/tools v0.0.0-20190125232054-d66bd3c5d5a6
+	golang.org/x/tools v0.0.0-20190308142131-b40df0fb21c3
 	google.golang.org/appengine v1.2.0 // indirect
 	gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127
 	gopkg.in/fsnotify/fsnotify.v1 v1.4.7
@@ -29,4 +29,4 @@ require (
 )
 
 // branch: master
-replace github.com/gopherjs/gopherjs => github.com/myitcv/gopherjs v0.0.0-20181127201855-87822abcb5da
+replace github.com/gopherjs/gopherjs => github.com/myitcv/gopherjs v1.11.50
