@@ -18,3 +18,8 @@ mkdir -p $PROTOBUF_INSTALL_DIR
 mkdir -p $GOBIN
 
 git clone --depth=1 https://github.com/myitcv/cachex $HOME/cachex
+
+if [[ "$GO_VERSION" = go1.11* ]]
+then
+	go mod edit -replace github.com/gopherjs/gopherjs=github.com/myitcv/gopherjs@v1.11.50
+fi
