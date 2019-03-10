@@ -28,5 +28,4 @@ require (
 	mvdan.cc/sh v2.6.0+incompatible
 )
 
-// branch: master
-replace github.com/gopherjs/gopherjs => github.com/myitcv/gopherjs v1.11.50
+replace github.com/gopherjs/gopherjs => github.com/myitcv/gopherjs v1.12.0

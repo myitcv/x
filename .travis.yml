@@ -10,11 +10,12 @@ notifications:
 
 env:
   global:
-    - GO_111VERSION=go1.11.5
     - CHROMEDRIVER_VERSION=2.45
     - CHROME_CHANNEL=beta
+    - GO111MODULE=on
   matrix:
-    - GO_VERSION=$GO_111VERSION GO111MODULE=on
+    - GO_VERSION=go1.12
+    - GO_VERSION=go1.11.5
 
 services:
   - docker
