@@ -800,31 +800,41 @@ func (g *gg) run() {
 
 	// At this point we should have a complete dependency graph, including the generators.
 	// Find roots and start work
-	if *fGraph {
-		fmt.Printf("digraph {\n")
-	}
 	var work []dep
 	for _, d := range g.allDeps() {
-		if *fGraph {
-			if p, isPkg := d.(*pkg); !isPkg || !p.Standard {
-				for rd := range d.Deps().rdeps {
-					lhs := strings.Replace(d.String(), "\"", "\\\"", -1)
-					rhs := strings.Replace(rd.String(), "\"", "\\\"", -1)
-					fmt.Printf("\"%v\" -> \"%v\";\n", lhs, rhs)
-				}
-			}
-		}
 		if d.Ready() {
 			work = append(work, d)
 		}
-	}
-	if *fGraph {
-		fmt.Printf("}\n")
 	}
 
 	logTiming("start work")
 
 	for len(work) > 0 {
+		if *fGraph {
+			fmt.Printf("digraph { ")
+			for _, d := range g.allDeps() {
+				if p, isPkg := d.(*pkg); !isPkg || !p.Standard {
+					for rd := range d.Deps().rdeps {
+						lhs := strings.Replace(d.String(), "\"", "\\\"", -1)
+						rhs := strings.Replace(rd.String(), "\"", "\\\"", -1)
+						var lhssuffix, rhssuffix string
+						if d.Done() {
+							lhssuffix = " (done)"
+						} else if d.Ready() {
+							lhssuffix = " (ready)"
+						}
+						if rd.Done() {
+							rhssuffix = " (done)"
+						} else if rd.Ready() {
+							rhssuffix = " (ready)"
+						}
+						fmt.Printf("\"%v%v\" -> \"%v%v\"; ", lhs, lhssuffix, rhs, rhssuffix)
+					}
+				}
+			}
+			fmt.Printf("}\n")
+		}
+
 		// It may be that since we added a piece of work one of its deps has been
 		// marked as not ready, and hence len(w.Deps().dirtyDeps) > 0. Drop any
 		// such work
