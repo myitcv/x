@@ -3,15 +3,15 @@
 # first run
 gg -p 1 -trace ./...
 cmpenv stderr trace1
-cmp p1/gen_input_txt_p2.go p1/input.txt
+cmp p1/gen_input_txt_p2.go p1/p3/input.txt
 cmp p1/gen_another_txt_p2.go p2/another.txt
 
-cp p1/input.txt.2 p1/input.txt
+cp p1/p3/input.txt.2 p1/p3/input.txt
 
 # second run
 gg -p 1 -trace ./...
 cmpenv stderr trace2
-cmp p1/gen_input_txt_p2.go p1/input.txt.2
+cmp p1/gen_input_txt_p2.go p1/p3/input.txt.2
 cmp p1/gen_another_txt_p2.go p2/another.txt
 
 cp p2/another.txt.2 p2/another.txt
@@ -19,7 +19,7 @@ cp p2/another.txt.2 p2/another.txt
 # third run
 gg -p 1 -trace ./...
 cmpenv stderr trace3
-cmp p1/gen_input_txt_p2.go p1/input.txt.2
+cmp p1/gen_input_txt_p2.go p1/p3/input.txt.2
 cmp p1/gen_another_txt_p2.go p2/another.txt.2
 
 -- go.mod --
@@ -28,18 +28,25 @@ module mod.com
 -- p1/p1.go --
 package p1
 
-//go:generate gobin -m -run mod.com/p2 -infiles:test input.txt
+import _ "mod.com/p1/p3"
+
+//go:generate gobin -m -run mod.com/p2 -infiles:test ./p3/*.txt
 //go:generate gobin -m -run mod.com/p2 -infiles:test ../p2/another.txt
 
--- p1/input.txt --
+-- p1/p3/input.txt --
 package p1
 
 // this is input.txt
 
--- p1/input.txt.2 --
+-- p1/p3/input.txt.2 --
 package p1
 
 // this is input.txt.2
+
+-- p1/p3/p3.go --
+package p3
+
+-- p1/p3/dir.txt/rubbish.txt --
 
 -- p2/p2.go --
 package main
@@ -48,8 +55,8 @@ import (
 	"flag"
 	"io"
 	"os"
-	"strings"
 	"path/filepath"
+	"strings"
 )
 
 var (
@@ -59,16 +66,30 @@ var (
 func main() {
 	flag.Parse()
 
-	infile, err := os.Open(*fTest)
+	ms, err := filepath.Glob(*fTest)
 	if err != nil {
 		panic(err)
 	}
-	outfile, err := os.Create("gen_" + strings.Replace(filepath.Base(*fTest), ".", "_", -1) + "_p2.go")
-	if err != nil {
-		panic(err)
-	}
-	if _, err := io.Copy(outfile, infile); err != nil {
-		panic(err)
+
+	for _, m := range ms {
+		fi, err := os.Stat(m)
+		if err != nil {
+			panic(err)
+		}
+		if fi.IsDir() {
+			continue
+		}
+		infile, err := os.Open(m)
+		if err != nil {
+			panic(err)
+		}
+		outfile, err := os.Create("gen_" + strings.Replace(filepath.Base(m), ".", "_", -1) + "_p2.go")
+		if err != nil {
+			panic(err)
+		}
+		if _, err := io.Copy(outfile, infile); err != nil {
+			panic(err)
+		}
 	}
 }
 
@@ -82,46 +103,49 @@ package p1
 // another.txt.2 in p2
 -- trace1 --
 go list -deps -test -json ./...
+hash {Pkg: mod.com/p1/p3 [G]}
 hash {Pkg: mod.com/p2 [G]}
 hash gobinModDep gobinModDep: mod.com/p2 (mod.com/p2)
 generate {Pkg: mod.com/p1 [G]}
-run generator: gobin -m -run mod.com/p2 -infiles:test input.txt
-ran generator: gobin -m -run mod.com/p2 -infiles:test input.txt
+run generator: gobin -m -run mod.com/p2 -infiles:test ./p3/*.txt
+ran generator: gobin -m -run mod.com/p2 -infiles:test ./p3/*.txt
 run generator: gobin -m -run mod.com/p2 -infiles:test ../p2/another.txt
 ran generator: gobin -m -run mod.com/p2 -infiles:test ../p2/another.txt
 generate {Pkg: mod.com/p1 [G]}
-run generator: gobin -m -run mod.com/p2 -infiles:test input.txt
-ran generator: gobin -m -run mod.com/p2 -infiles:test input.txt
+run generator: gobin -m -run mod.com/p2 -infiles:test ./p3/*.txt
+ran generator: gobin -m -run mod.com/p2 -infiles:test ./p3/*.txt
 run generator: gobin -m -run mod.com/p2 -infiles:test ../p2/another.txt
 ran generator: gobin -m -run mod.com/p2 -infiles:test ../p2/another.txt
 hash {Pkg: mod.com/p1 [G]}
 -- trace2 --
 go list -deps -test -json ./...
+hash {Pkg: mod.com/p1/p3 [G]}
 hash {Pkg: mod.com/p2 [G]}
 hash gobinModDep gobinModDep: mod.com/p2 (mod.com/p2)
 generate {Pkg: mod.com/p1 [G]}
-run generator: gobin -m -run mod.com/p2 -infiles:test input.txt
-ran generator: gobin -m -run mod.com/p2 -infiles:test input.txt
+run generator: gobin -m -run mod.com/p2 -infiles:test ./p3/*.txt
+ran generator: gobin -m -run mod.com/p2 -infiles:test ./p3/*.txt
 run generator: gobin -m -run mod.com/p2 -infiles:test ../p2/another.txt
 ran generator: gobin -m -run mod.com/p2 -infiles:test ../p2/another.txt
 generate {Pkg: mod.com/p1 [G]}
-run generator: gobin -m -run mod.com/p2 -infiles:test input.txt
-ran generator: gobin -m -run mod.com/p2 -infiles:test input.txt
+run generator: gobin -m -run mod.com/p2 -infiles:test ./p3/*.txt
+ran generator: gobin -m -run mod.com/p2 -infiles:test ./p3/*.txt
 run generator: gobin -m -run mod.com/p2 -infiles:test ../p2/another.txt
 ran generator: gobin -m -run mod.com/p2 -infiles:test ../p2/another.txt
 hash {Pkg: mod.com/p1 [G]}
 -- trace3 --
 go list -deps -test -json ./...
+hash {Pkg: mod.com/p1/p3 [G]}
 hash {Pkg: mod.com/p2 [G]}
 hash gobinModDep gobinModDep: mod.com/p2 (mod.com/p2)
 generate {Pkg: mod.com/p1 [G]}
-run generator: gobin -m -run mod.com/p2 -infiles:test input.txt
-ran generator: gobin -m -run mod.com/p2 -infiles:test input.txt
+run generator: gobin -m -run mod.com/p2 -infiles:test ./p3/*.txt
+ran generator: gobin -m -run mod.com/p2 -infiles:test ./p3/*.txt
 run generator: gobin -m -run mod.com/p2 -infiles:test ../p2/another.txt
 ran generator: gobin -m -run mod.com/p2 -infiles:test ../p2/another.txt
 generate {Pkg: mod.com/p1 [G]}
-run generator: gobin -m -run mod.com/p2 -infiles:test input.txt
-ran generator: gobin -m -run mod.com/p2 -infiles:test input.txt
+run generator: gobin -m -run mod.com/p2 -infiles:test ./p3/*.txt
+ran generator: gobin -m -run mod.com/p2 -infiles:test ./p3/*.txt
 run generator: gobin -m -run mod.com/p2 -infiles:test ../p2/another.txt
 ran generator: gobin -m -run mod.com/p2 -infiles:test ../p2/another.txt
 hash {Pkg: mod.com/p1 [G]}

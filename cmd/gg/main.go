@@ -1123,7 +1123,7 @@ func (g *gg) refreshImports(p *pkg, misses missingDeps) {
 		g.fatalf("found multiple packages %v in %v", keys(), p.Dir)
 	} else if len(pkgs) == 2 {
 		if _, ok := pkgs[xtest]; !ok {
-			g.fatalf("expected to find external test %v in %v", xtest, keys())
+			g.fatalf("expected to find external test %v in %v; multiple packages in same directory?", xtest, keys())
 		}
 	}
 
@@ -1570,6 +1570,13 @@ Patts:
 			g.fatalf("failed to glob %v: %v", absPatt, err)
 		}
 		for _, m := range ms {
+			fi, err := os.Stat(m)
+			if err != nil {
+				g.fatalf("failed to stat %v: %v", m, err)
+			}
+			if fi.IsDir() {
+				continue
+			}
 			dir := filepath.Dir(m)
 			if _, ok := pkgDirs[dir]; ok {
 				inFiles[m] = true
