@@ -10,7 +10,7 @@ require (
 	github.com/kisielk/gotool v1.0.0
 	github.com/kr/fs v0.1.0
 	github.com/myitcv/gobin v0.0.8
-	github.com/myitcv/vbash v0.0.1
+	github.com/myitcv/vbash v0.0.2
 	github.com/onsi/ginkgo v1.7.0 // indirect
 	github.com/onsi/gomega v1.4.3 // indirect
 	github.com/rogpeppe/go-internal v1.2.2

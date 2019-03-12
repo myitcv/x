@@ -3,7 +3,7 @@
 
 # first run
 gg -p 1 -trace ./...
-cmpenv stderr trace1
+cmpenv stderr trace1$GO111
 
 # tidy up
 rmglob */gen_*.go
@@ -55,6 +55,29 @@ package p1
 package p2
 
 -- trace1 --
+go list -deps -test -json ./...
+go: finding example.com v1.0.0
+go list -deps -json example.com/copy1
+go: downloading example.com v1.0.0
+go: extracting example.com v1.0.0
+hash {Pkg: mod.com/p2 [G]}
+hash {Pkg: example.com/copyimpl}
+hash {Pkg: example.com/copy1}
+hash gobinModDep gobinModDep: example.com/copy1 (example.com/copy1)
+generate {Pkg: mod.com/p1 [G]}
+run generator: gobin -m -run example.com/copy1 input1
+ran generator: gobin -m -run example.com/copy1 input1
+run generator: gobin -m -run example.com/copy1 input2
+ran generator: gobin -m -run example.com/copy1 input2
+go list -deps -json example.com/another
+hash {Pkg: example.com/another}
+generate {Pkg: mod.com/p1 [G]}
+run generator: gobin -m -run example.com/copy1 input1
+ran generator: gobin -m -run example.com/copy1 input1
+run generator: gobin -m -run example.com/copy1 input2
+ran generator: gobin -m -run example.com/copy1 input2
+hash {Pkg: mod.com/p1 [G]}
+-- trace1go1.11 --
 go list -deps -test -json ./...
 go: finding example.com v1.0.0
 go list -deps -json example.com/copy1

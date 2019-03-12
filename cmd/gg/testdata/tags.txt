@@ -8,7 +8,7 @@ cmpenv stderr trace1
 
 # apples tag should trigger generator
 gg -p 1 -trace -tags apples ./...
-cmpenv stderr trace2
+cmpenv stderr trace2$GO111
 go test ./...
 
 rmglob p1/gen_*
@@ -53,6 +53,21 @@ const Name = "name"
 go list -deps -test -json ./...
 hash {Pkg: mod.com/p1 [G]}
 -- trace2 --
+go list -deps -test -json -tags=apples ./...
+go list -deps -json -tags=apples example.com/copy1
+go: downloading example.com v1.0.0
+go: extracting example.com v1.0.0
+hash {Pkg: example.com/copyimpl}
+hash {Pkg: example.com/copy1}
+hash gobinModDep gobinModDep: example.com/copy1 (example.com/copy1)
+generate {Pkg: mod.com/p1 [G]}
+run generator: gobin -m -run example.com/copy1 input
+ran generator: gobin -m -run example.com/copy1 input
+generate {Pkg: mod.com/p1 [G]}
+run generator: gobin -m -run example.com/copy1 input
+ran generator: gobin -m -run example.com/copy1 input
+hash {Pkg: mod.com/p1 [G]}
+-- trace2go1.11 --
 go list -deps -test -json -tags=apples ./...
 go list -deps -json -tags=apples example.com/copy1
 go: downloading example.com v1.0.0
