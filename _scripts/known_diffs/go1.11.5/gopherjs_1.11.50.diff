@@ -1,5 +1,5 @@
 diff --git b/go.mod a/go.mod
-index 8cc659f..6dc21aa 100644
+index ecb3517..f72b2df 100644
 --- b/go.mod
 +++ a/go.mod
 @@ -28,4 +28,4 @@ require (
@@ -9,7 +9,7 @@ index 8cc659f..6dc21aa 100644
 -replace github.com/gopherjs/gopherjs => github.com/myitcv/gopherjs v1.11.50
 +replace github.com/gopherjs/gopherjs => github.com/myitcv/gopherjs v1.12.0
 diff --git b/go.sum a/go.sum
-index dc07de6..446abe4 100644
+index 56621f5..889946d 100644
 --- b/go.sum
 +++ a/go.sum
 @@ -29,8 +29,8 @@ github.com/kr/text v0.1.0 h1:45sCR5RtlFHMR4UwH9sdQ5TC8v0qDQCHnXt+kaKSTVE=
@@ -20,6 +20,6 @@ index dc07de6..446abe4 100644
 -github.com/myitcv/gopherjs v1.11.50/go.mod h1:d55Q4EjGQHeJVms+9LGtXul6ykz5Xzx1E1gaXQXdimY=
 +github.com/myitcv/gopherjs v1.12.0 h1:4QfVBUZ+1vDcNsx/jLHwJPAfkSG3NqOG2OpOxQIYoSI=
 +github.com/myitcv/gopherjs v1.12.0/go.mod h1:d55Q4EjGQHeJVms+9LGtXul6ykz5Xzx1E1gaXQXdimY=
- github.com/myitcv/vbash v0.0.1 h1:fje+IcgzQVS2eE1MEwAb0prqPR/ioYRKDzbqm17oIkY=
- github.com/myitcv/vbash v0.0.1/go.mod h1:mhxzs+IzamI7BJd/fOEClaPUW2CqsyZKVPLnf+jzpGU=
+ github.com/myitcv/vbash v0.0.2 h1:8R+91eSlfcgoRjEbnUgvbXYOmfh+p0+7i5klFOM5VMA=
+ github.com/myitcv/vbash v0.0.2/go.mod h1:8R1aaW5pjRay73Apauo2tzbNXizT9rViXl1jl5+/Xps=
  github.com/neelance/astrewrite v0.0.0-20160511093645-99348263ae86 h1:D6paGObi5Wud7xg83MaEFyjxQB1W5bz5d0IFppr+ymk=

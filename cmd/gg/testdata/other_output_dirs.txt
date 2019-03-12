@@ -3,7 +3,7 @@
 mkdir $WORK/p/godir
 mkdir $WORK/p/nongodir
 gg -p 1 -trace ./...
-cmpenv stderr trace1
+cmpenv stderr trace1$GO111
 cmp $WORK/p/godir/gen_gosample_copy1.go p/gosample
 cmp $WORK/p/nongodir/gen_sample_copy1.txt p/sample
 
@@ -45,6 +45,26 @@ package main
 
 const Val = "Hello World"
 -- trace1 --
+go list -deps -test -json ./...
+go: finding example.com v1.0.0
+go list -deps -json example.com/copy1
+go: downloading example.com v1.0.0
+go: extracting example.com v1.0.0
+hash {Pkg: example.com/copyimpl}
+hash {Pkg: example.com/copy1}
+hash gobinModDep gobinModDep: example.com/copy1 (example.com/copy1)
+generate {Pkg: mod.com/p [G]}
+run generator: gobin -m -run example.com/copy1 -outdir:output $WORK/p/godir gosample
+ran generator: gobin -m -run example.com/copy1 -outdir:output $WORK/p/godir gosample
+run generator: gobin -m -run example.com/copy1 -outdir:output $WORK/p/nongodir -ext .txt sample
+ran generator: gobin -m -run example.com/copy1 -outdir:output $WORK/p/nongodir -ext .txt sample
+generate {Pkg: mod.com/p [G]}
+run generator: gobin -m -run example.com/copy1 -outdir:output $WORK/p/godir gosample
+ran generator: gobin -m -run example.com/copy1 -outdir:output $WORK/p/godir gosample
+run generator: gobin -m -run example.com/copy1 -outdir:output $WORK/p/nongodir -ext .txt sample
+ran generator: gobin -m -run example.com/copy1 -outdir:output $WORK/p/nongodir -ext .txt sample
+hash {Pkg: mod.com/p [G]}
+-- trace1go1.11 --
 go list -deps -test -json ./...
 go: finding example.com v1.0.0
 go list -deps -json example.com/copy1

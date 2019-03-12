@@ -6,7 +6,7 @@ stderr '\Qp1/p1_test.go:7:28: undefined: Surname\E'
 
 # First run of gg
 gg -p 1 -trace ./...
-cmpenv stderr trace1
+cmpenv stderr trace1$GO111
 go test ./p1
 
 # Remove generated file and check test fails
@@ -41,6 +41,23 @@ package p1_test
 const Surname = "surname"
 
 -- trace1 --
+go list -deps -test -json ./...
+go list -deps -json example.com/copy1
+go: finding example.com v1.0.0
+go: downloading example.com v1.0.0
+go: extracting example.com v1.0.0
+hash {Pkg: mod.com/p1 [G]}
+hash {Pkg: example.com/copyimpl}
+hash {Pkg: example.com/copy1}
+hash gobinModDep gobinModDep: example.com/copy1 (example.com/copy1)
+generate {Pkg: mod.com/p1_test [mod.com/p1.test] [G]}
+run generator: gobin -m -run example.com/copy1 -ext _test.go input
+ran generator: gobin -m -run example.com/copy1 -ext _test.go input
+hash {Pkg: mod.com/p1 [G]}
+generate {Pkg: mod.com/p1_test [mod.com/p1.test] [G]}
+run generator: gobin -m -run example.com/copy1 -ext _test.go input
+ran generator: gobin -m -run example.com/copy1 -ext _test.go input
+-- trace1go1.11 --
 go list -deps -test -json ./...
 go list -deps -json example.com/copy1
 go: finding example.com v1.0.0

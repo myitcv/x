@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"go/build"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -99,6 +100,10 @@ func TestScripts(t *testing.T) {
 				"GOBINPATH="+gobinPath,
 				"COMMANDTESTSLEEP="+fmt.Sprintf("%.2f", *fCommandTestSleep),
 			)
+
+			if build.Default.ReleaseTags[len(build.Default.ReleaseTags)-1] == "go1.11" {
+				e.Vars = append(e.Vars, "GO111=go1.11")
+			}
 
 			return nil
 		},
