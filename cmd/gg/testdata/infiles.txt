@@ -33,6 +33,14 @@ import _ "mod.com/p1/p3"
 //go:generate gobin -m -run mod.com/p2 -infiles:test ./p3/*.txt
 //go:generate gobin -m -run mod.com/p2 -infiles:test ../p2/another.txt
 
+-- p1/p3/0input.txt --
+package p1
+
+// This file is intentionally named so that it will
+// appear first in the glob. We modify the second file
+// just in case (as we did have) there is an "off-by-one"
+// error.
+
 -- p1/p3/input.txt --
 package p1
 
@@ -106,11 +114,13 @@ go list -deps -test -json ./...
 hash {Pkg: mod.com/p1/p3 [G]}
 hash {Pkg: mod.com/p2 [G]}
 hash gobinModDep gobinModDep: mod.com/p2 (mod.com/p2)
+infiles for mod.com/p1: [$WORK/p1/p3/0input.txt $WORK/p1/p3/input.txt $WORK/p2/another.txt]
 generate {Pkg: mod.com/p1 [G]}
 run generator: gobin -m -run mod.com/p2 -infiles:test ./p3/*.txt
 ran generator: gobin -m -run mod.com/p2 -infiles:test ./p3/*.txt
 run generator: gobin -m -run mod.com/p2 -infiles:test ../p2/another.txt
 ran generator: gobin -m -run mod.com/p2 -infiles:test ../p2/another.txt
+infiles for mod.com/p1: [$WORK/p1/p3/0input.txt $WORK/p1/p3/input.txt $WORK/p2/another.txt]
 generate {Pkg: mod.com/p1 [G]}
 run generator: gobin -m -run mod.com/p2 -infiles:test ./p3/*.txt
 ran generator: gobin -m -run mod.com/p2 -infiles:test ./p3/*.txt
@@ -122,11 +132,13 @@ go list -deps -test -json ./...
 hash {Pkg: mod.com/p1/p3 [G]}
 hash {Pkg: mod.com/p2 [G]}
 hash gobinModDep gobinModDep: mod.com/p2 (mod.com/p2)
+infiles for mod.com/p1: [$WORK/p1/p3/0input.txt $WORK/p1/p3/input.txt $WORK/p2/another.txt]
 generate {Pkg: mod.com/p1 [G]}
 run generator: gobin -m -run mod.com/p2 -infiles:test ./p3/*.txt
 ran generator: gobin -m -run mod.com/p2 -infiles:test ./p3/*.txt
 run generator: gobin -m -run mod.com/p2 -infiles:test ../p2/another.txt
 ran generator: gobin -m -run mod.com/p2 -infiles:test ../p2/another.txt
+infiles for mod.com/p1: [$WORK/p1/p3/0input.txt $WORK/p1/p3/input.txt $WORK/p2/another.txt]
 generate {Pkg: mod.com/p1 [G]}
 run generator: gobin -m -run mod.com/p2 -infiles:test ./p3/*.txt
 ran generator: gobin -m -run mod.com/p2 -infiles:test ./p3/*.txt
@@ -138,11 +150,13 @@ go list -deps -test -json ./...
 hash {Pkg: mod.com/p1/p3 [G]}
 hash {Pkg: mod.com/p2 [G]}
 hash gobinModDep gobinModDep: mod.com/p2 (mod.com/p2)
+infiles for mod.com/p1: [$WORK/p1/p3/0input.txt $WORK/p1/p3/input.txt $WORK/p2/another.txt]
 generate {Pkg: mod.com/p1 [G]}
 run generator: gobin -m -run mod.com/p2 -infiles:test ./p3/*.txt
 ran generator: gobin -m -run mod.com/p2 -infiles:test ./p3/*.txt
 run generator: gobin -m -run mod.com/p2 -infiles:test ../p2/another.txt
 ran generator: gobin -m -run mod.com/p2 -infiles:test ../p2/another.txt
+infiles for mod.com/p1: [$WORK/p1/p3/0input.txt $WORK/p1/p3/input.txt $WORK/p2/another.txt]
 generate {Pkg: mod.com/p1 [G]}
 run generator: gobin -m -run mod.com/p2 -infiles:test ./p3/*.txt
 ran generator: gobin -m -run mod.com/p2 -infiles:test ./p3/*.txt

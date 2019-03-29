@@ -1569,7 +1569,6 @@ func (g *gg) inFiles(p *pkg) []string {
 		}
 	}
 
-Patts:
 	for _, patt := range patts {
 		absPatt := patt
 		if !filepath.IsAbs(patt) {
@@ -1590,7 +1589,7 @@ Patts:
 			dir := filepath.Dir(m)
 			if _, ok := pkgDirs[dir]; ok {
 				inFiles[m] = true
-				continue Patts
+				continue
 			}
 			var dirs []string
 			for d := range pkgDirs {
@@ -1605,6 +1604,7 @@ Patts:
 		res = append(res, f)
 	}
 	sort.Strings(res)
+	logTrace("infiles for %v: %v\n", p.ImportPath, res)
 	return res
 }
 
