@@ -3,7 +3,7 @@
 // gg is a cached-based wrapper around go generate directives.
 //
 // Usage:
-//         gg [-p n] [-r n] [-trace] [-tags 'tag list'] [packages]
+//         gg [-p n] [-r n] [-trace] [-skipCache] [-tags 'tag list'] [packages]
 //
 // gg runs go generate directives found in packages according to the reverse
 // dependency graph implied by those packages' imports, and the dependencies of
@@ -38,6 +38,12 @@
 // The -trace flag outputs a log of work being executed by gg. It is most useful
 // when specified along with -p 1 (else the order of execution of work is not well
 // defined).
+//
+// The -skipCache flag causes gg to skip checking for cache hits. Consequently,
+// all generators are run, regardless of cache state, until a fixed point is
+// reached. The cache is updated after each iteration in a package. As such, this
+// flag can be used to heal a broken cache, i.e. correct the delta for a given
+// cache key.
 //
 // Note: at present, gg does not understand the GOFLAGS environment variable.
 // Neither does it pass the effective build tags via GOFLAGS to each go generate
