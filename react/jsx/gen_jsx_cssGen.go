@@ -35,6 +35,9 @@ func parseCSS(s string) *react.CSS {
 		case "font-style":
 			res.FontStyle = v
 
+		case "font-weight":
+			res.FontWeight = v
+
 		case "height":
 			res.Height = v
 

@@ -22,21 +22,22 @@ import (
 // as a reference
 //
 var attrs = map[string]*typ{
-	"Float":     &typ{},
-	"FontSize":  &typ{HTML: "font-size"},
-	"FontStyle": &typ{HTML: "font-style"},
-	"Height":    &typ{},
-	"MaxHeight": &typ{HTML: "max-height"},
-	"MarginTop": &typ{HTML: "margin-top"},
-	"OverflowY": &typ{HTML: "overflow-y"},
-	"MinHeight": &typ{HTML: "min-height"},
-	"Overflow":  &typ{},
-	"Resize":    &typ{},
-	"Width":     &typ{},
-	"Position":  &typ{},
-	"Top":       &typ{},
-	"Left":      &typ{},
-	"ZIndex":    &typ{HTML: "z-index"},
+	"Float":      &typ{},
+	"FontSize":   &typ{HTML: "font-size"},
+	"FontStyle":  &typ{HTML: "font-style"},
+	"FontWeight": &typ{HTML: "font-weight"},
+	"Height":     &typ{},
+	"MaxHeight":  &typ{HTML: "max-height"},
+	"MarginTop":  &typ{HTML: "margin-top"},
+	"OverflowY":  &typ{HTML: "overflow-y"},
+	"MinHeight":  &typ{HTML: "min-height"},
+	"Overflow":   &typ{},
+	"Resize":     &typ{},
+	"Width":      &typ{},
+	"Position":   &typ{},
+	"Top":        &typ{},
+	"Left":       &typ{},
+	"ZIndex":     &typ{HTML: "z-index"},
 }
 
 const (
