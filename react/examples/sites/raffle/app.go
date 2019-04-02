@@ -95,18 +95,6 @@ func (a AppDef) buildURL() (res string, errStr string) {
 		}
 	}()
 
-	loc := dom.GetWindow().Location()
-	u, err := url.Parse(loc.String())
-	if err != nil {
-		return
-	}
-
-	id := u.Query().Get("in-reply-to")
-	if id == "" {
-		err = fmt.Errorf("failed to parse in-reply-to from current URL")
-		return
-	}
-
 	target, err := url.Parse("https://twitter.com/intent/tweet")
 	if err != nil {
 		return
@@ -115,15 +103,12 @@ func (a AppDef) buildURL() (res string, errStr string) {
 	ns := a.State()
 
 	hash := sha256.New()
-	fmt.Fprintf(hash, "")
-	fmt.Fprintf(hash, "in-reply-to: %v\n", id)
 	fmt.Fprintf(hash, "Handle: %v\n", ns.handle)
 	fmt.Fprintf(hash, "Key: %v\n", ns.key)
 
 	q := target.Query()
 	q.Set("text", fmt.Sprintf("Hey @LondonGophers, please enter me into the raffle! %x", hash.Sum(nil)))
 	q.Set("hashtags", "LondonGophers")
-	q.Set("in-reply-to", id)
 
 	target.RawQuery = q.Encode()
 
