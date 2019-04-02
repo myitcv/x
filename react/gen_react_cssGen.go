@@ -10,21 +10,22 @@ import "github.com/gopherjs/gopherjs/js"
 type CSS struct {
 	o *js.Object
 
-	Float     string
-	FontSize  string
-	FontStyle string
-	Height    string
-	Left      string
-	MarginTop string
-	MaxHeight string
-	MinHeight string
-	Overflow  string
-	OverflowY string
-	Position  string
-	Resize    string
-	Top       string
-	Width     string
-	ZIndex    string
+	Float      string
+	FontSize   string
+	FontStyle  string
+	FontWeight string
+	Height     string
+	Left       string
+	MarginTop  string
+	MaxHeight  string
+	MinHeight  string
+	Overflow   string
+	OverflowY  string
+	Position   string
+	Resize     string
+	Top        string
+	Width      string
+	ZIndex     string
 }
 
 // TODO: until we have a resolution on
@@ -40,6 +41,7 @@ func (c *CSS) hack() *CSS {
 	o.Set("float", c.Float)
 	o.Set("fontSize", c.FontSize)
 	o.Set("fontStyle", c.FontStyle)
+	o.Set("fontWeight", c.FontWeight)
 	o.Set("height", c.Height)
 	o.Set("left", c.Left)
 	o.Set("marginTop", c.MarginTop)

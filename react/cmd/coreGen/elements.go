@@ -214,6 +214,9 @@ var elements = map[string]*Elem{
 	"Button": &Elem{
 		Attributes: map[string]*Attr{
 			"Type": &Attr{},
+			"Disabled": &Attr{
+				OmitEmpty: true,
+			},
 		},
 	},
 	"Caption": &Elem{

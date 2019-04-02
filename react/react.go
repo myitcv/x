@@ -11,8 +11,8 @@ For more information see https://github.com/myitcv/x/blob/master/react/_doc/READ
 */
 package react
 
-//go:generate cssGen
-//go:generate coreGen
+//go:generate gobin -m -run myitcv.io/react/cmd/cssGen
+//go:generate gobin -m -run myitcv.io/react/cmd/coreGen
 
 import (
 	"fmt"

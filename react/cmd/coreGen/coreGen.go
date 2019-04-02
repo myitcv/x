@@ -22,7 +22,7 @@ import (
 )
 
 const (
-	coreGenCmd = "coreGen"
+	coreGenCmd = "myitcv.io/react/cmd/coreGen"
 
 	jsPkg = "github.com/gopherjs/gopherjs/js"
 )
@@ -79,7 +79,7 @@ func mainGen(wd string) {
 	}
 
 	if dirFiles[envFile] != 1 {
-		fatalf("expected a single occurrence of %v directive in %v. Got: %v", coreGenCmd, envFile, dirFiles)
+		fatalf("expected a single occurrence of %v directive in %v. Got: %v", coreGenCmd, envFile, len(dirFiles))
 	}
 
 	license, err := gogenerate.CommentLicenseHeader(fLicenseFile)
