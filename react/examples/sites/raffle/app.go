@@ -121,7 +121,7 @@ func (a AppDef) buildURL() (res string, errStr string) {
 	fmt.Fprintf(hash, "Key: %v\n", ns.key)
 
 	q := target.Query()
-	q.Set("text", fmt.Sprintf("Enter me into the raffle! The answer is %x", hash.Sum(nil)))
+	q.Set("text", fmt.Sprintf("Hey @LondonGophers, please enter me into the raffle! %x", hash.Sum(nil)))
 	q.Set("hashtags", "LondonGophers")
 	q.Set("in-reply-to", id)
 
