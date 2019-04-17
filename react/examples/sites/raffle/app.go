@@ -6,6 +6,7 @@ import (
 	"crypto/sha256"
 	"fmt"
 	"net/url"
+	"strings"
 
 	"honnef.co/go/js/dom"
 	"myitcv.io/react"
@@ -113,8 +114,8 @@ func (a AppDef) buildURL() (res string, errStr string) {
 	ns := a.State()
 
 	hash := sha256.New()
-	fmt.Fprintf(hash, "Handle: %v\n", ns.handle)
-	fmt.Fprintf(hash, "Key: %v\n", ns.key)
+	fmt.Fprintf(hash, "Handle: %v\n", strings.TrimSpace(ns.handle))
+	fmt.Fprintf(hash, "Key: %v\n", strings.TrimSpace(ns.key))
 
 	q := target.Query()
 	q.Set("text", fmt.Sprintf("Hey @LondonGophers, please enter me into the raffle! %x", hash.Sum(nil)))
