@@ -12,7 +12,7 @@
 ```
 -->
 ```
-gg is a cached-based wrapper around go generate directives.
+gg is a cache-based wrapper around go generate directives.
 
 Usage:
         gg [-p n] [-r n] [-trace] [-skipCache] [-tags 'tag list'] [packages]
