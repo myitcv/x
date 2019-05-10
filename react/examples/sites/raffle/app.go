@@ -8,6 +8,8 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/gopherjs/gopherjs/js"
+
 	"honnef.co/go/js/dom"
 	"myitcv.io/react"
 )
@@ -106,6 +108,11 @@ func (a AppDef) buildURL() (res string, errStr string) {
 		}
 	}()
 
+	curr, err := url.Parse(js.Global.Get("window").Get("location").String())
+	if err != nil {
+		return
+	}
+
 	target, err := url.Parse("https://twitter.com/intent/tweet")
 	if err != nil {
 		return
@@ -118,8 +125,8 @@ func (a AppDef) buildURL() (res string, errStr string) {
 	fmt.Fprintf(hash, "Key: %v\n", strings.TrimSpace(ns.key))
 
 	q := target.Query()
-	q.Set("text", fmt.Sprintf("Hey @LondonGophers, please enter me into the raffle! %x", hash.Sum(nil)))
-	q.Set("hashtags", "LondonGophers")
+	q.Set("text", fmt.Sprintf("%v %x", curr.Query().Get("greeting"), hash.Sum(nil)))
+	q.Set("hashtags", curr.Query().Get("hashtags"))
 
 	target.RawQuery = q.Encode()
 
