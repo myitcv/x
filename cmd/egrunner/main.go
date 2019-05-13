@@ -73,6 +73,8 @@ func (b *block) String() string {
 }
 
 func main() {
+	*fGoProxy = os.Getenv("EGRUNNER_GOPROXY")
+
 	flag.Var(&fDockerFlags, "df", "flag to pass to docker")
 	flag.Parse()
 
@@ -85,10 +87,6 @@ func main() {
 func run() error {
 	if *fGoRoot == "" {
 		*fGoRoot = os.Getenv("EGRUNNER_GOROOT")
-	}
-
-	if *fGoProxy == "" {
-		*fGoProxy = os.Getenv("EGRUNNER_GOPROXY")
 	}
 
 	type rewrite struct {
@@ -503,10 +501,14 @@ FinishedLookupGithubCLI:
 		}
 	}
 
-	if *fGoProxy != "" {
-		if egp, err := bindmnt.Resolve(*fGoProxy); err == nil {
-			args = append(args, "-v", fmt.Sprintf("%v:/goproxy", egp), "-e", "GOPROXY=file:///goproxy")
+	if filepath.IsAbs(*fGoProxy) {
+		egp, err := bindmnt.Resolve(*fGoProxy)
+		if err != nil {
+			return fmt.Errorf("failed to resolve bindmnt resolve %v: %v", *fGoProxy, err)
 		}
+		args = append(args, "-v", fmt.Sprintf("%v:/goproxy", egp), "-e", "GOPROXY=file:///goproxy")
+	} else {
+		args = append(args, "-e", "GOPROXY="+*fGoProxy)
 	}
 
 	// build docker image
