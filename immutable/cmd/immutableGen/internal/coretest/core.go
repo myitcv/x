@@ -41,6 +41,23 @@ type _Imm_MyStruct struct {
 	fieldWithoutTag bool
 }
 
+type MySpecialStructKey struct {
+	Uuid        MyStructUuid
+	Version     uint64
+	PrevVersion uint64
+}
+
+func (m *MySpecialStructKey) BumpVersion() {
+	m.PrevVersion = m.Version
+	m.Version += 5
+}
+
+type _Imm_MySpecialStruct struct {
+	Key MySpecialStructKey
+
+	Name string
+}
+
 type _Imm_A struct {
 	Name string
 	A    *A

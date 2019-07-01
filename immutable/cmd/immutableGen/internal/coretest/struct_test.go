@@ -326,41 +326,95 @@ func TestSpecialVersionBump(t *testing.T) {
 
 	s2 := s1.AsMutable()
 
-	if v := s1.Key().Version; v != 0 {
-		t.Fatalf("expected version 0 as initial value, got %v", v)
+	var e1 uint64 = 0
+	if v := s1.Key().Version; v != e1 {
+		t.Fatalf("expected version %v as initial value, got %v", e1, v)
 	}
 
-	if v := s2.Key().Version; v != 1 {
-		t.Fatalf("expected version 1 as initial value, got %v", v)
+	var e2 uint64 = 1
+	if v := s2.Key().Version; v != e2 {
+		t.Fatalf("expected version %v as initial value, got %v", e2, v)
 	}
 
 	s2.AsImmutable(s1)
 
-	if v := s1.Key().Version; v != 0 {
-		t.Fatalf("expected version 0 as initial value, got %v", v)
+	if v := s1.Key().Version; v != e1 {
+		t.Fatalf("expected version %v as initial value, got %v", e1, v)
 	}
 
-	if v := s2.Key().Version; v != 1 {
-		t.Fatalf("expected version 1 as initial value, got %v", v)
+	if v := s2.Key().Version; v != e2 {
+		t.Fatalf("expected version %v as initial value, got %v", e2, v)
 	}
 
 	s3 := s2.SetName("test")
 
-	if v := s2.Key().Version; v != 1 {
-		t.Fatalf("expected version 1 as initial value, got %v", v)
+	if v := s2.Key().Version; v != e2 {
+		t.Fatalf("expected version %v as initial value, got %v", e2, v)
 	}
 
-	if v := s3.Key().Version; v != 2 {
-		t.Fatalf("expected version 2 as initial value, got %v", v)
+	var e3 uint64 = 2
+	if v := s3.Key().Version; v != e3 {
+		t.Fatalf("expected version %v as initial value, got %v", e3, v)
 	}
 
 	s3.AsImmutable(s2)
 
-	if v := s2.Key().Version; v != 1 {
-		t.Fatalf("expected version 1 as initial value, got %v", v)
+	if v := s2.Key().Version; v != e2 {
+		t.Fatalf("expected version %v as initial value, got %v", e2, v)
 	}
 
-	if v := s3.Key().Version; v != 2 {
-		t.Fatalf("expected version 2 as initial value, got %v", v)
+	if v := s3.Key().Version; v != e3 {
+		t.Fatalf("expected version %v as initial value, got %v", e3, v)
+	}
+}
+
+func TestSpecialPreviousVersionBump(t *testing.T) {
+	s1 := new(coretest.MySpecialStruct)
+
+	if v := s1.Key().Version; v != 0 {
+		t.Fatalf("expected version 0 as initial value, got %v", v)
+	}
+
+	s2 := s1.AsMutable()
+
+	var e1 uint64 = 0
+	if v := s1.Key().Version; v != e1 {
+		t.Fatalf("expected version %v as initial value, got %v", e1, v)
+	}
+
+	var e2 uint64 = 5
+	if v := s2.Key().Version; v != e2 {
+		t.Fatalf("expected version %v as initial value, got %v", e2, v)
+	}
+
+	s2.AsImmutable(s1)
+
+	if v := s1.Key().Version; v != e1 {
+		t.Fatalf("expected version %v as initial value, got %v", e1, v)
+	}
+
+	if v := s2.Key().Version; v != e2 {
+		t.Fatalf("expected version %v as initial value, got %v", e2, v)
+	}
+
+	s3 := s2.SetName("test")
+
+	if v := s2.Key().Version; v != e2 {
+		t.Fatalf("expected version %v as initial value, got %v", e2, v)
+	}
+
+	var e3 uint64 = 10
+	if v := s3.Key().Version; v != e3 {
+		t.Fatalf("expected version %v as initial value, got %v", e3, v)
+	}
+
+	s3.AsImmutable(s2)
+
+	if v := s2.Key().Version; v != e2 {
+		t.Fatalf("expected version %v as initial value, got %v", e2, v)
+	}
+
+	if v := s3.Key().Version; v != e3 {
+		t.Fatalf("expected version %v as initial value, got %v", e3, v)
 	}
 }

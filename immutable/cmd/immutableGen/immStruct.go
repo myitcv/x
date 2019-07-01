@@ -40,7 +40,7 @@ type immStruct struct {
 	syn  *ast.StructType
 	typ  *types.Struct
 
-	special bool
+	special specialType
 
 	fields  []astField
 	methods map[string]*field
@@ -128,9 +128,14 @@ func (o *output) genImmStructs(structs []*immStruct) {
 
 			res := *s
 		`, exp, s.name)
-		if s.special {
+		switch s.special {
+		case specialRegular:
 			o.pt(`
 			res.field_Key.Version++
+			`, exp, nil)
+		case specialPrevious:
+			o.pt(`
+			res.field_Key.BumpVersion()
 			`, exp, nil)
 		}
 		o.pt(`
@@ -269,9 +274,14 @@ func (o *output) genImmStructs(structs []*immStruct) {
 
 					res := *s
 				`, exp, tmpl)
-				if s.special {
+				switch s.special {
+				case specialRegular:
 					o.pt(`
 					res.field_Key.Version++
+					`, exp, tmpl)
+				case specialPrevious:
+					o.pt(`
+					res.field_Key.BumpVersion()
 					`, exp, tmpl)
 				}
 				o.pt(`
