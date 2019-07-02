@@ -24,8 +24,6 @@ then
 	export PROTOBUF_INSTALL_DIR=$CI_DEPENDENCIES_DIR/protobuf
 
 	export CHROMEDRIVER_INSTALL_DIR=$CI_DEPENDENCIES_DIR/chromedriver
-
-	export GOPROXY=file://$HOME/cachex
 fi
 
 if [ "${PROTOBUF_VERSION:-}" == "" ]
@@ -37,6 +35,9 @@ then
 	autostash_or_export CHROMEDRIVER_VERSION="$(cat "${BASH_SOURCE%/*}/../.dependencies/chromedriver_version")"
 fi
 
-autostash_or_export PROTOBUF_INCLUDE="$PROTOBUF_INSTALL_DIR/$PROTOBUF_VERSION/include"
+if [ $(running_on_ci_server) != "yes" ]
+then
+	autostash_or_export PROTOBUF_INCLUDE="$PROTOBUF_INSTALL_DIR/$PROTOBUF_VERSION/include"
+fi
 
 autostash_or_export LOADED_COMMON_ENV=true

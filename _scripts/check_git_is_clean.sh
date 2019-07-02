@@ -5,6 +5,11 @@
 
 source $(git rev-parse --show-toplevel)/_scripts/common.bash
 
+if [ "${CI:-}" != "true" ]
+then
+	exit 0
+fi
+
 if [ -d _scripts/known_diffs ]
 then
 	for i in $(ls _scripts/known_diffs)
