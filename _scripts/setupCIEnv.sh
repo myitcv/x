@@ -10,14 +10,13 @@ mkdir -p $CI_CACHE_DIR
 mkdir -p $CI_DEPENDENCIES_DIR
 mkdir -p $PROTOBUF_INSTALL_DIR
 
-# Install protobuf and other external deps
-
-"${BASH_SOURCE%/*}/install_protobuf.sh"
-"${BASH_SOURCE%/*}/install_chromedriver.sh"
-
 mkdir -p $GOBIN
 
-git clone --depth=1 https://github.com/myitcv/cachex $HOME/cachex
+if [ "${GOPROXY:-}" == "" ]
+then
+	git clone --depth=1 https://github.com/myitcv/cachex $HOME/cachex
+	export GOPROXY=file://$HOME/cachex
+fi
 
 if [[ "$GO_VERSION" = go1.11* ]]
 then
