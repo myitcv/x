@@ -71,7 +71,7 @@ import (
 	"myitcv.io/react"
 )
 
-//go:generate reactGen
+//go:generate gobin -m -run myitcv.io/react/cmd/reactGen
 
 // Step 1
 // Declare a type that has (at least) an anonymous embedded react.ComponentDef

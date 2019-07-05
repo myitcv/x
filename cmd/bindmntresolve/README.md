@@ -22,7 +22,7 @@ $ gobin myitcv.io/cmd/bindmntresolve
 
 <!-- END -->
 
-<!-- __TEMPLATE: sh -c "${DOLLAR}(go list -f '{{.ImportPath}}' | xargs basename) -h 2>&1 || true"
+<!-- __TEMPLATE: gobin -m -run . -h # NEGATE
 ### Usage
 
 ```

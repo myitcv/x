@@ -1,6 +1,6 @@
 package model
 
-//go:generate immutableGen
+//go:generate gobin -m -run myitcv.io/immutable/cmd/immutableGen
 
 type _Imm_Person struct {
 	Name string

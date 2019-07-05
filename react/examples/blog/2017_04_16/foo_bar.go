@@ -8,7 +8,7 @@ import (
 	"myitcv.io/react"
 )
 
-//go:generate reactGen
+//go:generate gobin -m -run myitcv.io/react/cmd/reactGen
 
 // FooBarDef is the definition of the FooBar component. All components are
 // declared with a *Def suffix and an embedded myitcv.io/react.ComponentDef

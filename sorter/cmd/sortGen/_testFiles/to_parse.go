@@ -1,7 +1,7 @@
 package main
 
-//go:generate sortGen
-//go:generate immutableGen
+//go:generate gobin -m -run myitcv.io/sorter/cmd/sortGen
+//go:generate gobin -m -run myitcv.io/immutable/cmd/immutableGen
 
 import (
 	"bytes"

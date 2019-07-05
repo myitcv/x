@@ -14,8 +14,8 @@ import (
 	"myitcv.io/react/jsx"
 )
 
-//go:generate reactGen
-//go:generate immutableGen
+//go:generate gobin -m -run myitcv.io/react/cmd/reactGen
+//go:generate gobin -m -run myitcv.io/immutable/cmd/immutableGen
 
 // ExamplesDef is the definition of the Examples component
 type ExamplesDef struct {

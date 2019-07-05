@@ -20,6 +20,8 @@ then
 	args="-long -online"
 fi
 
+export MDREPLACE_CMD="gobin -m -run myitcv.io/cmd/mdreplace"
+
 # by this point we will have mdreplace installed. Hence check that
 # committed .md files are "fresh"
 gobin -m -run myitcv.io/cmd/mdreplace $args -w $(git ls-files '*.md')

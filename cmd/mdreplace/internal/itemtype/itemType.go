@@ -4,7 +4,7 @@ package itemtype
 // because without that issue being resolved stringer doesn't work in a package that has non-standard
 // library imports
 
-//go:generate stringer -type=ItemType -output=gen_ItemType.go
+//go:generate gobin -m -run golang.org/x/tools/cmd/stringer -type=ItemType -output=gen_ItemType.go
 
 type ItemType int
 

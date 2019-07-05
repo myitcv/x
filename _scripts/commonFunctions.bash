@@ -89,7 +89,7 @@ ensure_go_formatted()
 	then
 		return
 	fi
-	local z=$(goimports -l "$@")
+	local z=$(gobin -m -run golang.org/x/tools/cmd/goimports -l "$@")
 	if [ ! -z "$z" ]
 	then
 		echo "The following files are not formatted:"
@@ -158,25 +158,6 @@ EOD
 }
 export -f run_nested_tests
 
-install_main_go()
-{
-	for i in $(go list -f "{{if eq .Name \"main\"}}{{.Dir}}{{end}}" "$@")
-	do
-		pushd $i > /dev/null
-		go install
-		popd > /dev/null
-	done
-}
-export -f install_main_go
-
-# workaround for Go 1.10 pre export data in Go 1.11
-install_deps()
-{
-	go list -f "{{ range .Deps}}{{.}}
-	{{end}}" "$@" | xargs go install
-}
-export -f install_deps
-
 verifyGoGet()
 {
 	local pkg=$1
@@ -190,30 +171,6 @@ verifyGoGet()
 	)
 }
 export -f verifyGoGet
-
-installGo() {
-	# takes a two argument
-	#
-	# 1. go version
-	# 2. the target directory into which we will install the go directory
-	#
-	tf=$(mktemp)
-	os=$(uname | tr '[:upper:]' '[:lower:]')
-	arch="amd64"
-
-	if [[ "$1" = go* ]]
-	then
-		source="https://dl.google.com/go/$1.${os}-${arch}.tar.gz"
-		curl -sL $source > $tf
-	else
-		source="s3://io.myitcv.gobuilds/${os}_${arch}/$1.tar.gz"
-		aws s3 cp $source $tf
-	fi
-
-	echo "Will install ${1} from $source to $2"
-	tar -C $2 -zxf $tf
-}
-export -f installGo
 
 goVersion() {
 	go version | cut -d ' ' -f 3

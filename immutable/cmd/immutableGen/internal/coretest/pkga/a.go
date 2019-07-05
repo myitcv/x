@@ -6,7 +6,7 @@ import (
 	"myitcv.io/immutable/cmd/immutableGen/internal/coretest/pkgb"
 )
 
-//go:generate immutableGen
+//go:generate gobin -m -run myitcv.io/immutable/cmd/immutableGen
 
 type _Imm_PkgA struct {
 	*pkgb.PkgB

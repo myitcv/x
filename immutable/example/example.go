@@ -6,7 +6,7 @@ package example
 // The following directive will result in a generated file that includes the
 // directive //go:generate echo "hello world"
 //
-//go:generate immutableGen -licenseFile license_header.txt -G "echo \"hello world\""
+//go:generate gobin -m -run myitcv.io/immutable/cmd/immutableGen -licenseFile license_header.txt -G "echo \"hello world\""
 
 // MyMap will be exported
 type _Imm_MyMap map[string]*MySlice

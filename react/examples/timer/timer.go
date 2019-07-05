@@ -7,7 +7,7 @@ import (
 	"myitcv.io/react"
 )
 
-//go:generate reactGen
+//go:generate gobin -m -run myitcv.io/react/cmd/reactGen
 
 // TimerDef is the definition of the Timer component
 type TimerDef struct {

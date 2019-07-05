@@ -1,0 +1,21 @@
+# Test for when there is nothing to do, generation-wise
+
+# first run
+gogenerate -p 1 -trace ./...
+cmpenv stderr trace1
+
+-- go.mod --
+module mod.com
+
+-- p1/p1.go --
+package p1
+
+-- p1/p1_test.go --
+package p1
+
+-- p1/p1x_test.go --
+package p1_test
+
+-- trace1 --
+go list -deps -test -json ./...
+hash {Pkg: mod.com/p1 [G]}

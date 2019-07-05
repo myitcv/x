@@ -1,0 +1,98 @@
+# Test for circular import dependencies (via xtest)
+
+# Ensure that initially the test of p3 fails
+! go test ./p3
+stderr '\Qp2/p2.go:5:14: undefined: p1.Name\E'
+
+# First run of gogenerate
+gogenerate -p 1 -trace ./...
+cmpenv stderr trace1$GO111
+go test ./p3
+
+# Remove generated file and check test fails
+rm p1/gen_input_copy1.go
+! go test ./p3
+
+# First run of gogenerate
+gogenerate -p 1 -trace ./...
+cmpenv stderr trace2
+go test ./p3
+
+
+-- go.mod --
+module mod.com
+
+-- p1/p1.go --
+package p1
+
+-- p2/p2.go --
+package p2
+
+import "mod.com/p1"
+
+const Name = p1.Name
+
+-- p3/p3.go --
+package p3
+
+import "mod.com/p2"
+
+const Name = p2.Name
+
+//go:generate gobin -m -run example.com/copy1 -outdir:output ../p1 input
+
+-- p3/input --
+package p1
+
+const Name = "p1"
+
+-- trace1 --
+go list -deps -test -json ./...
+go list -deps -json example.com/copy1
+go: finding example.com v1.0.0
+go: downloading example.com v1.0.0
+go: extracting example.com v1.0.0
+hash {Pkg: mod.com/p1 [G]}
+hash {Pkg: mod.com/p2 [G]}
+hash {Pkg: example.com/copyimpl}
+hash {Pkg: example.com/copy1}
+hash gobinModDep gobinModDep: example.com/copy1 (example.com/copy1)
+generate {Pkg: mod.com/p3 [G]}
+run generator: gobin -m -run example.com/copy1 -outdir:output ../p1 input
+ran generator: gobin -m -run example.com/copy1 -outdir:output ../p1 input
+hash {Pkg: mod.com/p1 [G]}
+hash {Pkg: mod.com/p2 [G]}
+generate {Pkg: mod.com/p3 [G]}
+run generator: gobin -m -run example.com/copy1 -outdir:output ../p1 input
+ran generator: gobin -m -run example.com/copy1 -outdir:output ../p1 input
+hash {Pkg: mod.com/p3 [G]}
+-- trace1go1.11 --
+go list -deps -test -json ./...
+go list -deps -json example.com/copy1
+go: finding example.com v1.0.0
+go: downloading example.com v1.0.0
+hash {Pkg: mod.com/p1 [G]}
+hash {Pkg: mod.com/p2 [G]}
+hash {Pkg: example.com/copyimpl}
+hash {Pkg: example.com/copy1}
+hash gobinModDep gobinModDep: example.com/copy1 (example.com/copy1)
+generate {Pkg: mod.com/p3 [G]}
+run generator: gobin -m -run example.com/copy1 -outdir:output ../p1 input
+ran generator: gobin -m -run example.com/copy1 -outdir:output ../p1 input
+hash {Pkg: mod.com/p1 [G]}
+hash {Pkg: mod.com/p2 [G]}
+generate {Pkg: mod.com/p3 [G]}
+run generator: gobin -m -run example.com/copy1 -outdir:output ../p1 input
+ran generator: gobin -m -run example.com/copy1 -outdir:output ../p1 input
+hash {Pkg: mod.com/p3 [G]}
+-- trace2 --
+go list -deps -test -json ./...
+go list -deps -json example.com/copy1
+hash {Pkg: mod.com/p1 [G]}
+hash {Pkg: mod.com/p2 [G]}
+hash {Pkg: example.com/copyimpl}
+hash {Pkg: example.com/copy1}
+hash gobinModDep gobinModDep: example.com/copy1 (example.com/copy1)
+hash {Pkg: mod.com/p1 [G]}
+hash {Pkg: mod.com/p2 [G]}
+hash {Pkg: mod.com/p3 [G]}

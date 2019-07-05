@@ -1,0 +1,83 @@
+# Test for xtest-only generator
+
+# Ensure that initially the test of p1 fails
+! go test ./p1
+stderr '\Qp1/p1_test.go:7:28: undefined: Surname\E'
+
+# First run of gogenerate
+gogenerate -p 1 -trace ./...
+cmpenv stderr trace1$GO111
+go test ./p1
+
+# Remove generated file and check test fails
+rmglob p1/gen_*
+! go test ./p1
+
+# First run of gogenerate
+gogenerate -p 1 -trace ./...
+cmpenv stderr trace2
+go test ./p1
+
+-- go.mod --
+module mod.com
+
+-- p1/p1.go --
+package p1
+
+const Name = "name"
+
+-- p1/p1_test.go --
+package p1_test
+
+import "mod.com/p1"
+
+//go:generate gobin -m -run example.com/copy1 -ext _test.go input
+
+const FullName = p1.Name + Surname
+
+-- p1/input --
+package p1_test
+
+const Surname = "surname"
+
+-- trace1 --
+go list -deps -test -json ./...
+go list -deps -json example.com/copy1
+go: finding example.com v1.0.0
+go: downloading example.com v1.0.0
+go: extracting example.com v1.0.0
+hash {Pkg: mod.com/p1 [G]}
+hash {Pkg: example.com/copyimpl}
+hash {Pkg: example.com/copy1}
+hash gobinModDep gobinModDep: example.com/copy1 (example.com/copy1)
+generate {Pkg: mod.com/p1_test [mod.com/p1.test] [G]}
+run generator: gobin -m -run example.com/copy1 -ext _test.go input
+ran generator: gobin -m -run example.com/copy1 -ext _test.go input
+hash {Pkg: mod.com/p1 [G]}
+generate {Pkg: mod.com/p1_test [mod.com/p1.test] [G]}
+run generator: gobin -m -run example.com/copy1 -ext _test.go input
+ran generator: gobin -m -run example.com/copy1 -ext _test.go input
+-- trace1go1.11 --
+go list -deps -test -json ./...
+go list -deps -json example.com/copy1
+go: finding example.com v1.0.0
+go: downloading example.com v1.0.0
+hash {Pkg: mod.com/p1 [G]}
+hash {Pkg: example.com/copyimpl}
+hash {Pkg: example.com/copy1}
+hash gobinModDep gobinModDep: example.com/copy1 (example.com/copy1)
+generate {Pkg: mod.com/p1_test [mod.com/p1.test] [G]}
+run generator: gobin -m -run example.com/copy1 -ext _test.go input
+ran generator: gobin -m -run example.com/copy1 -ext _test.go input
+hash {Pkg: mod.com/p1 [G]}
+generate {Pkg: mod.com/p1_test [mod.com/p1.test] [G]}
+run generator: gobin -m -run example.com/copy1 -ext _test.go input
+ran generator: gobin -m -run example.com/copy1 -ext _test.go input
+-- trace2 --
+go list -deps -test -json ./...
+go list -deps -json example.com/copy1
+hash {Pkg: mod.com/p1 [G]}
+hash {Pkg: example.com/copyimpl}
+hash {Pkg: example.com/copy1}
+hash gobinModDep gobinModDep: example.com/copy1 (example.com/copy1)
+hash {Pkg: mod.com/p1 [G]}

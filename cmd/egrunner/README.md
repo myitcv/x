@@ -74,7 +74,7 @@ echo "Good morning, Rob"
 ```
 <!-- END -->
 
-<!-- __TEMPLATE: egrunner -out std _examples/readme.sh
+<!-- __TEMPLATE: gobin -m -run myitcv.io/cmd/egrunner -out std _examples/readme.sh
 
 results in:
 
@@ -87,7 +87,7 @@ $ {{.Cmd}}
 results in:
 
 ```
-$ egrunner -out std _examples/readme.sh
+$ gobin -m -run myitcv.io/cmd/egrunner -out std _examples/readme.sh
 # We can use the comment function to output comments.
 # This is only really useful when running with -out std
 

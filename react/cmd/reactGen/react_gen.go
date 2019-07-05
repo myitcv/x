@@ -22,7 +22,7 @@ import (
 )
 
 const (
-	reactGenCmd = "reactGen"
+	reactGenCmd = "myitcv.io/react/cmd/reactGen"
 
 	jsPkg = "github.com/gopherjs/gopherjs/js"
 )

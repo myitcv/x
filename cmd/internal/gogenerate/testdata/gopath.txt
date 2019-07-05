@@ -1,0 +1,57 @@
+# Test that ensures the basics of gogenerate work in GOPATH mode
+# (i.e. non module mode)
+
+# Install copy1
+cd mod
+exec pwd
+go install example.com/copy1
+
+env GO111MODULE=off
+cd $GOPATH/src
+! go test ./...
+stderr '\Qexample.com/p1/p1.go:5:29: undefined: Name\E'
+
+gogenerate -p 1 -trace ./...
+cmpenv stderr $GOPATH/src/example.com/p1/trace1
+go test ./...
+
+rmglob $GOPATH/src/example.com/p1/gen_*
+! go test ./...
+stderr '\Qexample.com/p1/p1.go:5:29: undefined: Name\E'
+
+gogenerate -p 1 -trace ./...
+cmpenv stderr $GOPATH/src/example.com/p1/trace2
+go test ./...
+
+
+-- mod/go.mod --
+module mod
+
+require example.com v1.0.0
+
+-- home/gopath/src/example.com/p1/p1.go --
+package p1
+
+//go:generate copy1 input
+
+const FullName = "Person" + Name
+
+-- home/gopath/src/example.com/p1/input --
+package p1
+
+const Name = "name"
+
+-- home/gopath/src/example.com/p1/trace1 --
+go list -deps -test -json ./...
+hash commandDep commandDep: copy1
+generate {Pkg: example.com/p1 [G]}
+run generator: copy1 input
+ran generator: copy1 input
+generate {Pkg: example.com/p1 [G]}
+run generator: copy1 input
+ran generator: copy1 input
+hash {Pkg: example.com/p1 [G]}
+-- home/gopath/src/example.com/p1/trace2 --
+go list -deps -test -json ./...
+hash commandDep commandDep: copy1
+hash {Pkg: example.com/p1 [G]}

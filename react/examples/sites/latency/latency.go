@@ -11,7 +11,7 @@ import (
 	"myitcv.io/react/jsx"
 )
 
-//go:generate immutableGen
+//go:generate gobin -m -run myitcv.io/immutable/cmd/immutableGen
 
 type location string
 

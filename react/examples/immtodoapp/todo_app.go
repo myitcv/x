@@ -7,8 +7,8 @@ import (
 	"myitcv.io/react"
 )
 
-//go:generate reactGen
-//go:generate immutableGen
+//go:generate gobin -m -run myitcv.io/react/cmd/reactGen
+//go:generate gobin -m -run myitcv.io/immutable/cmd/immutableGen
 
 // TodoAppDef is the definition fo the TodoApp component
 type TodoAppDef struct {

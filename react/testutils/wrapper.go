@@ -2,7 +2,7 @@ package testutils
 
 import "myitcv.io/react"
 
-//go:generate reactGen
+//go:generate gobin -m -run myitcv.io/react/cmd/reactGen
 
 // WrapperDef is the definition of the Wrapper component
 type WrapperDef struct {

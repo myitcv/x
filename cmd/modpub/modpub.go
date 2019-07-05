@@ -33,7 +33,7 @@ var (
 	fVerbose = flag.Bool("v", false, "give verbose output")
 )
 
-//go:generate pkgconcat -out gen_cliflag.go myitcv.io/_tmpls/cliflag
+//go:generate gobin -m -run myitcv.io/cmd/pkgconcat -out gen_cliflag.go myitcv.io/_tmpls/cliflag
 
 func main() {
 	// Notes

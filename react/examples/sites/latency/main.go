@@ -11,7 +11,7 @@ import (
 	"honnef.co/go/js/dom"
 )
 
-//go:generate reactGen
+//go:generate gobin -m -run myitcv.io/react/cmd/reactGen
 
 var document = dom.GetWindow().Document().(dom.HTMLDocument)
 

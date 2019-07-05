@@ -4,7 +4,7 @@ import (
 	"myitcv.io/react"
 )
 
-//go:generate reactGen
+//go:generate gobin -m -run myitcv.io/react/cmd/reactGen
 
 // HelloMessageDef is the definition of the HelloMessage component
 type HelloMessageDef struct {

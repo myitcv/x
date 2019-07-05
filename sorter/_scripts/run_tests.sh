@@ -7,20 +7,14 @@ source "$(git rev-parse --show-toplevel)/_scripts/common.bash"
 
 rm -f $(sub_git_files | gen_files)
 
-# TODO use gg
-go install myitcv.io/sorter/cmd/sortGen
-go install myitcv.io/immutable/cmd/immutableGen
-
-gobin -m -run myitcv.io/cmd/gg $(subpackages)
-go install $(subpackages)
+gobin -m -run myitcv.io/cmd/gogenerate $(subpackages)
 go vet $(subpackages)
 go test $(subpackages)
 
 pushd cmd/sortGen/_testFiles/ > /dev/null
 
-gobin -m -run myitcv.io/cmd/gg $(subpackages)
+gobin -m -run myitcv.io/cmd/gogenerate $(subpackages)
 go test $(subpackages)
-go install $(subpackages)
 go vet $(subpackages)
 
 popd > /dev/null

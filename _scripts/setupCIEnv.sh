@@ -10,8 +10,6 @@ mkdir -p $CI_CACHE_DIR
 mkdir -p $CI_DEPENDENCIES_DIR
 mkdir -p $PROTOBUF_INSTALL_DIR
 
-mkdir -p $GOBIN
-
 if [ "${GOPROXY:-}" == "" ]
 then
 	git clone --depth=1 https://github.com/myitcv/cachex $HOME/cachex

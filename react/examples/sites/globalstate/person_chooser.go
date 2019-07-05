@@ -8,7 +8,7 @@ import (
 	"myitcv.io/sorter"
 )
 
-//go:generate sortGen
+//go:generate gobin -m -run myitcv.io/sorter/cmd/sortGen
 
 type PersonState interface {
 	Get() *model.Person

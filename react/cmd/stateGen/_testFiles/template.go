@@ -2,7 +2,7 @@ package banana
 
 import "bytes"
 
-//go:generate stateGen
+//go:generate gobin -m -run myitcv.io/react/cmd/stateGen
 
 var root _Node_App
 

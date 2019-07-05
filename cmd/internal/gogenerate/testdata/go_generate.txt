@@ -1,0 +1,29 @@
+# This test verifies the behaviour of go generate with respect to the
+# special gogenerate directives
+
+go generate
+cmp stdout trace1
+
+gogenerate -trace -p 1 .
+cmp stderr trace2
+
+-- go.mod --
+module go.mod
+
+-- mod.go --
+package mod
+
+//go:generate echo hello
+//go:generate:gogenerate [!exists:blah] break
+//go:generate echo world
+
+-- trace1 --
+hello
+world
+-- trace2 --
+go list -deps -test -json .
+hash commandDep commandDep: echo
+generate {Pkg: go.mod [G]}
+run generator: echo hello
+ran generator: echo hello
+hash {Pkg: go.mod [G]}

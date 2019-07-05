@@ -13,8 +13,8 @@ const (
 	noEntry = "-1"
 )
 
-//go:generate reactGen
-//go:generate immutableGen
+//go:generate gobin -m -run myitcv.io/react/cmd/reactGen
+//go:generate gobin -m -run myitcv.io/immutable/cmd/immutableGen
 
 type Label interface {
 	Label() string

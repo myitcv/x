@@ -26,7 +26,7 @@ import (
 //
 // exit code is 0 if all commands succeed without error; one of the non-zero exit codes otherwise
 
-//go:generate pkgconcat -out gen_cliflag.go myitcv.io/_tmpls/cliflag
+//go:generate gobin -m -run myitcv.io/cmd/pkgconcat -out gen_cliflag.go myitcv.io/_tmpls/cliflag
 
 type result struct {
 	exitCode int

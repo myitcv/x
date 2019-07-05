@@ -7,7 +7,7 @@ Simply define an order function on the slice type of interest:
 
 ```go
 // main.go
-//go:generate sortGen
+//go:generate gobin -m -run myitcv.io/sorter/cmd/sortGen
 
 func orderByName(persons []person, i, j int) sorter.Ordered {
 	return persons[i].name < persons[j].name
@@ -41,7 +41,7 @@ go get -u myitcv.io/sorter/cmd/sortGen
 Taking the example from [`example/main.go`](https://myitcv.io/sorter/blob/master/example/main.go):
 
 ```go
-//go:generate sortGen -licenseFile license_header.txt
+//go:generate gobin -m -run myitcv.io/sorter/cmd/sortGen -licenseFile license_header.txt
 
 package main
 
@@ -110,7 +110,7 @@ to be included (commented) at the top of each generated file
 
 `sortGen` generates sort and stable sort functions/methods according to the following simple rules:
 
-1. The file, e.g. `my_file.go`, containing the order function/method must include the directive `//go:generate sortGen`
+1. The file, e.g. `my_file.go`, containing the order function/method must include the directive `//go:generate gobin -m -run myitcv.io/sorter/cmd/sortGen`
 2. The order function/method name must be of the form `"order*"` or `"Order*"` (more strictly `^[oO]rder[[:word:]]+` in a [regex](https://godoc.org/regexp)
    [pattern](https://github.com/google/re2/wiki/Syntax))
 3. The parameters of the order function/method must be a slice type, followed by two `int`'s

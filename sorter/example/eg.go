@@ -1,7 +1,7 @@
 // Copyright (c) 2016 Paul Jolly <paul@myitcv.org.uk>, all rights reserved.
 // Use of this document is governed by a license found in the LICENSE document.
 
-//go:generate sortGen -licenseFile license_header.txt
+//go:generate gobin -m -run myitcv.io/sorter/cmd/sortGen -licenseFile license_header.txt
 
 package main
 

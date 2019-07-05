@@ -248,7 +248,7 @@ Effectively the entry point for our app:
 
 `gen_App_reactGen.go` is the result of `go`generate` seeing the directive:
 
-  //go:generate reactGen
+  //go:generate gobin -m -run myitcv.io/react/cmd/reactGen
 
 `reactGen`:
 

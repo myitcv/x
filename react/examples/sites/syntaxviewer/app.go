@@ -21,7 +21,7 @@ type AppDef struct {
 	react.ComponentDef
 }
 
-//go:generate immutableGen
+//go:generate gobin -m -run myitcv.io/immutable/cmd/immutableGen
 
 type lang string
 

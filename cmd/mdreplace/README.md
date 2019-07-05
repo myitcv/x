@@ -40,7 +40,7 @@ For example, were we to include the following special comment block:
 results in:
 
 ---
-<!-- __TEMPLATE: sh -c "cat _examples/hello_world_today | sed -e 's/^    //' | mdreplace -strip"
+<!-- __TEMPLATE: sh -c "cat _examples/hello_world_today | sed -e 's/^    //' | gobin -m -run myitcv.io/cmd/mdreplace -strip"
 {{.Out}}
 -->
 hello world today
@@ -51,7 +51,7 @@ _To see this in action, look at the [source of the
 `README.md`](https://raw.githubusercontent.com/myitcv/x/master/cmd/mdreplace/README.md) you are currently reading._
 
 
-<!-- __TEMPLATE: sh -c "${DOLLAR}(go list -f '{{.ImportPath}}' | xargs basename) -h"
+<!-- __TEMPLATE: gobin -m -run . -h
 ### Usage
 
 ```
@@ -106,7 +106,7 @@ Code fences can appear within templates. Hence the following special template wi
 results in:
 
 ---
-<!-- __TEMPLATE: sh -c "cat _examples/code_fence | sed -e 's/^    //' | mdreplace -strip"
+<!-- __TEMPLATE: sh -c "cat _examples/code_fence | sed -e 's/^    //' | gobin -m -run myitcv.io/cmd/mdreplace -strip"
 {{.Out}}
 -->
 ```go
@@ -149,7 +149,7 @@ an argument to the template block. For example:
 results in :
 
 ---
-<!-- __TEMPLATE: sh -c "cat _examples/json_block | sed -e 's/^    //' | mdreplace -strip"
+<!-- __TEMPLATE: sh -c "cat _examples/json_block | sed -e 's/^    //' | gobin -m -run myitcv.io/cmd/mdreplace -strip"
 {{.Out}}
 -->
 Package `encoding/json` has name `json` and the following doc string:
@@ -177,7 +177,7 @@ Variable expansion also works; use the special `$DOLLAR` variable to expand to t
 results in :
 
 ---
-<!-- __TEMPLATE: sh -c "cat _examples/variable_expansion | sed -e 's/^    //' | mdreplace -strip"
+<!-- __TEMPLATE: sh -c "cat _examples/variable_expansion | sed -e 's/^    //' | gobin -m -run myitcv.io/cmd/mdreplace -strip"
 {{.Out}}
 -->
 fruit
