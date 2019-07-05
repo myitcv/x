@@ -1,6 +1,6 @@
 package main
 
-//go:generate reactGen
+//go:generate gobin -m -run myitcv.io/react/cmd/reactGen
 
 import (
 	"math/rand"

@@ -1,0 +1,55 @@
+# Test that gogenerate can handle different generators that generate to the same
+# command name, i.e. they name files with the same pattern.
+
+! go test ./...
+stderr '\Qp1/p1.go:6:18: undefined: Name\E'
+! stdout .+
+
+# Check gogenerate
+gogenerate -p 1 -trace ./...
+cmpenv stderr trace1
+go test ./...
+exists p1/gen_input1_copy1.go
+exists p1/gen_input2_copy1.go
+
+-- go.mod --
+module mod.com
+
+require example.com v1.0.0
+
+-- p1/p1.go --
+package p1
+
+//go:generate gobin -run example.com/copy1 input1
+//go:generate gobin -m -run example.com/copy1 input2
+
+const FullName = Name + Surname
+
+-- p1/input1 --
+package p1
+
+const Name = "name"
+
+-- p1/input2 --
+package p1
+
+const Surname = "surname"
+
+-- trace1 --
+go list -deps -test -json ./...
+go list -deps -json example.com/copy1
+hash {Pkg: example.com/copyimpl}
+hash {Pkg: example.com/copy1}
+hash gobinModDep gobinModDep: example.com/copy1 (example.com/copy1)
+hash gobinGlobalDep gobinGlobalDep: $WORK/home/.cache/gobin/example.com/@v/v1.0.0/example.com/copy1/copy1
+generate {Pkg: mod.com/p1 [G]}
+run generator: gobin -run example.com/copy1 input1
+ran generator: gobin -run example.com/copy1 input1
+run generator: gobin -m -run example.com/copy1 input2
+ran generator: gobin -m -run example.com/copy1 input2
+generate {Pkg: mod.com/p1 [G]}
+run generator: gobin -run example.com/copy1 input1
+ran generator: gobin -run example.com/copy1 input1
+run generator: gobin -m -run example.com/copy1 input2
+ran generator: gobin -m -run example.com/copy1 input2
+hash {Pkg: mod.com/p1 [G]}

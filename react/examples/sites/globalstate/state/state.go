@@ -2,7 +2,7 @@ package state
 
 import "myitcv.io/react/examples/sites/globalstate/model"
 
-//go:generate stateGen
+//go:generate gobin -m -run myitcv.io/react/cmd/stateGen
 
 var State = NewRoot()
 

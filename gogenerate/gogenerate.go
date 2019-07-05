@@ -280,7 +280,7 @@ func CommentLicenseHeader(file *string) (string, error) {
 
 // DefaultLogLevel is provided simply as a convenience along with LogFlag to ensure a default LogLevel
 // in a flag variable. This is necessary because of the interplay between go generate argument parsing
-// and the advice given for log levels via gg.
+// and the advice given for log levels via gogenerate.
 func DefaultLogLevel(f *string, ll LogLevel) {
 	if f != nil && *f == "" {
 		*f = string(ll)

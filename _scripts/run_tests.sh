@@ -5,9 +5,9 @@
 
 source "$(git rev-parse --show-toplevel)/_scripts/common.bash"
 
-# TODO: work out a better way of priming the build tools
-go install myitcv.io/cmd/concsh myitcv.io/cmd/pkgconcat
-go install golang.org/x/tools/cmd/goimports
+gobin=$(mktemp -d)
+GOBIN=$gobin go install github.com/gopherjs/gopherjs
+export PATH=$gobin:$PATH
 
 # Top-level run_tests.sh only.
 # check we don't have doubly-nested sub tests - we don't support this yet
@@ -33,8 +33,8 @@ do
 done
 
 # TODO come up with a better way of doing mutli-OS-ARCH stuff
-GOOS=linux GOARCH=amd64 gobin -m -run myitcv.io/cmd/gg myitcv.io/cmd/protoc
-GOOS=darwin GOARCH=amd64 gobin -m -run myitcv.io/cmd/gg myitcv.io/cmd/protoc
+GOOS=linux GOARCH=amd64 gobin -m -run myitcv.io/cmd/gogenerate myitcv.io/cmd/protoc
+GOOS=darwin GOARCH=amd64 gobin -m -run myitcv.io/cmd/gogenerate myitcv.io/cmd/protoc
 
 for i in $(find -name go.mod -execdir pwd \;)
 do
@@ -42,14 +42,12 @@ do
 	echo "$i: regular run" #!
 	pushd $i > /dev/null
 
-	gobin -m -run myitcv.io/cmd/gg $(subpackages)
+	gobin -m -run myitcv.io/cmd/gogenerate $(subpackages)
 
 	ensure_go_formatted $(sub_git_files | non_gen_go_files)
 	ensure_go_gen_formatted $(sub_git_files | gen_go_files)
 
 	go test $(subpackages)
-
-	install_main_go $(subpackages | grep -v myitcv.io/cmd/gg/internal/go)
 
 	go vet $(subpackages)
 

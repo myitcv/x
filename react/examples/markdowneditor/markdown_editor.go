@@ -7,7 +7,7 @@ import (
 	"myitcv.io/remarkable"
 )
 
-//go:generate reactGen
+//go:generate gobin -m -run myitcv.io/react/cmd/reactGen
 
 // MarkdownEditorDef is the definition of the MarkdownEditor component
 type MarkdownEditorDef struct {

@@ -19,7 +19,7 @@ import (
 )
 
 const (
-	stateGenCmd = "stateGen"
+	stateGenCmd = "myitcv.io/react/cmd/stateGen"
 )
 
 var (

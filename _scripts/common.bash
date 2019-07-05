@@ -48,13 +48,7 @@ then
 	export PATH="$HOME/go/bin:$PATH"
 fi
 
-# We assume that PATH will have been setup in such a way as to leave
-# the correct version of go in place. This allows us to test multiple
-# versions of Go via CI or to "pin" via go version, e.g. the logic that
-# sets up our _vendor GOPATH or not:
-source "${BASH_SOURCE%/*}/setupGOPATH.bash"
-
-# TODO switch to using gg
+# TODO switch to using gogenerate
 gg="go generate"
 
 # *****************************************

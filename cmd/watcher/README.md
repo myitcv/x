@@ -17,7 +17,7 @@ go get -u myitcv.io/cmd/watcher
 <!-- END -->
 
 
-<!-- __TEMPLATE: sh -c "${DOLLAR}(go list -f '{{.ImportPath}}' | xargs basename) -h"
+<!-- __TEMPLATE: gobin -m -run . -h
 ### Usage
 
 ```

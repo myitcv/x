@@ -1,5 +1,6 @@
-//go:generate sortGen
 package main
+
+//go:generate gobin -m -run myitcv.io/sorter/cmd/sortGen
 
 import mysorter "myitcv.io/sorter"
 

@@ -59,7 +59,7 @@ var (
 	fOnline = flag.Bool("online", false, "run ONLINE blocks")
 )
 
-//go:generate pkgconcat -out gen_cliflag.go myitcv.io/_tmpls/cliflag
+//go:generate gobin -m -run myitcv.io/cmd/pkgconcat -out gen_cliflag.go myitcv.io/_tmpls/cliflag
 
 type stateFn func() stateFn
 
@@ -123,6 +123,9 @@ When called with no file arguments, mdreplace works with stdin
 						wg.Done()
 					}()
 					args := []string{os.Args[0]}
+					if cmd, ok := os.LookupEnv("MDREPLACE_CMD"); ok {
+						args = strings.Fields(cmd)
+					}
 					if *fWrite {
 						args = append(args, "-w")
 					}

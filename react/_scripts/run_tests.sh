@@ -14,18 +14,13 @@ cd "${BASH_SOURCE%/*}/.."
 
 ./_scripts/webpack_deps.sh
 
-for i in $(cat .vendored_bin_deps .bin_deps)
-do
-	go install $i ##
-done
-
 sub_git_files | gen_files | xargs rm -f
 
 {
 	pushd examples/sites/helloworld
 
 	rm -f *.{go,html}
-	reactGen -init minimal
+	gobin -m -run myitcv.io/react/cmd/reactGen -init minimal
 
 	popd
 }
@@ -34,29 +29,21 @@ sub_git_files | gen_files | xargs rm -f
 	pushd examples/sites/helloworldbootstrap
 
 	rm -f *.{go,html}
-	reactGen -init bootstrap
+	gobin -m -run myitcv.io/react/cmd/reactGen -init bootstrap
 
 	popd
 }
 
 go generate $(subpackages)
-
-install_main_go $(subpackages)
-
-# TODO remove once we have Go 1.11
-install_deps $(subpackages)
-
-# we install the deps above because one of the reactVet tests
-# requires the deps to be present
 go test $(subpackages)
 
 # TODO work out a better way of excluding the cmd packages
 # or making them exclude themselves by virtue of a build tag
-gjbt $(subpackages | grep -v 'myitcv.io/react/cmd/')
+gobin -m -run myitcv.io/cmd/gjbt $(subpackages | grep -v 'myitcv.io/react/cmd/')
 
 go vet $(subpackages)
-reactVet $(subpackages)
-immutableVet $(subpackages)
+gobin -m -run myitcv.io/react/cmd/reactVet $(subpackages)
+gobin -m -run myitcv.io/immutable/cmd/immutableVet $(subpackages)
 
 # We need to explicitly test the generated test files
 # because these are not found by go list

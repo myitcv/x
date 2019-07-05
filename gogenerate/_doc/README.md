@@ -66,9 +66,9 @@ A non-idempotent generator will generally be caught by regenerating files as par
 
 ### Tip: Generate code from generated output
 
-It is entirely legitimate to generate code that itself becomes a source for a further code generation iteration. Use something like [`gg`](https://github.com/myitcv/gg) to automate the chaining and iteration towards a fixed point.
+It is entirely legitimate to generate code that itself becomes a source for a further code generation iteration. Use something like [`gogenerate`](https://myitcv.io/cmd/gogenerate) to automate the chaining and iteration towards a fixed point.
 
-Equally, it is entirely possible to use generators in the construction of other generators. The only constraint here is that the dependency graph is not (currently) calculated automatically by `gg`.'
+Equally, it is entirely possible to use generators in the construction of other generators. The only constraint here is that the dependency graph is not (currently) calculated automatically by `gogenerate`.'
 
 ### Tip: Use a common logging verbosity flag
 
@@ -76,7 +76,7 @@ All generators should ideally be able to understand a well-defined, common log v
 
 ### TODO: flesh out these points
 
-* New behaviour of `gg` with respect to deleting untyped gen files
+* New behaviour of `gogenerate` with respect to deleting untyped gen files
 * Agree common flags for being verbose... e.g. `-ggv=warning` then use argument expansion (but keep it simple) - select from info, warning, error, and fatal
 * Define whether a generator is package level; that is it only needs to be invoked once (because it scan's the entire package), file level, or other (type level etc)
 * If the template for the generation includes references to any types defined in external packages then it makes sense to do some sort of file-based approach... because this way you can trivially have a generated equivalent that has the same imports
@@ -85,12 +85,12 @@ All generators should ideally be able to understand a well-defined, common log v
 * Have generators log with a prefix of the generator name (for all lines of output)
 * Refer to github.com/myitcv/gogenerate package
 * Document that `sortGen` and `immutableGen` are package level generators
-* Generator should never have to worry about removing files... leave that to `gg`
-* Format the output... because it's nice to be able to read the generated output. Indeed best to `imports` format it, otherwise if you do that as part of wider CI-esque script the files can change _outside_ of `gg`... which means that if you end up re-running `gg` immediately afterwards it detects changes that didn't previously exist. If the formatting fails, write the unformatted code (so it can be inspected) and log a message to that effect
+* Generator should never have to worry about removing files... leave that to `gogenerate`
+* Format the output... because it's nice to be able to read the generated output. Indeed best to `imports` format it, otherwise if you do that as part of wider CI-esque script the files can change _outside_ of `gogenerate`... which means that if you end up re-running `gogenerate` immediately afterwards it detects changes that didn't previously exist. If the formatting fails, write the unformatted code (so it can be inspected) and log a message to that effect
 * When `go generate` says it will run with the package name, it really means the name; not the import path
 * Different level generators; determines where you need to put `go generate` directive for a given generator:
   * Declaration (e.g. type, function, method, const etc) - appears on/in/against declarations that are to be considered, e.g. `stringer`
   * File - appears in files which are to be considered `keyGen`
   * Package - appears at the file scope (potentially multiple times) but is then run _once) on all files in the package (hence making the multiple appearances redundant)
 * Making generators package based has the advantage of speed; invoked less times per package...
-* Comment on why `gogenerate.DefaultLogLevel` needs to exist; interplay of `go generate` command (argument) parsing and the `gg` advice on passing log levels to generators
+* Comment on why `gogenerate.DefaultLogLevel` needs to exist; interplay of `go generate` command (argument) parsing and the `gogenerate` advice on passing log levels to generators

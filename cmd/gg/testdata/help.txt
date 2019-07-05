@@ -1,2 +1,0 @@
-! gg -help
-stderr 'gg is a cache-based wrapper around go generate directives'

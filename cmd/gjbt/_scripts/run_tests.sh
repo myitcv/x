@@ -8,11 +8,6 @@ source "$(git rev-parse --show-toplevel)/_scripts/common.bash"
 # ensure we are in the right directory
 cd "${BASH_SOURCE%/*}/.."
 
-for i in $(cat .vendored_bin_deps .bin_deps)
-do
-	go install $i
-done
-
 google-chrome --version
 
 go test $(subpackages)

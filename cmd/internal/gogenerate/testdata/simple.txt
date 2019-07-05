@@ -1,0 +1,114 @@
+# A simple set of tests on command, gobin global, and gobin -m generators.
+# Verifies that on the second run no generation happens at all. The generator
+# is outside of the intial dependency set, hence a second call to go list is
+# required to resolve those deps
+
+# check that tests don't succeed
+! go test ./...
+stderr 'undefined: Title'
+
+# for the comamnd-based directive
+go install example.com/copy3
+
+# first run
+gogenerate -p 1 -trace ./...
+cmpenv stderr trace1
+go test ./...
+
+# tidy up
+rmglob p1/gen_*.go
+! exists p1/gen_input1_copy1.go p1/copy1_run1
+
+# second run
+gogenerate -p 1 -trace ./...
+cmpenv stderr trace2
+go test ./...
+
+-- go.mod --
+module mod.com
+
+require example.com v1.0.0
+
+-- tools.go --
+// +build tools
+
+package tools
+
+require _ "example.com/copy1"
+
+-- p1/input1 --
+package p1
+
+const Name = "simple"
+
+-- p1/input2 --
+package p1
+
+const Surname = "problem"
+
+-- p1/input3 --
+package p1
+
+const Title = "our"
+
+-- p1/p1.go --
+package p1
+
+//go:generate gobin -m -run example.com/copy1 input1
+//go:generate gobin -run example.com/copy2 input2
+//go:generate copy3 input3
+
+const Result = Title + Name + Surname
+
+-- p1/p1_test.go --
+package p1
+
+-- p1/x_test.go --
+package p1_test
+
+//go:generate echo hello
+
+-- p2/p2.go --
+package p2
+
+import _ "mod.com/p1"
+
+-- trace1 --
+go list -deps -test -json ./...
+go list -deps -json example.com/copy1
+hash {Pkg: example.com/copyimpl}
+hash {Pkg: example.com/copy1}
+hash gobinModDep gobinModDep: example.com/copy1 (example.com/copy1)
+hash gobinGlobalDep gobinGlobalDep: $WORK/home/.cache/gobin/example.com/@v/v1.0.0/example.com/copy2/copy2
+hash commandDep commandDep: copy3
+generate {Pkg: mod.com/p1 [G]}
+run generator: gobin -m -run example.com/copy1 input1
+ran generator: gobin -m -run example.com/copy1 input1
+run generator: gobin -run example.com/copy2 input2
+ran generator: gobin -run example.com/copy2 input2
+run generator: copy3 input3
+ran generator: copy3 input3
+generate {Pkg: mod.com/p1 [G]}
+run generator: gobin -m -run example.com/copy1 input1
+ran generator: gobin -m -run example.com/copy1 input1
+run generator: gobin -run example.com/copy2 input2
+ran generator: gobin -run example.com/copy2 input2
+run generator: copy3 input3
+ran generator: copy3 input3
+hash {Pkg: mod.com/p1 [G]}
+hash {Pkg: mod.com/p2 [G]}
+hash commandDep commandDep: echo
+generate {Pkg: mod.com/p1_test [mod.com/p1.test] [G]}
+run generator: echo hello
+ran generator: echo hello
+-- trace2 --
+go list -deps -test -json ./...
+go list -deps -json example.com/copy1
+hash {Pkg: example.com/copyimpl}
+hash {Pkg: example.com/copy1}
+hash gobinModDep gobinModDep: example.com/copy1 (example.com/copy1)
+hash gobinGlobalDep gobinGlobalDep: $WORK/home/.cache/gobin/example.com/@v/v1.0.0/example.com/copy2/copy2
+hash commandDep commandDep: copy3
+hash {Pkg: mod.com/p1 [G]}
+hash {Pkg: mod.com/p2 [G]}
+hash commandDep commandDep: echo

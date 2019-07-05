@@ -69,7 +69,7 @@ func showUsage() {
 	fmt.Fprintf(os.Stderr, "\nOnly options marked with [*] are valid in die mode\n")
 }
 
-//go:generate pkgconcat -out gen_cliflag.go myitcv.io/_tmpls/cliflag
+//go:generate gobin -m -run myitcv.io/cmd/pkgconcat -out gen_cliflag.go myitcv.io/_tmpls/cliflag
 
 func main() {
 	setupAndParseFlags("")

@@ -11,7 +11,7 @@ import (
 	"golang.org/x/oauth2"
 )
 
-//go:generate pkgconcat -out gen_cliflag.go myitcv.io/_tmpls/cliflag
+//go:generate gobin -m -run myitcv.io/cmd/pkgconcat -out gen_cliflag.go myitcv.io/_tmpls/cliflag
 
 const (
 	envGithubUser = "GITHUB_USERNAME"

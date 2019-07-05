@@ -6,6 +6,7 @@ then
 	return
 fi
 
+source "${BASH_SOURCE%/*}/commonFunctions.bash"
 source "${BASH_SOURCE%/*}/commonEnv.bash"
 
 autostash_or_export PATH="$(readlink -m "${BASH_SOURCE%/*}/../.bin"):$CHROMEDRIVER_INSTALL_DIR/$CHROMEDRIVER_VERSION:$PROTOBUF_INSTALL_DIR/$PROTOBUF_VERSION/bin:$PATH"

@@ -1,0 +1,42 @@
+# Test for circular import dependencies (via xtest)
+
+# zero run
+gogenerate -p 1 -trace ./...
+cmpenv stderr trace1
+
+# Initial state
+! exists $WORK/gogeneratecache/trim.txt
+
+# Now override cache location
+env GOGENERATECACHE=$WORK/gogeneratecache
+
+# first run
+gogenerate -p 1 -trace ./...
+cmpenv stderr trace1
+
+# verify the cache was created
+exists $WORK/gogeneratecache/trim.txt
+
+# second run
+gogenerate -p 1 -trace ./...
+cmpenv stderr trace2
+
+-- go.mod --
+module mod.com
+
+-- p1/p1.go --
+package p1
+
+//go:generate echo p1/p1.go
+
+-- trace1 --
+go list -deps -test -json ./...
+hash commandDep commandDep: echo
+generate {Pkg: mod.com/p1 [G]}
+run generator: echo p1/p1.go
+ran generator: echo p1/p1.go
+hash {Pkg: mod.com/p1 [G]}
+-- trace2 --
+go list -deps -test -json ./...
+hash commandDep commandDep: echo
+hash {Pkg: mod.com/p1 [G]}

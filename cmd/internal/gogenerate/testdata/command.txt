@@ -1,0 +1,55 @@
+# A long test that demonstates via a time trace the benefits that the gogenerate artefact cache
+# can bring
+
+# general setup
+env HOME=$WORK/home
+env PATH=$GOPATH/bin:$PATH
+
+# for the comamnd-based directive
+go install example.com/copy1
+
+# initial sanity check
+! go test
+stderr 'undefined: Name'
+
+# first round
+gogenerate -traceTime ./...
+
+# test output
+go test
+
+# remove generated files
+rmglob gen_*.go
+! go test
+stderr 'undefined: Name'
+
+# second round
+gogenerate -traceTime ./...
+
+# test output again
+go test
+
+-- go.mod --
+module mod
+
+-- input1 --
+package main
+
+const Name = "simple"
+
+-- main.go --
+package main
+
+//go:generate copy1 input1 $COMMANDTESTSLEEP
+
+func main() {
+  println(Name)
+}
+
+-- main_test.go --
+package main
+
+-- ignored.go --
+// +build ignore
+
+package main

@@ -2,7 +2,7 @@ package example
 
 import "fmt"
 
-//go:generate immutableGen
+//go:generate gobin -m -run myitcv.io/immutable/cmd/immutableGen
 
 // via go generate, this template is code generated into the immutable Person
 // struct within the same package

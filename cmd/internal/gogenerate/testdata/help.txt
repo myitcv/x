@@ -1,0 +1,2 @@
+! gogenerate -help
+stderr 'gogenerate is a cache-based wrapper around go generate directives'
