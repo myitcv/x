@@ -96,6 +96,10 @@ func main() {
 						if strings.HasPrefix(refname, "tag: ") {
 							continue
 						}
+						parts := strings.Split(refname, "/")
+						if len(parts) > 1 && parts[len(parts)-2] != *fRemote {
+							continue
+						}
 						commitsToNames[c][refname] = true
 						namesToCommits[refname] = c
 					}
