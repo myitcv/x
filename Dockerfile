@@ -61,10 +61,12 @@ RUN echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >
   apt-get -qq -y install google-chrome-${CHROME_CHANNEL}
 
 # Install chromedriver
+ARG CHROMEDRIVER_77_VERSION
 ARG CHROMEDRIVER_76_VERSION
 ARG CHROMEDRIVER_75_VERSION
 RUN mkdir /usr/bin/chromedriver
 
+RUN bash -c '([[ "$(google-chrome --version)" =~ [[:space:]]77\. ]] && curl -s -o /usr/bin/chromedriver/chrome_driver.zip https://chromedriver.storage.googleapis.com/$CHROMEDRIVER_77_VERSION/chromedriver_linux64.zip) || true'
 RUN bash -c '([[ "$(google-chrome --version)" =~ [[:space:]]76\. ]] && curl -s -o /usr/bin/chromedriver/chrome_driver.zip https://chromedriver.storage.googleapis.com/$CHROMEDRIVER_76_VERSION/chromedriver_linux64.zip) || true'
 RUN bash -c '([[ "$(google-chrome --version)" =~ [[:space:]]75\. ]] && curl -s -o /usr/bin/chromedriver/chrome_driver.zip https://chromedriver.storage.googleapis.com/$CHROMEDRIVER_75_VERSION/chromedriver_linux64.zip) || true'
 

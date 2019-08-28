@@ -8,14 +8,18 @@ notifications:
     on_success: change
     on_failure: always
 
+branches:
+  only:
+    - master
+
 env:
   global:
     - GO111MODULE=on
   matrix:
-    - CHROME_CHANNEL=beta GO_VERSION=go1.12.6
-    - CHROME_CHANNEL=beta GO_VERSION=go1.11.11
-    - CHROME_CHANNEL=stable GO_VERSION=go1.12.6
-    - CHROME_CHANNEL=stable GO_VERSION=go1.11.11
+    - CHROME_CHANNEL=beta GO_VERSION=go1.12.9
+    - CHROME_CHANNEL=beta GO_VERSION=go1.11.13
+    - CHROME_CHANNEL=stable GO_VERSION=go1.12.9
+    - CHROME_CHANNEL=stable GO_VERSION=go1.11.13
 
 services:
   - docker
