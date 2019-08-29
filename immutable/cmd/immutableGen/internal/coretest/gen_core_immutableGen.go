@@ -873,6 +873,124 @@ func (s *MyStruct) setSurname(n string) *MyStruct {
 }
 
 //
+// MySpecialStruct is an immutable type and has the following template:
+//
+// 	struct {
+// 		Key	MySpecialStructKey
+//
+// 		Name	string
+// 	}
+//
+type MySpecialStruct struct {
+	field_Key  MySpecialStructKey
+	field_Name string
+
+	mutable bool
+	__tmpl  *_Imm_MySpecialStruct
+}
+
+var _ immutable.Immutable = new(MySpecialStruct)
+var _ = new(MySpecialStruct).__tmpl
+
+func (s *MySpecialStruct) AsMutable() *MySpecialStruct {
+	if s.Mutable() {
+		return s
+	}
+
+	res := *s
+	res.field_Key.BumpVersion()
+	res.mutable = true
+	return &res
+}
+
+func (s *MySpecialStruct) AsImmutable(v *MySpecialStruct) *MySpecialStruct {
+	if s == nil {
+		return nil
+	}
+
+	if s == v {
+		return s
+	}
+
+	s.mutable = false
+	return s
+}
+
+func (s *MySpecialStruct) Mutable() bool {
+	return s.mutable
+}
+
+func (s *MySpecialStruct) WithMutable(f func(si *MySpecialStruct)) *MySpecialStruct {
+	res := s.AsMutable()
+	f(res)
+	res = res.AsImmutable(s)
+
+	return res
+}
+
+func (s *MySpecialStruct) WithImmutable(f func(si *MySpecialStruct)) *MySpecialStruct {
+	prev := s.mutable
+	s.mutable = false
+	f(s)
+	s.mutable = prev
+
+	return s
+}
+
+func (s *MySpecialStruct) IsDeeplyNonMutable(seen map[interface{}]bool) bool {
+	if s == nil {
+		return true
+	}
+
+	if s.Mutable() {
+		return false
+	}
+
+	if seen == nil {
+		return s.IsDeeplyNonMutable(make(map[interface{}]bool))
+	}
+
+	if seen[s] {
+		return true
+	}
+
+	seen[s] = true
+	return true
+}
+func (s *MySpecialStruct) Key() MySpecialStructKey {
+	return s.field_Key
+}
+
+// SetKey is the setter for Key()
+func (s *MySpecialStruct) SetKey(n MySpecialStructKey) *MySpecialStruct {
+	if s.mutable {
+		s.field_Key = n
+		return s
+	}
+
+	res := *s
+	res.field_Key.BumpVersion()
+	res.field_Key = n
+	return &res
+}
+func (s *MySpecialStruct) Name() string {
+	return s.field_Name
+}
+
+// SetName is the setter for Name()
+func (s *MySpecialStruct) SetName(n string) *MySpecialStruct {
+	if s.mutable {
+		s.field_Name = n
+		return s
+	}
+
+	res := *s
+	res.field_Key.BumpVersion()
+	res.field_Name = n
+	return &res
+}
+
+//
 // A is an immutable type and has the following template:
 //
 // 	struct {

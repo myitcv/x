@@ -10,7 +10,15 @@ import (
 	"text/template"
 )
 
-func isSpecialStruct(name string, st *types.Struct) bool {
+type specialType int
+
+const (
+	notSpecial specialType = iota
+	specialRegular
+	specialPrevious
+)
+
+func isSpecialStruct(name string, st *types.Struct) specialType {
 	// work out whether this is a special struct with a Key field
 	// pattern is:
 	//
@@ -23,7 +31,7 @@ func isSpecialStruct(name string, st *types.Struct) bool {
 	// two underlying type restrictions)
 
 	if st.NumFields() == 0 {
-		return false
+		return notSpecial
 	}
 
 	for i := 0; i < st.NumFields(); i++ {
@@ -33,12 +41,18 @@ func isSpecialStruct(name string, st *types.Struct) bool {
 			continue
 		}
 
+		// Not a pointer type
+		nt, ok := f.Type().(*types.Named)
+		if !ok {
+			continue
+		}
+
 		kst, ok := f.Type().Underlying().(*types.Struct)
 		if !ok {
 			continue
 		}
 
-		if kst.NumFields() != 2 {
+		if kst.NumFields() != 2 && kst.NumFields() != 3 {
 			continue
 		}
 
@@ -52,11 +66,42 @@ func isSpecialStruct(name string, st *types.Struct) bool {
 			continue
 		}
 
-		// we found it
-		return true
+		// we're special - just work out how special
+		if kst.NumFields() == 2 {
+			return specialRegular
+		}
+
+		prev := kst.Field(2)
+		if prev.Name() != "PrevVersion" {
+			continue
+		}
+
+		for i := 0; i < nt.NumMethods(); i++ {
+			m := nt.Method(i)
+			if m.Name() != "BumpVersion" {
+				continue
+			}
+
+			sig := m.Type().(*types.Signature)
+
+			pt, ok := sig.Recv().Type().(*types.Pointer)
+			if !ok || pt.Elem() != nt {
+				continue
+			}
+
+			if sig.Params().Len() != 0 {
+				continue
+			}
+
+			if sig.Results().Len() != 0 {
+				continue
+			}
+
+			return specialPrevious
+		}
 	}
 
-	return false
+	return notSpecial
 }
 
 func typeIsInvalid(t types.Type) bool {
