@@ -52,10 +52,3 @@ go test myitcv.io/react/cmd/stateGen/_testFiles/
 
 ensure_go_formatted $(sub_git_files | grep -v '^_talks/' | non_gen_go_files)
 ensure_go_gen_formatted $(sub_git_files | gen_go_files)
-
-if [ $(running_on_ci_server) == "yes" ]
-then
-	# off the back of https://github.com/myitcv/react/issues/116#issuecomment-380280847
-	# ensure that we can go get myitcv.io/react/... without _vendor
-	verifyGoGet myitcv.io/react/...
-fi
