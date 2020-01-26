@@ -20,7 +20,6 @@ require (
 	golang.org/x/net v0.0.0-20190311183353-d8887717615a
 	golang.org/x/oauth2 v0.0.0-20181017192945-9dcd33a902f4
 	golang.org/x/tools v0.0.0-20190328211700-ab21143f2384
-	google.golang.org/appengine v1.2.0 // indirect
 	gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127
 	gopkg.in/fsnotify/fsnotify.v1 v1.4.7
 	honnef.co/go/js/dom v0.0.0-20180323154144-6da835bec70f

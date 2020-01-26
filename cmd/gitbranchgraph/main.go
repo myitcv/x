@@ -70,7 +70,7 @@ func main() {
 				gmb = gmbs[0]
 			}
 
-			// get the chan from the merge base to the ref's commit
+			// get the chain from the merge base to the ref's commit
 			logCmd := exec.Command("git", "log", "--pretty=%H"+splitter+"%D", "--first-parent", fmt.Sprintf("%v~1..%v", gmb, commit))
 			var prevCommits []string
 			loglines := mustlines(logCmd)
@@ -139,6 +139,9 @@ func main() {
 		if len(labels) > 0 {
 			var ll []string
 			for l := range labels {
+				if _, ok := namesToCommits[path.Base(l)]; ok {
+					fontColor = "fontcolor=black"
+				}
 				ll = append(ll, l)
 			}
 			sort.Slice(ll, func(i, j int) bool {
@@ -158,13 +161,11 @@ func main() {
 				return cmp < 0
 			})
 			label = strings.Join(ll, "\n")
-			fontColor = "fontcolor=black"
 		}
 		options := []string{fmt.Sprintf("label=%q", label), fontColor}
 		if commit == currCommit {
 			options = append(options, "fillcolor=red", "style=filled")
 		}
-
 		f("%q [%v]\n", commit, strings.Join(options, ","))
 	}
 	sort.Slice(edges, func(i, j int) bool {
