@@ -7,41 +7,22 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"mvdan.cc/sh/syntax"
 	"myitcv.io/cmd/internal/bindmnt"
 )
 
-var _ flag.Value = (*dockerFlags)(nil)
-
-type dockerFlags []string
-
-func (d *dockerFlags) String() string {
-	return strings.Join(*d, " ")
-}
-
-func (d *dockerFlags) Set(v string) error {
-	*d = append(*d, v)
-	return nil
-}
-
 var (
-	debugOut     = false
-	stdOut       = false
-	fDockerFlags dockerFlags
-
-	fDebug      = flag.Bool("debug", false, "Print debug information for egrunner")
-	fOut        = flag.String("out", "json", "output format; json(default)|debug|std")
-	fGoRoot     = flag.String("goroot", "", "path to GOROOT to use")
-	fGoProxy    = flag.String("goproxy", "", "path to GOPROXY to use")
-	fGithubCLI  = flag.String("githubcli", "", "path to githubcli program")
-	fEnvSubVars = flag.String("envsubst", "HOME,GITHUB_ORG,GITHUB_USERNAME", "comma-separated list of env vars to expand in commands")
+	debugOut = false
+	stdOut   = false
 )
 
 const (
@@ -62,40 +43,81 @@ const (
 	outDebug = "debug"
 )
 
-type block string
+func main() { os.Exit(main1()) }
 
-func (b *block) String() string {
-	if b == nil {
-		return "nil"
+func main1() int {
+	err := mainerr()
+	if err == nil {
+		return 0
 	}
-
-	return string(*b)
+	switch err := err.(type) {
+	case usageErr:
+		fmt.Fprintln(os.Stderr, err.Error())
+		err.flagSet.Usage()
+		return 2
+	case flagErr:
+		return 2
+	}
+	fmt.Fprintln(os.Stderr, err)
+	return 1
 }
 
-func main() {
-	*fGoProxy = os.Getenv("EGRUNNER_GOPROXY")
+type context struct {
+	fDockerRunFlags   dockerFlags
+	fDockerBuildFlags dockerFlags
 
-	flag.Var(&fDockerFlags, "df", "flag to pass to docker")
-	flag.Parse()
+	fDebug      *bool
+	fOut        *string
+	fGoRoot     *string
+	fGoProxy    *string
+	fGithubCLI  *string
+	fEnvSubVars *string
+	fUID        *bool
+	fGID        *bool
 
-	if err := run(); err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
-	}
+	dockerfile string
+	script     string
 }
 
-func run() error {
-	if *fGoRoot == "" {
-		*fGoRoot = os.Getenv("EGRUNNER_GOROOT")
+func mainerr() error {
+	fs := flag.NewFlagSet("flags", flag.ContinueOnError)
+	fs.Usage = usage{fs}.usage
+	c := &context{
+		fDebug:      fs.Bool("debug", false, "Print debug information for egrunner"),
+		fOut:        fs.String("out", "json", "output format; json(default)|debug|std"),
+		fGoRoot:     fs.String("goroot", os.Getenv("EGRUNNER_GOROOT"), "path to GOROOT to use"),
+		fGoProxy:    fs.String("goproxy", os.Getenv("EGRUNNER_GOPROXY"), "path to GOPROXY to use"),
+		fGithubCLI:  fs.String("githubcli", "", "path to githubcli program"),
+		fEnvSubVars: fs.String("envsubst", "HOME,GITHUB_ORG,GITHUB_USERNAME", "comma-separated list of env vars to expand in commands"),
+		fUID:        fs.Bool("uid", false, "Set UID as a build arg for docker build"),
+		fGID:        fs.Bool("gid", false, "Set GID as a build arg for docker build"),
+	}
+	fs.Var(&c.fDockerRunFlags, "drf", "flag to pass to docker run")
+	fs.Var(&c.fDockerBuildFlags, "dbf", "flag to pass to docker build")
+
+	if err := fs.Parse(os.Args[1:]); err != nil {
+		return flagErr(err.Error())
 	}
 
+	args := fs.Args()
+	if len(args) != 2 {
+		return usageErr{"incorrect arguments", fs}
+	}
+
+	c.dockerfile = args[0]
+	c.script = args[1]
+
+	return c.run()
+}
+
+func (c *context) run() error {
 	type rewrite struct {
 		p *regexp.Regexp
 		r string
 	}
 
 	var rewrites []rewrite
-	envsubvars := strings.Split(*fEnvSubVars, ",")
+	envsubvars := strings.Split(*c.fEnvSubVars, ",")
 
 	applyRewrite := func(s string) string {
 		for _, r := range rewrites {
@@ -105,15 +127,15 @@ func run() error {
 		return s
 	}
 
-	switch *fOut {
+	switch *c.fOut {
 	case outJson, outStd, outDebug:
 	default:
-		return errorf("unknown option to -out: %v", *fOut)
+		return errorf("unknown option to -out: %v", *c.fOut)
 	}
 
-	debugOut = *fOut == outDebug || debug || *fDebug
+	debugOut = *c.fOut == outDebug || debug || *c.fDebug
 	if !debugOut {
-		stdOut = *fOut == outStd
+		stdOut = *c.fOut == outStd
 	}
 
 	toRun := new(bytes.Buffer)
@@ -160,8 +182,8 @@ comment()
 `)
 
 	var ghcli string
-	if *fGithubCLI != "" {
-		if abs, err := filepath.Abs(*fGithubCLI); err == nil {
+	if *c.fGithubCLI != "" {
+		if abs, err := filepath.Abs(*c.fGithubCLI); err == nil {
 			ghcli = abs
 		}
 	} else {
@@ -196,11 +218,7 @@ FinishedLookupGithubCLI:
 		// will be able to work it out (hopefully)
 	}
 
-	if len(flag.Args()) != 1 {
-		return errorf("expected a single argument script file to run")
-	}
-
-	fn := flag.Arg(0)
+	fn := c.script
 
 	fi, err := os.Open(fn)
 	if err != nil {
@@ -472,7 +490,7 @@ FinishedLookupGithubCLI:
 		}
 	}
 
-	for _, df := range fDockerFlags {
+	for _, df := range fDockerRunFlags {
 		parts := strings.SplitN(df, "=", 2)
 		switch len(parts) {
 		case 1:
@@ -495,20 +513,20 @@ FinishedLookupGithubCLI:
 		}
 	}
 
-	if *fGoRoot != "" {
-		if egr, err := bindmnt.Resolve(*fGoRoot); err == nil {
+	if *c.fGoRoot != "" {
+		if egr, err := bindmnt.Resolve(*c.fGoRoot); err == nil {
 			args = append(args, "-v", fmt.Sprintf("%v:/go", egr))
 		}
 	}
 
-	if filepath.IsAbs(*fGoProxy) {
-		egp, err := bindmnt.Resolve(*fGoProxy)
+	if filepath.IsAbs(*c.fGoProxy) {
+		egp, err := bindmnt.Resolve(*c.fGoProxy)
 		if err != nil {
-			return fmt.Errorf("failed to resolve bindmnt resolve %v: %v", *fGoProxy, err)
+			return fmt.Errorf("failed to resolve bindmnt resolve %v: %v", *c.fGoProxy, err)
 		}
 		args = append(args, "-v", fmt.Sprintf("%v:/goproxy", egp), "-e", "GOPROXY=file:///goproxy")
 	} else {
-		args = append(args, "-e", "GOPROXY="+*fGoProxy)
+		args = append(args, "-e", "GOPROXY="+*c.fGoProxy)
 	}
 
 	// build docker image
@@ -521,14 +539,33 @@ FinishedLookupGithubCLI:
 			debugf("Removing temp dir %v\n", td)
 			os.RemoveAll(td)
 		}()
-		df := filepath.Join(td, "Dockerfile")
-		udf := fmt.Sprintf(userDockerfile, os.Getuid(), os.Getgid())
-		if err := ioutil.WriteFile(df, []byte(udf), 0644); err != nil {
-			return errorf("failed to write temp Dockerfile %v: %v", df, err)
+		idf, err := os.Open(c.dockerfile)
+		if err != nil {
+			return errorf("failed to open Docker file %v: %v", c.dockerfile, err)
+		}
+		odfn := filepath.Join(td, "Dockerfile")
+		odf, err := os.Create(odfn)
+		if err != nil {
+			return errorf("failed to create temp Dockerfile %v: %v", odfn, err)
+		}
+		if _, err := io.Copy(odf, idf); err != nil {
+			return errorf("failed to copy %v to %v: %v", c.dockerfile, odfn, err)
+		}
+		if err := odf.Close(); err != nil {
+			return errorf("failed to close %v: %v", odfn, err)
 		}
 
+		buildArgs := []string{"docker", "build", "-q"}
+		if *c.fUID {
+			buildArgs = append(buildArgs, "--build-arg=UID="+strconv.Itoa(os.Getuid()))
+		}
+		if *c.fGID {
+			buildArgs = append(buildArgs, "--build-arg=GID="+strconv.Itoa(os.Getgid()))
+		}
+		buildArgs = append(buildArgs, td)
+
 		var stdout, stderr bytes.Buffer
-		dbcmd := exec.Command("docker", "build", "-q", td)
+		dbcmd := exec.Command(buildArgs[0], buildArgs[1:]...)
 		dbcmd.Stdout = &stdout
 		dbcmd.Stderr = &stderr
 		debugf("building docker image with %v\n", strings.Join(dbcmd.Args, " "))
@@ -685,37 +722,3 @@ func debugf(format string, args ...interface{}) {
 		fmt.Fprintf(os.Stderr, "+ "+format, args...)
 	}
 }
-
-const userDockerfile = `
-FROM golang
-
-ENV PATH=/vbash/bin:/home/gopher/.local/bin:/home/gopher/gopath/bin:$PATH
-ENV GOPATH=/home/gopher/gopath
-
-RUN groupadd -g %[2]v gopher && \
-    adduser --uid %[1]v --gid %[2]v --disabled-password --gecos "" gopher
-
-# install sudo
-RUN apt-get update
-RUN apt-get install -y sudo tree gettext-base
-
-# enable sudo
-RUN usermod -aG sudo gopher
-RUN echo "gopher ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/gopher
-
-RUN apt-get update
-RUN apt-get install -y apt-transport-https ca-certificates curl gnupg2 software-properties-common
-RUN curl -fsSL https://download.docker.com/linux/debian/gpg | apt-key add -
-RUN add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/debian $(lsb_release -cs) stable"
-RUN apt-get update
-RUN apt-get install -y docker-ce
-RUN apt-get install -y graphviz
-
-RUN usermod -aG docker gopher
-
-USER gopher
-
-RUN mkdir -p $GOPATH/bin
-RUN curl -fsSLo $GOPATH/bin/gobin https://github.com/myitcv/gobin/releases/download/v0.0.3/linux-amd64
-RUN chmod 755 $GOPATH/bin/gobin
-`
