@@ -25,7 +25,7 @@ For consumers of the package:
 * [Examples](examples.md)
 * [Creating a GopherJS React app](creating_app.md)
 * [Golang UK talk: _"Creating interactive frontend apps with GopherJS and React."_](https://youtu.be/emoUiK-GHkE)
- ([slides](https://blog.myitcv.io/gopherjs_examples_sites/present/?url=https://raw.githubusercontent.com/myitcv/x/master/react/_talks/2017/golang_uk.slide&hideAddressBar=true))
+ ([slides](https://myitcv.github.io/gopherjs_examples_sites/present/?url=https://raw.githubusercontent.com/myitcv/x/master/react/_talks/2017/golang_uk.slide&hideAddressBar=true))
 * [Gotchas](gotchas.md) (including significant differences to the React API)
 
 For developers of this package:
