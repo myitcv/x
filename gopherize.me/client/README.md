@@ -5,4 +5,4 @@ and React (via [`myitcv.io/react`](https://myitcv.io/react))
 
 Hosted version can be found here:
 
-https://blog.myitcv.io/gopherize.me_site/
+https://myitcv.github.io/gopherize.me_site/

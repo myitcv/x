@@ -6,7 +6,7 @@ This changelog was created when the code used to live at https://github.com/myit
 
 * The ability to write `Render()` methods with specific return types (as opposed to `react.Element`). This then allows us to constraint the types of children a component can accept, e.g. `Ul` require that its children implement [`RendersLi`](https://godoc.org/myitcv.io/react#Ul).
 * Support for `data-*` and `aria-*` attributes
-* Added the [Syntax Viewer](https://blog.myitcv.io/gopherjs_examples_sites/syntaxviewer/) example
+* Added the [Syntax Viewer](https://myitcv.github.io/gopherjs_examples_sites/syntaxviewer/) example
 * Initial cut of `coreGen` to automate the coding of the `myitcv.io/react` core elements
 
 ### [2017-12-08](https://github.com/myitcv/react/tree/bcaf55421745acd10f22033c3dbe6faa2215b5b5) - early Christmas present
@@ -25,21 +25,21 @@ This changelog was created when the code used to live at https://github.com/myit
 * **Breaking change**: introduction of element types to complement component definitions. See https://github.com/myitcv/react/pull/73 for more detail
 * Add various missing HTML element: `<h4>`, `<i>`, `<footer>`, `<img>`
 * Add blog examples to repo so we can be sure they compile
-* Another fun example available: https://blog.myitcv.io/gopherize.me_site/
+* Another fun example available: https://myitcv.github.io/gopherize.me_site/
 
 ### [2017-05-02](https://github.com/myitcv/react/tree/890c91fce3c81cc2fec2d58a78d20d8a44ff9e67) - CSS, `stateGen` and JSX goodies
 
 * Initial cut of [CSS](https://godoc.org/myitcv.io/react#CSS) support for core HTML components
 * **Breaking change**: refactor events to be interface based: [#53](https://github.com/myitcv/react/pull/53)
-* By kind permission of [@tjholowaychuk](https://twitter.com/tjholowaychuk), included a basic component-based version of his [Latency Checker](https://blog.myitcv.io/gopherjs_examples_sites/latency/) as an example
+* By kind permission of [@tjholowaychuk](https://twitter.com/tjholowaychuk), included a basic component-based version of his [Latency Checker](https://myitcv.github.io/gopherjs_examples_sites/latency/) as an example
 * Include Github source ribbon links on all example pages for convenience
-* First cut of an [global state example app](https://blog.myitcv.io/gopherjs_examples_sites/globalstate/) that uses [`stateGen`](https://github.com/myitcv/x/tree/master/react/cmd/stateGen): [#61](https://github.com/myitcv/react/pull/61)
+* First cut of an [global state example app](https://myitcv.github.io/gopherjs_examples_sites/globalstate/) that uses [`stateGen`](https://github.com/myitcv/x/tree/master/react/cmd/stateGen): [#61](https://github.com/myitcv/react/pull/61)
 * First cut of JSX-like support. All components needing constant blocks of HTML updated to use `jsx.HTML`, `jsx.HTMLElem` or `jsx.Markdown` (see the [latency checker for example](https://github.com/myitcv/react/blob/890c91fce3c81cc2fec2d58a78d20d8a44ff9e67/examples/sites/latency/latency.go#L78-L83)). Also includes a first cut of `reactVet` to ensure correct usage of `myitcv.io/react/jsx`:  [#65](https://github.com/myitcv/react/pull/65)
 
 ### [2017-04-19](https://github.com/myitcv/react/tree/827b0efd23aab5fb50b528f6204d5d89e2db7272) - moved to `myitcv.io/react`
 
 * **Breaking change:** moved package to [`myitcv.io/react`](https://myitcv.io/react)
-* Use [Highlight.js](https://highlightjs.org/) to highlight code in the [examples showcase](https://blog.myitcv.io/gopherjs_examples_sites/examplesshowcase/)
+* Use [Highlight.js](https://highlightjs.org/) to highlight code in the [examples showcase](https://myitcv.github.io/gopherjs_examples_sites/examplesshowcase/)
 * Initial cut of support for [Preact](https://github.com/developit/preact) - thanks to [@developit](https://github.com/developit) for the pointers on `preact-compat` and [@tjholowaychuk](https://twitter.com/tjholowaychuk) for the initial inspiration to look into Preact.
 
 ### [2017-04-13](https://github.com/myitcv/react/tree/648bf1950ae20f0ad155e4faabc276252c7f3ff9) - proper props
