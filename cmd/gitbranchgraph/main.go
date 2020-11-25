@@ -57,7 +57,7 @@ func main() {
 		wg.Add(1)
 		go func() {
 			// get the merge base
-			gmbCmd := exec.Command("git", "merge-base", "--fork-point", path.Join(*fRemote, "master"), commit)
+			gmbCmd := exec.Command("git", "merge-base", "--fork-point", *fRemote, commit)
 
 			// default the merge-base to itself, because it we can't find a merge base
 			// we just want to see whether we have any ref names for the commit
