@@ -5,7 +5,7 @@
   "keywords": [],
   "author": "",
   "devDependencies": {
-    "create-react-class": "15.6.2",
+    "create-react-class": "^15.7.0",
     "react": "^16.9.0",
     "react-dom": "16.7.0",
     "webpack": "^4.39.3",
