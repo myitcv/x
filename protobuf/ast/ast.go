@@ -290,6 +290,8 @@ type Enum struct {
 	Name     string
 	Values   []*EnumValue
 
+	Deprecated    bool
+
 	Up FileOrMessage // either *File or *Message
 }
 
