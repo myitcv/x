@@ -4,8 +4,6 @@
 package main
 
 import (
-	"bufio"
-	"errors"
 	"flag"
 	"fmt"
 	"log"
@@ -131,64 +129,12 @@ func findVersion(pid uint64, target string) (string, error) {
 	if m == nil {
 		return "", fmt.Errorf("failed to match target in %q", parts[1])
 	}
-	return filepath.Base(m[2]), nil
-}
-
-func goVersion(pid uint64) (string, error) {
-	out, err := exec.Command("findmnt", "-l", "/home/myitcv/gos", "-N", fmt.Sprintf("%d", pid)).CombinedOutput()
-	if err != nil {
-		return "", err
+	// If we have a /myitcv/.$LANG prefix, then use the base,
+	// otherwise assume tip
+	lang := filepath.Base(target)
+	fmt.Println("======", m[2], filepath.Join("/myitcv", "."+lang)+string(os.PathSeparator))
+	if strings.HasPrefix(m[2], filepath.Join("/myitcv", "."+lang)+string(os.PathSeparator)) {
+		return filepath.Base(m[2]), nil
 	}
-
-	lines := strings.Split(strings.TrimSpace(string(out)), "\n")
-	if len(lines) != 2 {
-		return "", fmt.Errorf("failed to find gos mount")
-	}
-	line := lines[1]
-
-	parts := strings.Fields(line)
-
-	if len(parts) != 4 {
-		return "", fmt.Errorf("unexpected format of findmnt output: %q", out)
-	}
-
-	if parts[0] != "/home/myitcv/gos" {
-		return "", fmt.Errorf("failed to find gos mount in output: %q", out)
-	}
-
-	// parts[1] should now be like /dev/sda1[/myitcv/.gos/1.20.4]
-	targetRegexp := regexp.MustCompile(`^(.+)\[(.+)\]$`)
-	m := targetRegexp.FindStringSubmatch(parts[1])
-	if m == nil {
-		return "", fmt.Errorf("failed to match target in %q", parts[1])
-	}
-	return filepath.Base(m[2]), nil
-}
-
-func nodeVersion(pid uint64) (string, error) {
-	mi, err := os.Open(fmt.Sprintf("/proc/%d/mountinfo", pid))
-	if err != nil {
-		return "", err
-	}
-	defer mi.Close()
-
-	root := ""
-
-	sc := bufio.NewScanner(mi)
-
-	for sc.Scan() {
-		line := sc.Text()
-		parts := strings.Fields(line)
-
-		if parts[4] == "/home/myitcv/nodes" {
-			root = parts[3]
-			break
-		}
-	}
-
-	if strings.HasPrefix(root, "/home/myitcv/.nodes/") {
-		return strings.TrimPrefix(root, "/home/myitcv/.nodes/"), nil
-	}
-
-	return "", errors.New("Not mounted or unknown error")
+	return "tip", nil
 }
