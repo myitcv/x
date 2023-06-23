@@ -1,6 +1,7 @@
 // Copyright (c) 2016 Paul Jolly <paul@myitcv.org.uk>, all rights reserved.
 // Use of this document is governed by a license found in the LICENSE document.
 
+//go:build linux
 // +build linux
 
 package main
@@ -10,6 +11,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"os/exec"
 	"os/user"
 	"runtime"
 	"strings"
@@ -45,6 +47,17 @@ func main() {
 
 	if err := syscall.Unshare(CLONE_NEWNS); err != nil {
 		fmt.Printf("Could not unshare: %v\n", err)
+		os.Exit(1)
+	}
+
+	err = syscall.Setreuid(0, 0)
+	if err != nil {
+		fmt.Printf("Error performing setuid: %v\n", err)
+		os.Exit(1)
+	}
+	out, err := exec.Command("/bin/mount", "--make-private", "/home").CombinedOutput()
+	if err != nil {
+		fmt.Printf("Error performing make-private on /: %v\n%s", err, out)
 		os.Exit(1)
 	}
 
