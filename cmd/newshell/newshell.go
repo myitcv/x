@@ -11,6 +11,8 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"path/filepath"
+	"regexp"
 	"runtime"
 	"strconv"
 	"strings"
@@ -22,6 +24,9 @@ var fP = flag.Uint64("p", 0, "the PID of the process to walk for bash sub-proces
 const (
 	NodeVersion     = "NODEVERSION"
 	GoVersion       = "GOVERSION"
+	CueVersion      = "CUEVERSION"
+	RubyVersion     = "RUBYVERSION"
+	HugoVersion     = "HUGOVERSION"
 	MustChangeToDir = "MUST_CHANGE_TO_DIR"
 )
 
@@ -76,13 +81,20 @@ func main() {
 			// we don't care if this fails
 			os.Setenv(MustChangeToDir, n)
 
-			gv, err := goVersion(bestPid)
-			if err == nil {
-				os.Setenv(GoVersion, gv)
+			if v, err := findVersion(bestPid, "/home/myitcv/gos"); err == nil {
+				os.Setenv(GoVersion, v)
 			}
-			nv, err := nodeVersion(bestPid)
-			if err == nil {
-				os.Setenv(NodeVersion, nv)
+			if v, err := findVersion(bestPid, "/home/myitcv/nodes"); err == nil {
+				os.Setenv(NodeVersion, v)
+			}
+			if v, err := findVersion(bestPid, "/home/myitcv/cues"); err == nil {
+				os.Setenv(CueVersion, v)
+			}
+			if v, err := findVersion(bestPid, "/home/myitcv/hugos"); err == nil {
+				os.Setenv(HugoVersion, v)
+			}
+			if v, err := findVersion(bestPid, "/home/myitcv/rubys"); err == nil {
+				os.Setenv(RubyVersion, v)
 			}
 		}
 	}
@@ -91,36 +103,66 @@ func main() {
 	syscall.Exec(cmd[0], cmd, os.Environ())
 }
 
-func goVersion(pid uint64) (string, error) {
-	mi, err := os.Open(fmt.Sprintf("/proc/%d/mountinfo", pid))
+func findVersion(pid uint64, target string) (string, error) {
+	out, err := exec.Command("findmnt", "-l", target, "-N", fmt.Sprintf("%d", pid)).CombinedOutput()
 	if err != nil {
 		return "", err
 	}
-	defer mi.Close()
 
-	root := ""
+	lines := strings.Split(strings.TrimSpace(string(out)), "\n")
+	if len(lines) != 2 {
+		return "", fmt.Errorf("failed to find %s mount", target)
+	}
+	line := lines[1]
 
-	sc := bufio.NewScanner(mi)
+	parts := strings.Fields(line)
 
-	for sc.Scan() {
-		line := sc.Text()
-		parts := strings.Fields(line)
-
-		if parts[4] == "/home/myitcv/gos" {
-			root = parts[3]
-			break
-		}
+	if len(parts) != 4 {
+		return "", fmt.Errorf("unexpected format of findmnt output: %q", out)
 	}
 
-	if strings.HasPrefix(root, "/home/myitcv/.gos/") {
-		return strings.TrimPrefix(root, "/home/myitcv/.gos/"), nil
+	if parts[0] != target {
+		return "", fmt.Errorf("failed to find %s mount in output: %q", target, out)
 	}
 
-	if root == "/home/myitcv/dev/go" {
-		return "tip", nil
+	// parts[1] should now be like /dev/sda1[/myitcv/.gos/1.20.4]
+	targetRegexp := regexp.MustCompile(`^(.+)\[(.+)\]$`)
+	m := targetRegexp.FindStringSubmatch(parts[1])
+	if m == nil {
+		return "", fmt.Errorf("failed to match target in %q", parts[1])
+	}
+	return filepath.Base(m[2]), nil
+}
+
+func goVersion(pid uint64) (string, error) {
+	out, err := exec.Command("findmnt", "-l", "/home/myitcv/gos", "-N", fmt.Sprintf("%d", pid)).CombinedOutput()
+	if err != nil {
+		return "", err
 	}
 
-	return "", errors.New("Not mounted or unknown error")
+	lines := strings.Split(strings.TrimSpace(string(out)), "\n")
+	if len(lines) != 2 {
+		return "", fmt.Errorf("failed to find gos mount")
+	}
+	line := lines[1]
+
+	parts := strings.Fields(line)
+
+	if len(parts) != 4 {
+		return "", fmt.Errorf("unexpected format of findmnt output: %q", out)
+	}
+
+	if parts[0] != "/home/myitcv/gos" {
+		return "", fmt.Errorf("failed to find gos mount in output: %q", out)
+	}
+
+	// parts[1] should now be like /dev/sda1[/myitcv/.gos/1.20.4]
+	targetRegexp := regexp.MustCompile(`^(.+)\[(.+)\]$`)
+	m := targetRegexp.FindStringSubmatch(parts[1])
+	if m == nil {
+		return "", fmt.Errorf("failed to match target in %q", parts[1])
+	}
+	return filepath.Base(m[2]), nil
 }
 
 func nodeVersion(pid uint64) (string, error) {

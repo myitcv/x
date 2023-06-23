@@ -73,12 +73,7 @@ func main() {
 			fmt.Printf("Error performing setuid: %v\n", err)
 			os.Exit(1)
 		}
-		out, err := exec.Command("/bin/mount", "--make-private", "/").CombinedOutput()
-		if err != nil {
-			fmt.Printf("Error performing make-private on /: %v\n", err)
-			os.Exit(1)
-		}
-		out, err = exec.Command("/bin/mount", "-n", "--bind", old_dir, new_dir).CombinedOutput()
+		out, err := exec.Command("/bin/mount", "-n", "--bind", old_dir, new_dir).CombinedOutput()
 		if err != nil {
 			fmt.Printf("Error performing mount: %v\n", err)
 			os.Exit(1)
