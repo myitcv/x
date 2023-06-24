@@ -203,6 +203,12 @@ func createElement(cmp interface{}, props interface{}, children ...Element) Elem
 	}
 }
 
+func CreateElementFromJS(object *js.Object) Element {
+	return &elementHolder{
+		Elem: object,
+	}
+}
+
 func buildReactComponent(typ reflect.Type, builder ComponentBuilder) *js.Object {
 	compDef := object.New()
 	compDef.Set(reactCompDisplayName, fmt.Sprintf("%v(%v)", typ.Name(), typ.PkgPath()))
