@@ -425,8 +425,8 @@ func (g *gen) genLeaf(n leafField) {
 
 	var _ Node = new({{.LeafType}})
 
-	func new{{.LeafType}}(r *rootNode, prefix string) *{{.LeafType}} {
-		prefix = path.Join(prefix, "{{.LeafType}}")
+	func new{{.LeafType}}(r *rootNode, prefix, fieldName string) *{{.LeafType}} {
+		prefix = path.Join(prefix, "{{.LeafType}}", fieldName)
 
 		return &{{.LeafType}}{
 			rootNode:   r,
@@ -499,12 +499,12 @@ func (g *gen) genNode(n node) {
 
 	for _, c := range n.children {
 		g.pt(`
-		res._{{.Name}} = new{{.Type}}(r, prefix)
+		res._{{.Name}} = new{{.Type}}(r, prefix, "{{.Name}}")
 		`, c)
 	}
 	for _, l := range n.leaves {
 		g.pt(`
-		res._{{.Name}} = new{{.LeafType}}(r, prefix)
+		res._{{.Name}} = new{{.LeafType}}(r, prefix, "{{.Name}}")
 		`, l)
 	}
 
