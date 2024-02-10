@@ -14,6 +14,7 @@ import (
 	"os/exec"
 	"os/user"
 	"runtime"
+	"slices"
 	"strings"
 	"syscall"
 )
@@ -71,6 +72,13 @@ func main() {
 		fmt.Printf("Failed to setgid: %v\n", err)
 		os.Exit(1)
 	}
+
+	// Strip out GOTRACEBACK which is only set at this point because
+	// unsharemounts is setuid, and Go detects this as a safe mode.
+	// Hence by default does not log traces.
+	env = slices.DeleteFunc(env, func(v string) bool {
+		return strings.HasPrefix(v, "GOTRACEBACK=")
+	})
 
 	// now exec the user's shell
 	if err := syscall.Exec(shell, nil, env); err != nil {
