@@ -44,42 +44,45 @@ func main() {
 	}
 
 	if *fP != 0 {
-		// we need to try and find the first bash child process of the process
-		// and get the cwd of the process. If if is an xterm there will be just
-		// one bash process. If it's chrome, for example, there will be none.
-		// So we literally take the first one if there is one.
-		bestPid := uint64(0)
+		// Try to use the given PID directly first (e.g. when passed a
+		// foreground process PID from kitty remote control). Fall back to
+		// walking the process tree to find a bash descendant (e.g. when
+		// passed a window manager PID).
+		bestPid := *fP
 
-		// Walk the process tree to find a bash descendant. With xterm the
-		// tree was xterm -> bash (direct child), but with kitty the tree is
-		// kitty -> unsharemounts -> bash (grandchild). We iteratively search
-		// children, grandchildren, etc. until we find bash.
-		frontier := []string{strconv.FormatUint(*fP, 10)}
-		for len(frontier) > 0 && bestPid == 0 {
-			parent := frontier[0]
-			frontier = frontier[1:]
+		// Check if we can read the CWD of the given PID directly
+		if _, err := os.Readlink(fmt.Sprintf("/proc/%v/cwd", bestPid)); err != nil {
+			bestPid = 0
+		}
 
-			// Check for bash children of this parent
-			cmd := exec.Command("pgrep", "-x", "bash", "-P", parent)
-			output, err := cmd.CombinedOutput()
-			if err == nil {
-				lines := strings.Split(strings.TrimSpace(string(output)), "\n")
-				if len(lines) > 0 && lines[0] != "" {
-					cPid, err := strconv.ParseUint(lines[0], 10, 64)
-					if err == nil {
-						bestPid = cPid
-						break
+		// If the direct PID didn't work, walk the process tree to find
+		// a bash descendant.
+		if bestPid == 0 {
+			frontier := []string{strconv.FormatUint(*fP, 10)}
+			for len(frontier) > 0 && bestPid == 0 {
+				parent := frontier[0]
+				frontier = frontier[1:]
+
+				cmd := exec.Command("pgrep", "-x", "bash", "-P", parent)
+				output, err := cmd.CombinedOutput()
+				if err == nil {
+					lines := strings.Split(strings.TrimSpace(string(output)), "\n")
+					if len(lines) > 0 && lines[0] != "" {
+						cPid, err := strconv.ParseUint(lines[0], 10, 64)
+						if err == nil {
+							bestPid = cPid
+							break
+						}
 					}
 				}
-			}
 
-			// No bash found; collect all children to search deeper
-			cmd = exec.Command("pgrep", "-P", parent)
-			output, err = cmd.CombinedOutput()
-			if err == nil {
-				for _, line := range strings.Split(strings.TrimSpace(string(output)), "\n") {
-					if line != "" {
-						frontier = append(frontier, line)
+				cmd = exec.Command("pgrep", "-P", parent)
+				output, err = cmd.CombinedOutput()
+				if err == nil {
+					for _, line := range strings.Split(strings.TrimSpace(string(output)), "\n") {
+						if line != "" {
+							frontier = append(frontier, line)
+						}
 					}
 				}
 			}
@@ -91,7 +94,6 @@ func main() {
 				log.Fatalf("Could not read cwd of best pid %v: %v", bestPid, err)
 			}
 
-			// we don't care if this fails
 			os.Setenv(MustChangeToDir, n)
 
 			if v, err := findVersion(bestPid, "/home/myitcv/gos"); err == nil {
