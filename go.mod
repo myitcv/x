@@ -1,6 +1,6 @@
 module myitcv.io
 
-go 1.22.0
+go 1.23.0
 
 require (
 	cuelang.org/go v0.0.11
@@ -17,9 +17,9 @@ require (
 	github.com/rogpeppe/go-internal v1.2.2
 	github.com/russross/blackfriday v1.5.1
 	github.com/sclevine/agouti v3.0.0+incompatible
-	golang.org/x/net v0.0.0-20190311183353-d8887717615a
+	golang.org/x/net v0.34.0
 	golang.org/x/oauth2 v0.0.0-20181017192945-9dcd33a902f4
-	golang.org/x/tools v0.0.0-20190328211700-ab21143f2384
+	golang.org/x/tools v0.29.0
 	gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127
 	gopkg.in/fsnotify/fsnotify.v1 v1.4.7
 	honnef.co/go/js/dom v0.0.0-20180323154144-6da835bec70f
@@ -45,9 +45,9 @@ require (
 	github.com/shurcooL/vfsgen v0.0.0-20180915214035-33ae1944be3f // indirect
 	github.com/spf13/cobra v0.0.3 // indirect
 	github.com/spf13/pflag v1.0.3 // indirect
-	golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2 // indirect
-	golang.org/x/sys v0.0.0-20190215142949-d0b11bdaac8a // indirect
-	golang.org/x/text v0.3.2 // indirect
+	golang.org/x/crypto v0.32.0 // indirect
+	golang.org/x/sys v0.29.0 // indirect
+	golang.org/x/text v0.21.0 // indirect
 	golang.org/x/xerrors v0.0.0-20190717185122-a985d3407aa7 // indirect
 	google.golang.org/appengine v1.1.0 // indirect
 	gopkg.in/errgo.v2 v2.1.0 // indirect

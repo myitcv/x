@@ -50,24 +50,39 @@ func main() {
 		// So we literally take the first one if there is one.
 		bestPid := uint64(0)
 
-		cmd := exec.Command("pgrep", "-x", "bash", "-P", strconv.FormatUint(*fP, 10))
-		output, err := cmd.CombinedOutput()
-		if err != nil {
-			ws := cmd.ProcessState.Sys().(syscall.WaitStatus)
-			// exit status of 1 simply simply means we matched nothing
-			if ws.ExitStatus() != 1 {
-				log.Fatalf("Could not run pgrep: %v, %v\n", err, output)
-			}
-		}
+		// Walk the process tree to find a bash descendant. With xterm the
+		// tree was xterm -> bash (direct child), but with kitty the tree is
+		// kitty -> unsharemounts -> bash (grandchild). We iteratively search
+		// children, grandchildren, etc. until we find bash.
+		frontier := []string{strconv.FormatUint(*fP, 10)}
+		for len(frontier) > 0 && bestPid == 0 {
+			parent := frontier[0]
+			frontier = frontier[1:]
 
-		lines := strings.Split(string(output), "\n")
-
-		if len(lines) > 0 {
-			cPid, err := strconv.ParseUint(lines[0], 10, 64)
-			if err != nil {
-				log.Fatalf("Could not parseint: %v\n", err)
+			// Check for bash children of this parent
+			cmd := exec.Command("pgrep", "-x", "bash", "-P", parent)
+			output, err := cmd.CombinedOutput()
+			if err == nil {
+				lines := strings.Split(strings.TrimSpace(string(output)), "\n")
+				if len(lines) > 0 && lines[0] != "" {
+					cPid, err := strconv.ParseUint(lines[0], 10, 64)
+					if err == nil {
+						bestPid = cPid
+						break
+					}
+				}
 			}
-			bestPid = cPid
+
+			// No bash found; collect all children to search deeper
+			cmd = exec.Command("pgrep", "-P", parent)
+			output, err = cmd.CombinedOutput()
+			if err == nil {
+				for _, line := range strings.Split(strings.TrimSpace(string(output)), "\n") {
+					if line != "" {
+						frontier = append(frontier, line)
+					}
+				}
+			}
 		}
 
 		if bestPid != 0 {
@@ -98,7 +113,11 @@ func main() {
 	}
 
 	cmd := flag.Args()
-	syscall.Exec(cmd[0], cmd, os.Environ())
+	bin, err := exec.LookPath(cmd[0])
+	if err != nil {
+		log.Fatalf("Could not find %v in PATH: %v", cmd[0], err)
+	}
+	syscall.Exec(bin, cmd, os.Environ())
 }
 
 func findVersion(pid uint64, target string) (string, error) {
