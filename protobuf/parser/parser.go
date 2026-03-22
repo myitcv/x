@@ -898,6 +898,20 @@ func (p *parser) readEnum(enum *ast.Enum) *parseError {
 		}
 		ev.Number = int32(num) // TODO: validate
 
+		// an enum can either end with a semicolon or have a deprecated option then a semicolon "[deprecated = true];"
+		tok = p.next()
+		if tok.value == ";" {
+			// that's it, the enum value is done
+			continue
+		} else if tok.value == "[" {
+			deprecatedOptions := []string{"deprecated", "=", "true", "]"}
+			for _, wantToken := range deprecatedOptions {
+				if err := p.readToken(wantToken); err != nil {
+					return err
+				}
+			}
+			enum.Deprecated = true
+		}
 		if err := p.readToken(";"); err != nil {
 			return err
 		}
